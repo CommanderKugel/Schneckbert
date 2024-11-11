@@ -39,7 +39,8 @@ public static class RepetitionTable
     /// </summary>
     public static bool IsRepeatedPosition(pos p)
     {
-        if (p.FiftyMoveCnt < 4) {
+        if (p.FiftyMoveCnt < 4) 
+        {
             return false;
         }
         int x = Math.Max(ply-p.FiftyMoveCnt, 0);

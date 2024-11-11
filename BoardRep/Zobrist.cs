@@ -4,10 +4,10 @@ using static Utils;
 
 public static class Zobrist
 {
-    public static ulong StmKey;
-    public static ulong[][][] PieceSqKeys;
-    public static ulong[] CastlingKeys;
-    public static ulong[] EpFileKeys;
+    private static ulong StmKey;
+    private static ulong[][][] PieceSqKeys;
+    private static ulong[] CastlingKeys;
+    private static ulong[] EpFileKeys;
 
 
     public static void init() 
@@ -28,36 +28,46 @@ public static class Zobrist
         }
 
         CastlingKeys = new ulong[4];
-        for (int i=0; i<4; i++) {
+        for (int i=0; i<4; i++) 
+        {
             CastlingKeys[i] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
         }
 
         EpFileKeys = new ulong[8];
-        for (int i=0; i<8; i++) {
+        for (int i=0; i<8; i++) 
+        {
             EpFileKeys[i] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
         }
     }
     
-
-    public static ulong CalcZobrist(pos p) {
+    /// <summary>
+    /// calculates the ZobristKey of a given position from zero
+    /// </summary>
+    public static ulong CalcZobrist(pos p) 
+    {
         ulong key = p.us == WHITE ? StmKey : 0;
 
-        for (int c=BLACK; c<=WHITE; c++) {
-            for (int pt=PAWN; pt<=KING; pt++) {
+        for (int c=BLACK; c<=WHITE; c++) 
+        {
+            for (int pt=PAWN; pt<=KING; pt++) 
+            {
                 ulong pieces = p.get_pieces(pt, c);
-                while (pieces != 0) {
+                while (pieces != 0) 
+                {
                     int sq = popLsb(ref pieces);
                     key ^= PieceSqKeys[c][pt][sq];
                 }
             }
         }
 
-        for (int i=0; i<4; i++) {
+        for (int i=0; i<4; i++) 
+        {
             if (p.castling_rights[i])
                 key ^= CastlingKeys[i];
         }
 
-        if (p.ep != EPSQ_NONE) {
+        if (p.ep != EPSQ_NONE) 
+        {
             key ^= EpFileKeys[file_of(p.ep)];
         }
 

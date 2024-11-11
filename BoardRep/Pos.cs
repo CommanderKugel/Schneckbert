@@ -29,9 +29,14 @@ public struct pos
     public byte MovedPiece = PIECE_NONE;
     public byte CapturedPiece = PIECE_NONE;
 
-    // Constructors
 
-    public pos(pos p) {
+    /// <summary>
+    /// copies all values from the parent position
+    /// essential part of "copy/make"
+    /// </summary>
+    /// <param name="p"></param>
+    public pos(pos p) 
+    {
         Array.Copy(p.pieceBB, this.pieceBB, 6);
         Array.Copy(p.colorBB, this.colorBB, 2);
         Array.Copy(p.castling_rights, this.castling_rights, 4);
@@ -43,6 +48,9 @@ public struct pos
         this.ZobristKey = p.ZobristKey;
     }
 
+    /// <summary>
+    /// parses a fen an returns the expected position
+    /// </summary>
     public pos (string fen) 
     {
         colorBB = [0, 0];
@@ -53,7 +61,8 @@ public struct pos
         int idx = 0;
         char c = 'x';
 
-        for (; c!=' '; idx++) {
+        for (; c!=' '; idx++) 
+        {
             c = fen[idx];
             int sq = 8 * r + f;
             f++;
@@ -79,8 +88,10 @@ public struct pos
         us = (byte)((fen[idx++] == 'w') ? 1 : 0);
 
         castling_rights = [false, false, false, false];
-        for (char cr = fen[++idx]; cr != ' ' && cr != '-'; cr = fen[++idx]) {
-            switch (cr) {
+        for (char cr = fen[++idx]; cr != ' ' && cr != '-'; cr = fen[++idx]) 
+        {
+            switch (cr) 
+            {
                 case 'K': castling_rights[WHITE+WHITE  ] = true; break;
                 case 'Q': castling_rights[WHITE+WHITE+1] = true; break;
                 case 'k': castling_rights[BLACK+BLACK  ] = true; break;
@@ -90,10 +101,13 @@ public struct pos
         }
         
         if (fen[++idx] != '-' && fen[idx] != ' ') 
+        {
             ep = CharsToSquare(fen[idx], fen[++idx]);
+        }
 
         ZobristKey = Zobrist.CalcZobrist(this);
     }
+
     private void set_piece(int sq, int piece, int c) {
         pieceBB[piece] |= 1ul << sq;
         colorBB[c]     |= 1ul << sq;
@@ -108,13 +122,18 @@ public struct pos
 
     public int get_ksq(int c) => lsb(pieceBB[KING] & colorBB[c]);
 
-    public byte piece_on(int sq) {
+    /// <summary>
+    /// returns the PieceType of the Piece on the given Square-index
+    /// </summary>
+    public byte piece_on(int sq) 
+    {
         for (byte i=PAWN; i<=KING; i++)
             if ((pieceBB[i] & (1ul << sq)) != 0)
                 return i;
         return PIECE_NONE;
     }
-    public int color_on(int sq) {
+    public int color_on(int sq) 
+    {
         if (((1ul << sq) & colorBB[WHITE]) != 0)
             return WHITE;
         if (((1ul << sq) & colorBB[BLACK]) != 0)
@@ -122,9 +141,17 @@ public struct pos
         return COLOR_NONE;
     }
 
+    /// <summary>
+    /// returns a bitboard containing all occupants of both WHITE and BLACK pieces
+    /// </summary>
     public ulong get_blocker() => colorBB[WHITE] | colorBB[BLACK];
 
-    public ulong attackers_to (int sq, ulong block) {
+    /// <summary>
+    /// returns a bitboard containing all pieces that attack a given square
+    /// the pieces can be of WHITE or BLACK color
+    /// </summary>
+    public ulong attackers_to (int sq, ulong block) 
+    {
         return PawnAttacks[WHITE][sq] & pieceBB[PAWN] & colorBB[BLACK] | 
                PawnAttacks[BLACK][sq] & pieceBB[PAWN] & colorBB[WHITE] | 
                KnightAttacks(sq) & pieceBB[KNIGHT] | 
@@ -133,14 +160,17 @@ public struct pos
                KingAttacks(sq) & pieceBB[KING];
     }
 
+    /// <summary>
+    /// returns a bitboard of all pieces that attack the side-to-move's king
+    /// the pieces are of the opposing side's color
+    /// </summary>
+    /// <returns></returns>
     public ulong get_checkers() => attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us];
 
 
-
-    // Make Move Big block 
     public bool make_move(move m) 
     {
-        int from, to, movingPiece, dist;
+        int from, to, dist;
         ulong fromBB, toBB, FromTo;
         bool wtm;
 
@@ -177,19 +207,21 @@ public struct pos
         if (MovedPiece == PAWN) 
         {
             // double pawn push
-            // set ep only if there are possible captures
-            if (Math.Abs(dist) == 16) {
+            if (Math.Abs(dist) == 16) 
+            {
                 ep = to;
             }
 
             // promotion
-            else if (m.IsPromo) {
+            else if (m.IsPromo) 
+            {
                 pieceBB[PAWN] ^= toBB;
                 pieceBB[m.PromoPiece] ^= toBB;
             }
 
             // en passant capture
-            else if (m.IsEp) {
+            else if (m.IsEp) 
+            {
                 CapturedPiece = PAWN;
                 pieceBB[PAWN] ^= wtm ? south(toBB) : north(toBB);
                 colorBB[1-us] ^= wtm ? south(toBB) : north(toBB);
@@ -202,13 +234,15 @@ public struct pos
         if (MovedPiece == KING) 
         {
             // Kingside Castling
-            if (dist == 2) {
+            if (dist == 2) 
+            {
                 pieceBB[ROOK] ^= wtm ? 0x0000_0000_0000_00a0ul : 0xa000_0000_0000_0000ul;
                 colorBB[us]   ^= wtm ? 0x0000_0000_0000_00a0ul : 0xa000_0000_0000_0000ul;
             }
 
             // Queenside Castling
-            if (dist == -2) {
+            if (dist == -2) 
+            {
                 pieceBB[ROOK] ^= wtm ? 0x0000_0000_0000_0009ul : 0x0900_0000_0000_0000ul;
                 colorBB[us]   ^= wtm ? 0x0000_0000_0000_0009ul : 0x0900_0000_0000_0000ul;
             }
