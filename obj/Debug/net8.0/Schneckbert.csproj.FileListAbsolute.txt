@@ -1,0 +1,45 @@
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.exe
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.deps.json
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.runtimeconfig.json
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfoInputs.cache
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfo.cs
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.csproj.CoreCompileInputs.cache
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.sourcelink.json
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\refint\Schneckbert.dll
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.genruntimeconfig.cache
+C:\Users\nikol\Desktop\Schneckbert\Schneckbert\obj\Debug\net8.0\ref\Schneckbert.dll
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfoInputs.cache
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfo.cs
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.csproj.CoreCompileInputs.cache
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.sourcelink.json
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\refint\Schneckbert.dll
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.exe
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.deps.json
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.runtimeconfig.json
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.genruntimeconfig.cache
+C:\Users\nikol\Desktop\VS Code Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\ref\Schneckbert.dll
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.exe
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.deps.json
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.runtimeconfig.json
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\bin\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfoInputs.cache
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.AssemblyInfo.cs
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.csproj.CoreCompileInputs.cache
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.sourcelink.json
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.dll
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\refint\Schneckbert.dll
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.pdb
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\Schneckbert.genruntimeconfig.cache
+C:\Users\nikol\Desktop\VS_Code_Dateien\Schneckbert\Schneckbert\obj\Debug\net8.0\ref\Schneckbert.dll
