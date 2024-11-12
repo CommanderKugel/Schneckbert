@@ -4,10 +4,12 @@ public struct TTEntry
     public byte key, depth, flag;
     public int score;
     public move move;
+
+    public const int TT_SHIFT = 56;
     
     public TTEntry(ulong key, int score, int depth, int flag, move move)
     {
-        this.key   = (byte)(key >> 48);
+        this.key   = (byte)(key >> TT_SHIFT);
         this.score =        score;
         this.depth = (byte) depth;
         this.flag  = (byte) flag;
@@ -29,6 +31,11 @@ public static class TranspositionTable
     private static TTEntry[] TT;
     private static ulong TTSize;
 
+    /// <summary>
+    /// initializes the Transposition Table as a big array
+    /// the size sets the amonunt of entries
+    /// one TTEntry is 70 bytes in size
+    /// </summary>
     public static void init(int size)
     {
         TTSize = (ulong) size;
@@ -36,29 +43,36 @@ public static class TranspositionTable
         Reset();
     }
 
+    /// <summary>
+    /// Cleats all Entries from the Transposition Table
+    /// </summary>
     public static void Reset()
     {
         Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
     }
 
-    public static ref TTEntry Probe(ulong key)
-    {
-        return ref TT[key % TTSize];
-    }
+    /// <summary>
+    /// returns the entry of the Transposition Table for the given key
+    /// the key is provided by the position
+    /// </summary>
+    public static ref TTEntry Probe(ulong key) => ref TT[key % TTSize];
 
-    public static bool isTTHit(ulong ZobristKey, ref TTEntry entry)
-    {
-        return entry.key == (byte)(ZobristKey >> 56);
-    }
+    /// <summary>
+    /// compares the stored bits of the entry with the provided key
+    /// compares the biggest 8 bits of the stored and to be stored position's keys
+    /// </summary>
+    public static bool isTTHit(ulong ZobristKey, ref TTEntry entry) => entry.key == (byte)(ZobristKey >> TTEntry.TT_SHIFT);
 
-    // just always overwrite
+    /// <summary>
+    /// enters a new entry in the Transposition Table
+    /// always overwrites the old entry
+    /// </summary>
     public static void Push(ref TTEntry entry, ulong key, int score, int depth, int flag, move move)
     {
-        entry.key   = (byte)(key >> 56);
+        entry.key   = (byte)(key >> TTEntry.TT_SHIFT);
         entry.score =        score;
         entry.depth = (byte) depth;
         entry.flag  = (byte) flag;
         entry.move  =        move;
     }
-
 }

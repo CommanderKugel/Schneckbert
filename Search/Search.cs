@@ -29,15 +29,8 @@ public static class Search
         do
         {
             ResetPV(iteration);
+            int rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, info);
 
-            int rootScore;// = Negamax(root, alpha, beta, iteration, 0, info);
-            if (true || rootScore >= alpha || rootScore <= beta) 
-            {
-                rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, info);
-            }
-
-            alpha = rootScore - delta;
-            beta  = rootScore + delta;
 
             if (info)
             {
@@ -93,7 +86,7 @@ public static class Search
 
         // try for TT Cutoff -> doesnt work yet
         // didnt pass sprt yet
-        if (false && nonPV && ttHit && entry.depth >= depth && ( // && nonPV
+        if (nonPV && ttHit && entry.depth >= depth && (
             entry.flag == BOUND_UPPER && entry.score <= alpha ||
             entry.flag == BOUND_LOWER && entry.score >= beta)
         ) {
