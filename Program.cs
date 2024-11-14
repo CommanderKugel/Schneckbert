@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
+Board.init();
+SearchStack.init();
 Zobrist.init();
 TranspositionTable.init(1 << 17); // should be 1MB (i hope)
 History.init();
@@ -35,7 +37,8 @@ while (true)
         {
             TranspositionTable.Reset();
             History.Reset();
-            // Board
+            Board.Reset();
+            SearchStack.Reset();
             TimeManager.Reset(resetTotalNodes: true);
             break;
         }
@@ -51,6 +54,8 @@ while (true)
                 root = new pos(fen);
             }
 
+            Board.Reset();
+            SearchStack.Reset();
             RepetitionTable.Reset();
 
             foreach (var moveStr in SkipPast("moves"))

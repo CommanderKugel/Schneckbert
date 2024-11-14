@@ -1,3 +1,4 @@
+using static Constants;
 
 public struct SS
 {
@@ -14,14 +15,14 @@ public static class SearchStack
 {
     public static SS[] stack;
     
-    public static void init(int size)
+    public static void init() 
     {
-        stack = new SS[size];
+        //stack = new SS[Board.MAX_SEARCH_DEPTH];
     }
 
     public static void Reset()
     {
-        Array.Clear(stack);
+        //Array.Clear(stack);
     }
 
 }

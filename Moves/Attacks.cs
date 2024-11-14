@@ -29,6 +29,7 @@ public static class Attacks
         ulong key = getKey(bishopMagics[sq], bishopMasks[sq], block, fancyBishopBits[sq]);
         return bishopMagicLookup[sq][key];
     }
+
     /// <summary>
     /// returns a bitboard containing all squares a rook could reach
     /// all pieces blocking the movement are available for capture on the bitboard
@@ -38,6 +39,7 @@ public static class Attacks
         ulong key = getKey(rookMagics[sq], rookMasks[sq], block, fancyRookBits[sq]);
         return rookMagicLookup[sq][key];
     }
+
     /// <summary>
     /// returns a bitboard containing all squares a queen could reach
     /// all pieces blocking the movement are available for capture on the bitboard
@@ -62,7 +64,9 @@ public static class Attacks
             _      => 0
         };
     }
-    private static ulong PseudoPawnMoves(pos p, int sq) {
+
+    private static ulong PseudoPawnMoves(pos p, int sq) 
+    {
         ulong empty = ~p.get_blocker();
         // push moves
         ulong push = up(1ul << sq, p.us) & empty;
@@ -200,5 +204,4 @@ public static class Attacks
             }
         }
     }
-    
 }

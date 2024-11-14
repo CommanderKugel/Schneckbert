@@ -6,8 +6,6 @@ using static System.Math;
 
 public static class Search
 {
-    const int MAX_PLY = 64;
-
     static int iteration;
     static int seldepth;
     static move rootBestMove;
@@ -61,7 +59,7 @@ public static class Search
         TimeManager.NodeCnt++;
 
         // #2 avoid stack-overflows or IndexOutOfBound Exceptions
-        if (ply >= MAX_PLY)
+        if (ply >= Board.MAX_SEARCH_DEPTH)
         {
             return Evaluation.Evaluate(p);
         }
