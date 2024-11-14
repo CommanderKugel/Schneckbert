@@ -108,11 +108,11 @@ public struct pos
         ZobristKey = Zobrist.CalcZobrist(this);
     }
 
-    private void set_piece(int sq, int piece, int c) {
+    private void set_piece(int sq, int piece, int c) 
+    {
         pieceBB[piece] |= 1ul << sq;
         colorBB[c]     |= 1ul << sq;
     }
-
 
     // QOL Methods
 
@@ -164,7 +164,6 @@ public struct pos
     /// returns a bitboard of all pieces that attack the side-to-move's king
     /// the pieces are of the opposing side's color
     /// </summary>
-    /// <returns></returns>
     public ulong get_checkers() => attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us];
 
 
@@ -196,8 +195,7 @@ public struct pos
             pieceBB[CapturedPiece] ^= toBB;
             colorBB[1-us] ^= toBB;
 
-            // reset if move is a capture
-            // ep capture will be reset because its also a pawn move
+            // captures reset the fifty move rule
             FiftyMoveCnt = 0;
         }
 
@@ -271,7 +269,8 @@ public struct pos
     }
 
 
-    public bool IsPseudoLegal(move m) {
+    public bool IsPseudoLegal(move m) 
+    {
         if (color_on(m.from) != us)
             return false;
         return (PieceAttacks(this, piece_on(m.from), m.from) & (1ul << m.to)) != 0;

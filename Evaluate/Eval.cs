@@ -1,6 +1,7 @@
 using static Constants;
 using static Utils;
 using static Pesto;
+using static Attacks;
 
 public static class Evaluation
 {
@@ -22,7 +23,10 @@ public static class Evaluation
         S(82, 94), S(337, 281), S(365, 297), S(477, 512), S(1025, 936), S(20_000, 20_000) 
     };
     
-
+    /// <summary>
+    /// evaluates a position and returns a 32-bit Integer
+    /// Positive numbers suggest WHITE has the advantage, negative BLACK's
+    /// </summary>
     public static int Evaluate(pos p) 
     {
         int eval = 0;
@@ -36,7 +40,12 @@ public static class Evaluation
                 while (pieces != 0) 
                 {
                     int sq = popLsb(ref pieces);
-                    if (us==BLACK) sq ^= 56;
+
+                    // side relative Square
+                    if (us == BLACK)
+                    {
+                        sq ^= 56;
+                    }
 
                     // Material
                     eval  += Material[pt];
@@ -51,7 +60,7 @@ public static class Evaluation
         }
         // handle early promotions
         phase = Math.Min(phase, 24); 
-        
+
         return ((short)(eval >> 16) * phase + (short)eval * (24 - phase)) / (p.us == WHITE ? 24 : -24);
     }
 }

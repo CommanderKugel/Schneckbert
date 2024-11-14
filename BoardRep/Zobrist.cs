@@ -17,9 +17,11 @@ public static class Zobrist
         StmKey = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
 
         PieceSqKeys = new ulong[2][][];
-        for (int c=BLACK; c<=WHITE; c++) {
+        for (int c=BLACK; c<=WHITE; c++) 
+        {
             PieceSqKeys[c] = new ulong[6][];
-            for (int pt=PAWN; pt<=KING; pt++) {
+            for (int pt=PAWN; pt<=KING; pt++) 
+            {
                 PieceSqKeys[c][pt] = new ulong[64];
                 for (int sq=0; sq<64; sq++) {
                     PieceSqKeys[c][pt][sq] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
@@ -72,5 +74,29 @@ public static class Zobrist
         }
 
         return key;
+    }
+
+    /// <summary>
+    /// returns the ZobristKey of a given piece
+    /// </summary>
+    public static ulong get_piece_key(int color, int pt, int sq)
+    {
+        return PieceSqKeys[color][pt][sq];
+    }
+
+    /// <summary>
+    /// returns the ZobristKey of a given castling right
+    /// </summary>
+    public static ulong get_castling_key(int cr)
+    {
+        return CastlingKeys[cr];
+    }
+
+    /// <summary>
+    /// returns the ZobristKey representing the En Passant rights for a given square
+    /// </summary>
+    public static ulong get_ep_key(int sq)
+    {
+        return EpFileKeys[file_of(sq)];
     }
 }

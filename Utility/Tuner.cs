@@ -1,7 +1,4 @@
 
-#define IsTapered
-
-
 using static Constants;
 using static Utils;
 
@@ -24,25 +21,23 @@ class Datapoint
     public List<coef_entry> coefficients = new List<coef_entry>();
     public double label;
     public sbyte wtm;
-    public value const_term;
 
-#if IsTapered
+    public value const_term;
     public byte phase = 0;
-#endif
 
 
     public Datapoint(string fen)
     {
         pos p = new pos(fen);
 
-    #if IsTapered
         phase = (byte)Min(
             1 * popCount(p.get_pieces(KNIGHT)) +
             1 * popCount(p.get_pieces(BISHOP)) +
             2 * popCount(p.get_pieces(ROOK)  ) +
             4 * popCount(p.get_pieces(QUEEN) ),
             24);
-    #endif
+
+            //const_term = Evaluation.Evaluate(p);
 
         // start implementing your evaluation here
 
@@ -62,14 +57,9 @@ class Datapoint
 
                     // mobility
                     int mob = popCount(Attacks.PieceAttacks(p, pt, sq) & enemyOrEmpty);
-
-                    int idx = pt==KNIGHT ? 0
-                            : pt==BISHOP ? 9
-                            : pt==ROOK   ? 9+14
-                            : pt==QUEEN  ? 9+14+15
-                            : 0;
+                    int idx = pt-KNIGHT;
                     
-                    add_coef(idx + mob, sign);
+                    add_coef(idx, (sbyte)(sign * mob));
                 }
             }
         }
@@ -100,7 +90,6 @@ class Datapoint
 
 public struct value
 {
-#if IsTapered
     public double mg;
     public double eg;
     public value (int mg, int eg) {
@@ -108,21 +97,14 @@ public struct value
         this.eg = eg;
     }
     public string ts(double PawnEg) => $"S({Round(mg, 0)}, {Round(eg, 0)}), ";
-#else
-    public double val;
-    public value (int mg, int eg) => val = (mg + eg) / 2;
-    public value (int val)        => this.val = val;
-    public override string ToString() => $"{(int)val}, ";
-    public string ts(double PawnEg) => $"{val}, ";
-#endif
+    public override string ToString() => $"S({(int)mg}, {(int)eg}), ";
 }
 
 public static class Tuner
 {        
-
     const string source_path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\lichess-big3-resolved.book";
     
-    static double K           = 2.5; // if K <= 0 a new K value will be calculated
+    static double K           = 15; // if K <= 0 a new K value will be calculated
     static double lr          = 1000;
     const int    LR_DROP      = 1_000;
     const double LR_DROP_RATE = 1;
@@ -132,7 +114,7 @@ public static class Tuner
     const int REPORT = 50;
 
     const int LICHESS_POS_CNT = 7_153_653;
-    const int TUNE_POS_CNT    = 1_000_000;
+    const int TUNE_POS_CNT    = 7_000_000;
 
 
     const int KNIGHT_MOB_NB = 9;
@@ -143,29 +125,17 @@ public static class Tuner
     static value[] my_values;
     static void init_values()
     {
-        my_values = new value[KNIGHT_MOB_NB + BISHOP_MOB_NB + ROOK_MOB_NB + QUEEN_MOB_NB];
+        my_values = new value[4];
         return;
     }
 
     static void print_values(value[] values, bool pretty=false)
     {
-    #if IsTapered
-        double pawnVal = values[0].eg / 100;
-    #else
-        double pawnVal = values[0].val / 100;
-    #endif
+        double normalize = 1;
 
         for (int i=0; i<values.Length; i++)
         {
-            if (i == 0) 
-                Console.WriteLine("\nKnight Mobility:");
-            if (i == KNIGHT_MOB_NB)     
-                Console.WriteLine("\nBishop Mobility:");
-            if (i == KNIGHT_MOB_NB+BISHOP_MOB_NB) 
-                Console.WriteLine("\nRook Mobility:");
-            if (i == KNIGHT_MOB_NB+BISHOP_MOB_NB+ROOK_MOB_NB) 
-                Console.WriteLine("\nQueen Mobility:");
-            Console.Write(values[i].ts(pawnVal));
+            Console.Write(pretty ? values[i] : values[i].ts(normalize));
         }
         Console.WriteLine("\n");
     }
@@ -204,6 +174,29 @@ public static class Tuner
         for (int epoch=1; epoch<=MAX_EPOCH; epoch++)
         {
             
+            for (int i=0; i<my_values.Length; i++)
+            {
+                my_values[i].mg += 1;
+                double up   = get_mean_squared_error(K, my_values, data);
+                my_values[i].mg -= 2;
+                double down = get_mean_squared_error(K, my_values, data);
+                my_values[i].mg += up==down ? 1 : up<down ? 2 : 0;
+
+
+                my_values[i].eg += 1;
+                up   = get_mean_squared_error(K, my_values, data);
+                my_values[i].eg -= 2;
+                down = get_mean_squared_error(K, my_values, data);
+                my_values[i].eg += up==down ? 1 : up<down ? 2 : 0;
+            }
+
+            Console.WriteLine($"epoch {epoch}");
+            Console.WriteLine($"error {get_mean_squared_error(K, my_values, data)}");
+            print_values(my_values);
+
+        }
+        print_values(my_values, true);
+            /*
             // #7 compute the gradient
             value[] gradient = new value[values.Length];
             calculate_gradient(K, data, my_values, gradient);
@@ -237,6 +230,7 @@ public static class Tuner
         // #10 stop tuning @max epoch & save parameters
         Console.WriteLine("Finished Tuning");
         print_values(values, pretty: true);
+        */
     }
 
     static Datapoint[] read_training_data(string path)
@@ -277,19 +271,13 @@ public static class Tuner
         double sigm = sigmoid(eval, K);
         double error = (dp.label - sigm) * sigm * (1 - sigm);
 
-        #if IsTapered
         double mg_base = error * (double)(   dp.phase) / 24.0d;
         double eg_base = error * (double)(24-dp.phase) / 24.0d;
-        #endif
 
         foreach (var coef in dp.coefficients)
         {
-            #if IsTapered
             gradient[coef.index].mg += mg_base * coef.value;
             gradient[coef.index].eg += eg_base * coef.value;
-            #else
-            gradient[coef.index].val += error * coef.value;
-            #endif
         }
     }
     
@@ -297,12 +285,8 @@ public static class Tuner
     {
         for (int val_idx=0; val_idx<values.Length; val_idx++)
         {
-            #if IsTapered
             values [val_idx].mg += (K / 200.0) * (gradient[val_idx].mg / TUNE_POS_CNT) * lr;
             values [val_idx].eg += (K / 200.0) * (gradient[val_idx].eg / TUNE_POS_CNT) * lr; 
-            #else
-            values [val_idx].val += (K / 200.0) * (gradient[val_idx].val / TUNE_POS_CNT) * lr / TUNE_POS_CNT; 
-            #endif
         }
     }
 
@@ -322,7 +306,6 @@ public static class Tuner
 
     static double evaluate_linearly(value[] values, Datapoint dp)
     {
-    #if IsTapered
         double mg  = dp.const_term.mg;
         double eg  = dp.const_term.eg;
         foreach (coef_entry entry in dp.coefficients)
@@ -331,14 +314,6 @@ public static class Tuner
             eg += values[entry.index].eg * entry.value;
         }
         return (mg * dp.phase + eg * (24 - dp.phase)) / (dp.wtm * 24);
-    #else
-        double eval = 0;
-        foreach (coef_entry entry in dp.coefficients)
-        {
-            eval += values[entry.index].val * entry.value;
-        }
-        return eval * dp.wtm;
-    #endif
     }
 
     static double sigmoid(double x, double K) => 1.0d / (1.0d + Exp(-K * x / 400.0d));

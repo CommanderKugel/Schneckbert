@@ -38,6 +38,14 @@ public static class Attacks
         ulong key = getKey(rookMagics[sq], rookMasks[sq], block, fancyRookBits[sq]);
         return rookMagicLookup[sq][key];
     }
+    /// <summary>
+    /// returns a bitboard containing all squares a queen could reach
+    /// all pieces blocking the movement are available for capture on the bitboard
+    /// </summary>
+    public static ulong QueenAttacks(int sq, ulong block)
+    {
+        return BishopAttacks(sq, block) | RookAttacks(sq, block);
+    }
 
     /// <summary>
     /// returns a bitboard containing reachable squares by PieceType

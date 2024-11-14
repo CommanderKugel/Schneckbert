@@ -6,10 +6,10 @@ using static Attacks;
 public static class MoveGen
 {
 
-    public static byte GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures)
+    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures)
     {
         int us, them;
-        byte moveCnt;
+        int moveCnt;
         ulong block, mask;
         bool wtm;
 
@@ -32,6 +32,7 @@ public static class MoveGen
             GenerateCastlingMoves(moves);
 
         return moveCnt;
+
 
 
         void GeneratePieceMoves(Span<move> moves, ulong pieces, Func<int, ulong, ulong> F)

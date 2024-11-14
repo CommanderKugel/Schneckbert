@@ -5,14 +5,15 @@ public struct move
 {
     ushort value = 0;
 
-    public move(int from, int to, int flag=NoFlag) {
+    public move(int from, int to, int flag=NoFlag) 
+    {
         value = (ushort) (from | (to << 6) |flag);
     }
 
-    public int from =>  value & 0b11_1111;
-    public int to   => (value >> 6) & 0b11_1111;
-    public int flag =>  value & 0xF000;
-    public int FromTo => value & 0x0FFF;
+    public readonly int from   =>  value & 0b11_1111;
+    public readonly int to     => (value >> 6) & 0b11_1111;
+    public readonly int flag   =>  value & 0xF000;
+    public readonly int FromTo =>  value & 0x0FFF;
 
     public bool IsPromo    => (value & KnightPromo) != 0;
     public int  PromoPiece => ((value >> 12) & 0b11) + 1;
@@ -30,14 +31,19 @@ public struct move
         EpCapture   = 0b1000_0000_0000_0000;
 
 
-    public move(string mvstr, pos p) {
+    /// <summary>
+    /// constructs a move from a given uci-string
+    /// providing the position is necessary for identifying En Passant captures
+    /// </summary>
+    public move(string mvstr, pos p) 
+    {
         int from = CharsToSquare(mvstr[0], mvstr[1]);
         int to   = CharsToSquare(mvstr[2], mvstr[3]);
-
         ushort flag = 0;
 
         // read promotions directly from the string
-        if (mvstr.Length == 5) {
+        if (mvstr.Length == 5) 
+        {
             flag = mvstr[4] switch {
                 'n' => KnightPromo,
                 'b' => BishopPromo,
@@ -60,7 +66,12 @@ public struct move
     public static bool operator ==(move m1, move m2) => m1.value == m2.value;
     public static bool operator !=(move m1, move m2) => m1.value != m2.value;
 
-    public override string ToString() {
+    /// <summary>
+    /// returns the moves uci-string representation
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString() 
+    {
         return IsPromo ? BoardNotation[from] + BoardNotation[to] + PieceChars[PromoPiece].ToString()
                        : BoardNotation[from] + BoardNotation[to];
     }

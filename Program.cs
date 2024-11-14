@@ -112,8 +112,13 @@ while (true)
     }
 }
 }
-catch
+catch (Exception e)
 {
+    using (StreamWriter file = new StreamWriter("C:\\Users\\nikol\\Desktop\\fastchess\\error.txt"))
+    {
+        file.WriteLine(e.Message);
+        file.WriteLine(e.StackTrace);
+    }
     Console.WriteLine("bestmove a1a1");
     return 1;
 }

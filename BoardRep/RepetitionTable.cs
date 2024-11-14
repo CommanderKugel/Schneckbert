@@ -15,7 +15,7 @@ public static class RepetitionTable
 
     /// <summary>
     /// inserts a new zobrist key into the Repetitiontable
-    /// the position can cause a repetitiondetection afterwards
+    /// the position can cause a two-fold-repetition-detection afterwards
     /// </summary>
     public static void Push(ulong key) 
     {

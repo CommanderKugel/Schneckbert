@@ -51,6 +51,8 @@ public static class Search
 
     public static int Negamax(pos p, int alpha, int beta, int depth, int ply, bool info)
     {
+        // #1 check for timeout and immediately return
+        //    Negamax will negate this big score into the worst mateing score possible
         if (iteration > 1 && !TimeManager.InHardTimeLimit())
         {
             return 30_000;
@@ -58,18 +60,19 @@ public static class Search
 
         TimeManager.NodeCnt++;
 
+        // #2 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_PLY)
         {
             return Evaluation.Evaluate(p);
         }
 
-        bool inQS = depth <= 0;
-        bool isRoot = ply == 0;
-        bool nonPV = alpha + 1 == beta;
-        bool inCheck = p.get_checkers() == 0;
+        bool inQS     = depth <= 0;
+        bool isRoot   = ply == 0;
+        bool nonPV    = alpha + 1 == beta;
+        bool inCheck  = p.get_checkers() == 0;
         int bestScore = ply - SCORE_MATE;
 
-        // test for draws
+        // #3 Draw detection (besides Stalemate)
         if (!isRoot && (
             RepetitionTable.IsRepeatedPosition(p) ||
             p.IsFiftyMoveDraw ||
@@ -79,22 +82,25 @@ public static class Search
         }
 
 
-        // Probe Transposition Table
+        // #4 fetch the Transpositiontables entry
+        //    also try for cutoffs if possible
         ref var entry = ref TranspositionTable.Probe(p.ZobristKey);
         bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref entry);
         move ttMove = ttHit ? entry.move : move.NullMove;
 
-        // try for TT Cutoff -> doesnt work yet
-        // didnt pass sprt yet
+        // TT Cutoff
         if (nonPV && ttHit && entry.depth >= depth && (
             entry.flag == BOUND_UPPER && entry.score <= alpha ||
-            entry.flag == BOUND_LOWER && entry.score >= beta)
-        ) {
+            entry.flag == BOUND_LOWER && entry.score >= beta
+            )) 
+        {
             return entry.score;
         }
 
 
-        // Quiescense Search Stand Pat & Evaluate
+        // #5 Quiescense Search Stand Pat & Evaluate
+        //    when a Quiet Position is reached, return the static evaluation score
+        //    int a Quiet Position the best move is quiet (mostly: not a capture)
         if (inQS)
         {
             int eval = Evaluation.Evaluate(p);
@@ -132,7 +138,9 @@ public static class Search
             {
                 continue;
             }
+
             movesPlayed++;
+            
 
             // Full window search in pv-nodes
             // will be null-window in non-pv-nodes because null window gets passed either way
@@ -148,7 +156,7 @@ public static class Search
                 // somehow didnt pass sprt yet lol
                 // maybe eval is too weak for now
                 // needs a re-search when reactivated!
-                if (false && depth > 2 && nextPos.CapturedPiece != PIECE_NONE && nonPV)
+                if (false && nonPV && depth > 2 && nextPos.CapturedPiece != PIECE_NONE)
                 {
                     //R += ln[movesPlayed];
                 }
@@ -198,11 +206,12 @@ public static class Search
             }
         }
 
+        // enter data into the TT
         if (Abs(bestScore) < SCORE_MATE / 2) 
         {
             int flag = bestScore >= beta  ? BOUND_LOWER
-                    : alpha > startAlpha ? BOUND_EXACT
-                                        : BOUND_LOWER;
+                     : alpha > startAlpha ? BOUND_EXACT
+                                          : BOUND_LOWER;
             TranspositionTable.Push(ref entry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
         }
 
@@ -210,12 +219,18 @@ public static class Search
     }
 
 
+    /// <summary>
+    /// copies the newest Principal Variation line onto the current ply
+    /// </summary>
     private static void UpdatePV(move m, int ply)
     {
         PV[ply][ply] = m;
         for (int i = ply + 1; i < iteration; i++)
             PV[ply][i] = PV[ply + 1][i];
     }
+    /// <summary>
+    /// returns a uci-string-representation of the Principal Variation
+    /// </summary>
     public static string getPV()
     {
         string s = "";
@@ -223,6 +238,9 @@ public static class Search
             s += $"{PV[0][i]} ";
         return s;
     }
+    /// <summary>
+    /// clears the current PV-Arrays
+    /// </summary>
     public static void ResetPV(int depth)
     {
         PV = new move[depth][];

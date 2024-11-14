@@ -13,7 +13,7 @@ public class MovePicker
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
         
-        mvCnt = MoveGen.GenerateMoves(moves, p, inQS);
+        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS);
         mvIdx = 0;
         us = p.us;
 
