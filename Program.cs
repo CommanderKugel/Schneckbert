@@ -48,10 +48,15 @@ while (true)
             {
                 root = new pos(Perft.startpos);
             }
-            else
+            else if (tokens[1] == "fen")
             {
                 string fen = string.Join(' ', SkipPast("fen").Take(6));
                 root = new pos(fen);
+            }
+            else 
+            {
+                Console.Error.WriteLine($"unknown uci command: {tokens[1]}");
+                break;
             }
 
             Board.Reset();
@@ -88,10 +93,17 @@ while (true)
         case "bench" or "Bench":
         {
             Bench.runBench();
-            long bench = 3628196; 
-            int  nps   = 425046; 
+            long bench = 1882139; 
+            int  nps   = 366246; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
+            break;
+        }
+        case "eval" or "evaluate":
+        {
+            Utils.print(root);
+            int eval = Evaluation.Evaluate(root);
+            Console.WriteLine(eval);
             break;
         }
         case "Perft" or "perft":
@@ -102,11 +114,6 @@ while (true)
         case "print":
         {
             Utils.print(root);
-            break;
-        }
-        case "tune" or "Tune":
-        {
-            Tuner.Tune();
             break;
         }
         default:

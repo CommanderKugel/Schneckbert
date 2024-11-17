@@ -68,15 +68,18 @@ public static class Utils
     // Printer Methods
 
     public static void print (pos p) {
-        string[,] pieces = {{"p", "n", "b", "r", "q", "k", "-"}, {"P","N", "B", "R", "Q", "K", "-"}, {"-", "-", "-", "-", "-", "-", "-"}};
+        string[,] pieces = {
+            {"p", "n", "b", "r", "q", "k", "-"}, 
+            {"P", "N", "B", "R", "Q", "K", "-"}, 
+            {"-", "-", "-", "-", "-", "-", "-"}
+        };
         Console.WriteLine("  | a b c d e f g h |\n--+-----------------+");
         for (int r=7; r>=0; r--) {
             string str = $"{r+1} | ";
             for (int f=0; f<8; f++)
             {
                 int sq = r * 8 + f;
-                int color = ((1ul << sq) & p.colorBB[WHITE]) != 0 ? WHITE : BLACK;
-                str += pieces[color, p.piece_on(sq)] + " ";
+                str += pieces[p.color_on(sq), p.piece_on(sq)] + " ";
             }
             str += "|";
             Console.WriteLine(str);

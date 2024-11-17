@@ -6,46 +6,47 @@ using static Attacks;
 public static class MoveGen
 {
 
-    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures)
+    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures, ref SS ss)
     {
-        int us, them;
-        int moveCnt;
-        ulong block, mask;
-        bool wtm;
+        int moveCnt = 0;
+        int us   = p.us;
+        int them = 1 - us;
+        bool wtm = us == WHITE;
 
-        moveCnt = 0;
-        us = p.us;
-        them = 1 - us;
-        wtm = us == WHITE;
-        block = p.get_blocker();
+        ulong block = p.get_blocker();
+        ulong mask  = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
 
-        mask = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
-
-        GeneratePieceMoves(moves, p.get_pieces(KNIGHT, us), KnightAttacks);
-        GeneratePieceMoves(moves, p.get_pieces(BISHOP, QUEEN, us), BishopAttacks);
-        GeneratePieceMoves(moves, p.get_pieces(ROOK, QUEEN, us), RookAttacks);
-        GeneratePieceMoves(moves, p.get_pieces(KING, us), KingAttacks);
+        GeneratePieceMoves(moves, KNIGHT, KnightAttacks, ref ss);
+        GeneratePieceMoves(moves, BISHOP, BishopAttacks, ref ss);
+        GeneratePieceMoves(moves, ROOK,   RookAttacks,   ref ss);
+        GeneratePieceMoves(moves, QUEEN,  QueenAttacks,  ref ss);
+        GeneratePieceMoves(moves, KING,   KingAttacks,   ref ss);
 
         GeneratePawnMoves(moves);
+        ss.AttackTable[PAWN] = wtm ? nw(p.get_pieces(PAWN, us)) | ne(p.get_pieces(PAWN, us))
+                                   : sw(p.get_pieces(PAWN, us)) | se(p.get_pieces(PAWN, us));
 
         if (!OnlyCaptures)
+        {
             GenerateCastlingMoves(moves);
+        }
 
         return moveCnt;
 
 
-
-        void GeneratePieceMoves(Span<move> moves, ulong pieces, Func<int, ulong, ulong> F)
+        void GeneratePieceMoves(Span<move> moves, int pt, Func<int, ulong, ulong> F, ref SS ss)
         {
-            int from, to;
-            ulong attacks;
+            ulong pieces = p.get_pieces(pt, us);
             while (pieces != 0)
             {
-                from = popLsb(ref pieces);
-                attacks = F(from, block) & mask;
+                int from = popLsb(ref pieces);
+                ulong attacks = F(from, block);
+                ss.AttackTable[pt] |= attacks;
+                attacks &=  mask;
+
                 while (attacks != 0)
                 {
-                    to = popLsb(ref attacks);
+                    int to = popLsb(ref attacks);
                     moves[moveCnt++] = new(from, to);
                 }
             }

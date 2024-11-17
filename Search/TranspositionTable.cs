@@ -15,13 +15,14 @@ public struct TTEntry
         this.flag  = (byte) flag;
         this.move  =        move;
     }
+    
     public TTEntry(byte key, int score, int depth, int flag, move move)
     {
-        this.key   =       key;
-        this.score =       score;
-        this.depth = (byte)depth;
-        this.flag  = (byte)flag;
-        this.move  =       move;
+        this.key   =        key;
+        this.score =        score;
+        this.depth = (byte) depth;
+        this.flag  = (byte) flag;
+        this.move  =        move;
     }
 }
 

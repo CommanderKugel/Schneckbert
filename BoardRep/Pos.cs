@@ -26,9 +26,6 @@ public struct pos
     public byte FiftyMoveCnt = 0;
     public ulong ZobristKey = 0;
 
-    public byte MovedPiece = PIECE_NONE;
-    public byte CapturedPiece = PIECE_NONE;
-
 
     /// <summary>
     /// copies all values from the parent position
@@ -42,8 +39,6 @@ public struct pos
         Array.Copy(p.castling_rights, this.castling_rights, 4);
         this.ep  = p.ep;
         this.us = p.us;
-        this.MovedPiece = p.MovedPiece;
-        this.CapturedPiece = p.CapturedPiece;
         this.FiftyMoveCnt = p.FiftyMoveCnt;
         this.ZobristKey = p.ZobristKey;
     }
@@ -130,7 +125,7 @@ public struct pos
         for (byte i=PAWN; i<=KING; i++)
             if ((pieceBB[i] & (1ul << sq)) != 0)
                 return i;
-        return PIECE_NONE;
+        return PIECE_TYPE_NONE;
     }
     public int color_on(int sq) 
     {
@@ -167,9 +162,9 @@ public struct pos
     public ulong get_checkers() => attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us];
 
 
-    public bool make_move(move m) 
+    public bool make_move(move m, int ply=0) 
     {
-        int from, to, dist;
+        int from, to, dist, movingPieceType, capturedPieceType;
         ulong fromBB, toBB, FromTo;
         bool wtm;
 
@@ -181,18 +176,18 @@ public struct pos
         dist   = to-from;
         wtm    = us == WHITE;
 
-        MovedPiece    = piece_on(from);
-        CapturedPiece = piece_on(to);
+        movingPieceType   = piece_on(from);
+        capturedPieceType = piece_on(to);
 
         // make quiet move
-        pieceBB[MovedPiece] ^= FromTo;
+        pieceBB[movingPieceType] ^= FromTo;
         colorBB[us] ^= FromTo;
         FiftyMoveCnt++;
 
         // make capture
-        if (CapturedPiece != PIECE_NONE) 
+        if (capturedPieceType != PIECE_TYPE_NONE) 
         {
-            pieceBB[CapturedPiece] ^= toBB;
+            pieceBB[capturedPieceType] ^= toBB;
             colorBB[1-us] ^= toBB;
 
             // captures reset the fifty move rule
@@ -202,7 +197,7 @@ public struct pos
         // reset ep square, because was copyied from prev pos
         ep = EPSQ_NONE;
 
-        if (MovedPiece == PAWN) 
+        if (movingPieceType == PAWN) 
         {
             // double pawn push
             if (Math.Abs(dist) == 16) 
@@ -220,7 +215,7 @@ public struct pos
             // en passant capture
             else if (m.IsEp) 
             {
-                CapturedPiece = PAWN;
+                capturedPieceType = PAWN;
                 pieceBB[PAWN] ^= wtm ? south(toBB) : north(toBB);
                 colorBB[1-us] ^= wtm ? south(toBB) : north(toBB);
             }
@@ -229,7 +224,7 @@ public struct pos
             FiftyMoveCnt = 0;
         }
 
-        if (MovedPiece == KING) 
+        if (movingPieceType == KING) 
         {
             // Kingside Castling
             if (dist == 2) 
@@ -259,6 +254,9 @@ public struct pos
             castling_rights[1] &= (FromTo & 0x1100_0000_0000_0000ul) == 0;
             castling_rights[2] &= (FromTo & 0x0000_0000_0000_0090ul) == 0;
             castling_rights[3] &= (FromTo & 0x0000_0000_0000_0011ul) == 0;
+
+            // update Search Stack
+            SearchStack.Push(m, this, movingPieceType, capturedPieceType, ply);
 
             // recalculate Zobrist Keys, incremental updates coming soon
             ZobristKey = Zobrist.CalcZobrist(this);

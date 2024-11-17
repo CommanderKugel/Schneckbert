@@ -27,7 +27,7 @@ public static class Search
         do
         {
             ResetPV(iteration);
-            int rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, info);
+            int rootScore = Negamax(root, alpha, beta, iteration, 0, info);
 
 
             if (info)
@@ -68,7 +68,7 @@ public static class Search
         bool isRoot   = ply == 0;
         bool nonPV    = alpha + 1 == beta;
         bool inCheck  = p.get_checkers() == 0;
-        int bestScore = ply - SCORE_MATE;
+        int bestScore = -SCORE_MATE;
 
         // #3 Draw detection (besides Stalemate)
         if (!isRoot && (
@@ -116,8 +116,14 @@ public static class Search
             bestScore = eval;
         }
 
+        // SearchStack Lookup
+        // current entry is for ply+1 so we dont get out of bounds errors
+        ref var last_ss = ref SearchStack.stack[ply];
+        ref var ss = ref SearchStack.stack[ply+1];
+
+
         // init MovePicker and maybe later other stuff for main move loop
-        var picker = new MovePicker(p, inQS, ttMove);
+        var picker = new MovePicker(p, inQS, ttMove, ref last_ss);
 
 
         // init stuff for main move loop        
@@ -132,40 +138,41 @@ public static class Search
         while (!(m = picker.next()).IsNull)
         {
             pos nextPos = new pos(p);
-            if (!nextPos.make_move(m))
+            if (!nextPos.make_move(m, ply+1))
             {
                 continue;
             }
 
             movesPlayed++;
-            
 
             // Full window search in pv-nodes
             // will be null-window in non-pv-nodes because null window gets passed either way
             if (movesPlayed == 1)
             {
-                score = -Negamax(nextPos, -beta, -alpha, depth - 1, ply + 1, info);
+                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, info);
             }
             else
             {
-                // soon to be lmr stuff
                 int R = 1;
 
-                // somehow didnt pass sprt yet lol
-                // maybe eval is too weak for now
-                // needs a re-search when reactivated!
-                if (false && nonPV && depth > 2 && nextPos.CapturedPiece != PIECE_NONE)
+                if (depth>2 && nonPV && ss.CapturedPiece==PIECE_TYPE_NONE)
                 {
-                    //R += ln[movesPlayed];
+                    R += 1;
                 }
 
+                // reduced zero-window search
                 score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, info);
 
-                // Research if score beats current alpha
-                // only usefull in pv-nodes because no full window exists
+                // re-search at full depth, also with zero window
+                if (score > alpha && R > 1)
+                {
+                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, info);
+                }
+
+                // if score beats alpha and its a PV node, re-search using a full-window
                 if (!nonPV && score > alpha)
                 {
-                    score = -Negamax(nextPos, -beta, -alpha, depth - 1, ply + 1, info);
+                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, info);
                 }
             }
 
@@ -182,7 +189,7 @@ public static class Search
                     rootBestMove = m;
                 }
 
-                if (info && !inQS)
+                if (info && ply < iteration)
                 {
                     UpdatePV(m, ply);
                 }
@@ -204,14 +211,10 @@ public static class Search
             }
         }
 
+
         // enter data into the TT
-        if (Abs(bestScore) < SCORE_MATE / 2) 
-        {
-            int flag = bestScore >= beta  ? BOUND_LOWER
-                     : alpha > startAlpha ? BOUND_EXACT
-                                          : BOUND_LOWER;
-            TranspositionTable.Push(ref entry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
-        }
+        int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
+        TranspositionTable.Push(ref entry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
 
         return bestScore;
     }

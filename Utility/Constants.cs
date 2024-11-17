@@ -1,4 +1,6 @@
 
+using System.Runtime.CompilerServices;
+
 public static class Constants
 {
 
@@ -9,7 +11,7 @@ public static class Constants
         ROOK   = 3,     // 0b011
         QUEEN  = 4,     // 0b100
         KING   = 5,     // 0b101
-        PIECE_NONE = 6; // 0b110
+        PIECE_TYPE_NONE = 6; // 0b110
 
     public const int    // Colors
         WHITE = 1,
@@ -28,10 +30,12 @@ public static class Constants
         BLACK_BISHOP = (BISHOP << 1) + BLACK,
         BLACK_ROOK   = (ROOK   << 1) + BLACK,
         BLACK_QUEEN  = (QUEEN  << 1) + BLACK,
-        BLACK_KING   = (KING   << 1) + BLACK;
+        BLACK_KING   = (KING   << 1) + BLACK,
+        PIECE_NONE   =  PIECE_TYPE_NONE;
 
     public static int pt_of(int piece) => piece >> 1;
     public static int color_of(int piece) => piece & 1;
+    public static byte make_piece(int pt, int color) => (byte)((pt << 1) | color);
 
     
     public const byte   // TT Flags
@@ -94,12 +98,20 @@ public static class Constants
     /// this is necessary for the distancy of passed pawns until promotion
     /// e.g. the square a8 would return the relative rank 0
     /// </summary>
-    public static int relative_rank_of(int sq, int c) => c == WHITE ? rank_of(sq) : 7-rank_of(sq);
+    public static int relative_rank_of(int sq, int c) 
+    {
+        int rank = rank_of(sq);
+        return c == WHITE ? rank : 7-rank;
+    } 
     /// <summary>
     /// provides the file of the square-index but flips it for pieces on the right flank
     /// e.g. the square h1 would return the relative file 0
     /// </summary>
-    public static int relative_file_of(int sq) => file_of(sq) < 4 ? file_of(sq) : file_of(sq) ^ 7;
+    public static int relative_file_of(int sq) 
+    {
+        int file = file_of(sq);
+        return file < 4 ? file : file ^ 7;
+    } 
 
     /// <summary>
     /// maps a square index to its string representation

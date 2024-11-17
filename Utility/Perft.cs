@@ -5,8 +5,6 @@ public static class Perft
 {
 
     public const string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    public const string kiwipete = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-    public const string pos3 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
 
     private struct testPosition 
     {
@@ -31,10 +29,11 @@ public static class Perft
 
     public static void perft()
     {
+        ref SS ss = ref SearchStack.stack[0];
         foreach (var tp in positions)
         {
             pos p = new(tp.fen);
-            long nodes = recurse(tp.depth, p);
+            long nodes = recurse(tp.depth, p, ref ss);
             Console.WriteLine($"{tp.name} : {nodes}/{tp.nodes} - {nodes == tp.nodes}");
         }
     }
@@ -42,9 +41,9 @@ public static class Perft
 
     public static void goPerft(int depth, pos root) 
     {
-
+        ref SS ss = ref SearchStack.stack[0];
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, root, false);
+        int moveCnt = GenerateMoves(moves, root, false, ref ss);
 
 
         for (int i=0; i<moveCnt; i++) {
@@ -56,17 +55,17 @@ public static class Perft
                 continue;
             }
 
-            long nodes = recurse(depth-1, copy);
+            long nodes = recurse(depth-1, copy, ref ss);
             Console.WriteLine($"{m}- {nodes}");
         }
     }
 
-    private static long recurse(int depth, pos p) {
+    private static long recurse(int depth, pos p, ref SS ss) {
         if (depth <= 0)
             return 1;
 
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, p, false);
+        int moveCnt = GenerateMoves(moves, p, false, ref ss);
         long nodes = 0;
 
         for (int i=0; i<moveCnt; i++) {
@@ -76,7 +75,7 @@ public static class Perft
             if (!copy.make_move(m))
                 continue;
 
-            nodes += recurse(depth-1, copy);
+            nodes += recurse(depth-1, copy, ref ss);
         }
         return nodes;
     }

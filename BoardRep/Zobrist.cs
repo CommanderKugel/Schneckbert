@@ -12,9 +12,11 @@ public static class Zobrist
 
     public static void init() 
     {
-        var rng = new Random(67065);
 
-        StmKey = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
+        var rng = new Random(67065);
+        ulong random_ulong() => ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
+
+        StmKey = random_ulong();
 
         PieceSqKeys = new ulong[2][][];
         for (int c=BLACK; c<=WHITE; c++) 
@@ -23,8 +25,9 @@ public static class Zobrist
             for (int pt=PAWN; pt<=KING; pt++) 
             {
                 PieceSqKeys[c][pt] = new ulong[64];
-                for (int sq=0; sq<64; sq++) {
-                    PieceSqKeys[c][pt][sq] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
+                for (int sq=0; sq<64; sq++) 
+                {
+                    PieceSqKeys[c][pt][sq] = random_ulong();
                 }
             }
         }
@@ -32,13 +35,13 @@ public static class Zobrist
         CastlingKeys = new ulong[4];
         for (int i=0; i<4; i++) 
         {
-            CastlingKeys[i] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
+            CastlingKeys[i] = random_ulong();
         }
 
         EpFileKeys = new ulong[8];
         for (int i=0; i<8; i++) 
         {
-            EpFileKeys[i] = ((ulong) rng.NextInt64() << 32) + ((uint) rng.NextInt64());
+            EpFileKeys[i] = random_ulong();
         }
     }
     
