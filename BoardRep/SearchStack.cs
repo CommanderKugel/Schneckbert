@@ -29,7 +29,7 @@ public static class SearchStack
 
     public static void Reset()
     {
-        Array.Clear(stack);
+        Array.Fill(stack, new SS());
     }
 
     public static void Push(move m, pos p, int movingPieceType, int capturedPieceType, int ply)

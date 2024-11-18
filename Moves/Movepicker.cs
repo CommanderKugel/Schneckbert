@@ -22,6 +22,7 @@ public class MovePicker
 
     private void ScoreMoves(pos p, move ttMove, ref SS ss) 
     {
+        /*
         ulong pawnDanger  = ss.AttackTable[PAWN];
         ulong minorDanger = ss.AttackTable[KNIGHT] | ss.AttackTable[BISHOP] | pawnDanger;
         ulong majorDanger = ss.AttackTable[ROOK] | ss.AttackTable[QUEEN] | minorDanger;
@@ -29,6 +30,7 @@ public class MovePicker
         ulong endangeredPieces = p.get_pieces(KNIGHT, BISHOP, p.us) & pawnDanger
                                | p.get_pieces(ROOK, p.us) & minorDanger
                                | p.get_pieces(QUEEN, p.us) & majorDanger;
+        */
 
         for (int i=0; i<mvCnt; i++) 
         {
@@ -51,9 +53,11 @@ public class MovePicker
             // #4 Attack Maps, bonus for moving when in danger
             if ((endangeredPieces & (1ul << m.from)) != 0)
             {
-                scores[i] += fromDangerBonus[attacker];
+                scores[i] += 50_000;
             }
+            */
 
+            /*
             // #5 Attack Maps, malus when moving into danger
             ulong toBB = 1ul << m.to;
             scores[i] -= ((attacker == KNIGHT || attacker == BISHOP) && (pawnDanger & toBB) != 0) ? 14_000

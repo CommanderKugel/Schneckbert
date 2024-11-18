@@ -67,7 +67,7 @@ public static class Search
         bool inQS     = depth <= 0;
         bool isRoot   = ply == 0;
         bool nonPV    = alpha + 1 == beta;
-        bool inCheck  = p.get_checkers() == 0;
+        bool inCheck  = p.get_checkers() != 0;
         int bestScore = -SCORE_MATE;
 
         // #3 Draw detection (besides Stalemate)
@@ -87,7 +87,7 @@ public static class Search
         move ttMove = ttHit ? entry.move : move.NullMove;
 
         // TT Cutoff
-        if (nonPV && ttHit && entry.depth >= depth && (
+        if (nonPV && ttHit && entry.depth >= depth && Abs(entry.score) < SCORE_MATE/2 && (
             entry.flag == BOUND_UPPER && entry.score <= alpha ||
             entry.flag == BOUND_LOWER && entry.score >= beta
             )) 
@@ -118,8 +118,8 @@ public static class Search
 
         // SearchStack Lookup
         // current entry is for ply+1 so we dont get out of bounds errors
-        ref var last_ss = ref SearchStack.stack[ply];
-        ref var ss = ref SearchStack.stack[ply+1];
+        ref SS last_ss = ref SearchStack.stack[ply];
+        ref SS ss      = ref SearchStack.stack[ply+1];
 
 
         // init MovePicker and maybe later other stuff for main move loop
@@ -211,6 +211,11 @@ public static class Search
             }
         }
 
+        // check-/stalemate detection
+        if (!inQS && movesPlayed == 0)
+        {
+            return inCheck ? ply - SCORE_MATE : 0;
+        }
 
         // enter data into the TT
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
