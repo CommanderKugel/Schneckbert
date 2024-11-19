@@ -122,15 +122,14 @@ public static class Search
 
         // SearchStack Lookup
         // current entry is for ply+1 so we dont get out of bounds errors
-        ref SS last_ss = ref SearchStack.stack[ply];
-        ref SS ss      = ref SearchStack.stack[ply+1];
+        ref SS ss = ref SearchStack.stack[ply];
 
 
         // #7 Reverse Futility Pruning
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
-        if (false && nonPV && !inCheck && !isRoot && !inQS && depth<=7 &&
+        if (nonPV && !inCheck && !isRoot && !inQS && depth<=7 &&
             staticEval - 75 * depth >= beta)
         {
             return staticEval;
@@ -158,7 +157,7 @@ public static class Search
 
 
         // init MovePicker and maybe later other stuff for main move loop
-        var picker = new MovePicker(p, inQS, ttMove, ref last_ss);
+        var picker = new MovePicker(p, inQS, ttMove);
 
 
         // init stuff for main move loop        

@@ -6,7 +6,7 @@ using static Attacks;
 public static class MoveGen
 {
 
-    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures, ref SS ss)
+    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures)
     {
         int moveCnt = 0;
         int us   = p.us;
@@ -16,15 +16,13 @@ public static class MoveGen
         ulong block = p.get_blocker();
         ulong mask  = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
 
-        GeneratePieceMoves(moves, KNIGHT, KnightAttacks, ref ss);
-        GeneratePieceMoves(moves, BISHOP, BishopAttacks, ref ss);
-        GeneratePieceMoves(moves, ROOK,   RookAttacks,   ref ss);
-        GeneratePieceMoves(moves, QUEEN,  QueenAttacks,  ref ss);
-        GeneratePieceMoves(moves, KING,   KingAttacks,   ref ss);
+        GeneratePieceMoves(moves, KNIGHT, KnightAttacks);
+        GeneratePieceMoves(moves, BISHOP, BishopAttacks);
+        GeneratePieceMoves(moves, ROOK,   RookAttacks);
+        GeneratePieceMoves(moves, QUEEN,  QueenAttacks);
+        GeneratePieceMoves(moves, KING,   KingAttacks);
 
         GeneratePawnMoves(moves);
-        ss.AttackTable[PAWN] = wtm ? nw(p.get_pieces(PAWN, us)) | ne(p.get_pieces(PAWN, us))
-                                   : sw(p.get_pieces(PAWN, us)) | se(p.get_pieces(PAWN, us));
 
         if (!OnlyCaptures)
         {
@@ -34,15 +32,13 @@ public static class MoveGen
         return moveCnt;
 
 
-        void GeneratePieceMoves(Span<move> moves, int pt, Func<int, ulong, ulong> F, ref SS ss)
+        void GeneratePieceMoves(Span<move> moves, int pt, Func<int, ulong, ulong> F)
         {
             ulong pieces = p.get_pieces(pt, us);
             while (pieces != 0)
             {
                 int from = popLsb(ref pieces);
-                ulong attacks = F(from, block);
-                ss.AttackTable[pt] |= attacks;
-                attacks &=  mask;
+                ulong attacks = F(from, block) & mask;
 
                 while (attacks != 0)
                 {

@@ -93,8 +93,8 @@ while (true)
         case "bench" or "Bench":
         {
             Bench.runBench();
-            long bench = 1445272; 
-            int  nps   = 370108; 
+            long bench = 1088783; 
+            int  nps   = 367832; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;

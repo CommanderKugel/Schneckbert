@@ -43,7 +43,7 @@ public static class Perft
     {
         ref SS ss = ref SearchStack.stack[0];
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, root, false, ref ss);
+        int moveCnt = GenerateMoves(moves, root, false);
 
 
         for (int i=0; i<moveCnt; i++) {
@@ -65,7 +65,7 @@ public static class Perft
             return 1;
 
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, p, false, ref ss);
+        int moveCnt = GenerateMoves(moves, p, false);
         long nodes = 0;
 
         for (int i=0; i<moveCnt; i++) {

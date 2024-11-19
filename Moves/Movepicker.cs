@@ -8,69 +8,41 @@ public class MovePicker
     private move[] moves;
     private int[]  scores;
     
-    public MovePicker(pos p, bool inQS, move ttMove, ref SS ss) 
+    public MovePicker(pos p, bool inQS, move ttMove) 
     {
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
         
-        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS, ref ss);
+        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS);
         mvIdx = 0;
         us = p.us;
 
-        ScoreMoves(p, ttMove, ref ss);
+        ScoreMoves(p, ttMove);
     }
 
-    private void ScoreMoves(pos p, move ttMove, ref SS ss) 
-    {
-        /*
-        ulong pawnDanger  = ss.AttackTable[PAWN];
-        ulong minorDanger = ss.AttackTable[KNIGHT] | ss.AttackTable[BISHOP] | pawnDanger;
-        ulong majorDanger = ss.AttackTable[ROOK] | ss.AttackTable[QUEEN] | minorDanger;
-
-        ulong endangeredPieces = p.get_pieces(KNIGHT, BISHOP, p.us) & pawnDanger
-                               | p.get_pieces(ROOK, p.us) & minorDanger
-                               | p.get_pieces(QUEEN, p.us) & majorDanger;
-        */
-
+    private void ScoreMoves(pos p, move ttMove) 
+    {    
         for (int i=0; i<mvCnt; i++) 
         {
             ref move m = ref moves[i];
 
-            if (m.IsNull) {
+            if (m.IsNull) 
+            {
                 continue;
             }
 
             int attacker = p.piece_on(m.from);
             int victim   = p.piece_on(m.to);
-                                             // #1 ttMove
-            scores[i] = m == ttMove          ? 2_000_000
-                                             // #2 Mvv-Lva                           
+
+            // #1 TT Move
+            // #2 Captures Mvv-Lva
+            // #3 Quiets Butterfly History
+            scores[i] = m      == ttMove     ? 2_000_000
                       : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker 
-                                             // #3 Quiet History
-                      : 1 + History.getHistVal(us, m);                            
-
-            /*
-            // #4 Attack Maps, bonus for moving when in danger
-            if ((endangeredPieces & (1ul << m.from)) != 0)
-            {
-                scores[i] += 50_000;
-            }
-            */
-
-            /*
-            // #5 Attack Maps, malus when moving into danger
-            ulong toBB = 1ul << m.to;
-            scores[i] -= ((attacker == KNIGHT || attacker == BISHOP) && (pawnDanger & toBB) != 0) ? 14_000
-                       : (attacker == ROOK && (minorDanger & toBB) != 0) ? 24_000 
-                       : (attacker == QUEEN && (majorDanger & toBB) != 0) ? 49_000
-                       : 0;
-            */
+                      : 1 + History.getHistVal(us, m);
         }
     }
-    private static readonly int[] fromDangerBonus = {
-        0, 15_000, 15_000, 25_000, 50_000, 0
-    };
-
+    
 
     public move next() 
     {
