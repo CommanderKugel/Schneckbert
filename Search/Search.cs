@@ -29,6 +29,13 @@ public static class Search
             ResetPV(iteration);
             int rootScore = Negamax(root, alpha, beta, iteration, 0, false, info);
 
+            if (rootScore <= alpha || rootScore >= beta)
+            {
+                rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, false, info);
+            }
+
+            alpha = rootScore - delta;
+            beta  = rootScore + delta;
 
             if (info)
             {
