@@ -162,7 +162,7 @@ public struct pos
     public ulong get_checkers() => attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us];
 
 
-    public bool make_move(move m, int ply=0) 
+    public bool make_move(move m, ref SS ss) 
     {
         int from, to, dist, movingPieceType, capturedPieceType;
         ulong fromBB, toBB, FromTo;
@@ -256,7 +256,7 @@ public struct pos
             castling_rights[3] &= (FromTo & 0x0000_0000_0000_0011ul) == 0;
 
             // update Search Stack
-            SearchStack.Push(m, this, movingPieceType, capturedPieceType, ply);
+            SearchStack.Push(ref ss, m, this, movingPieceType, capturedPieceType);
 
             // recalculate Zobrist Keys, incremental updates coming soon
             ZobristKey = Zobrist.CalcZobrist(this);
@@ -264,6 +264,16 @@ public struct pos
         }
 
         return IsLegal;
+    }
+
+    public void force_null_move(ref SS ss)
+    {
+        ep = EPSQ_NONE;
+        us = (byte)(1-us);
+        FiftyMoveCnt++;
+        ZobristKey = Zobrist.CalcZobrist(this);
+        RepetitionTable.Push(ZobristKey);
+        SearchStack.Push(ref ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
     }
 
 

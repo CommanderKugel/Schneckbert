@@ -66,7 +66,7 @@ while (true)
             foreach (var moveStr in SkipPast("moves"))
             {
                 move m = new move(moveStr, root);
-                root.make_move(m);
+                root.make_move(m, ref SearchStack.stack[0]);
                 RepetitionTable.Push(root.ZobristKey);
             }
             break;
@@ -93,8 +93,8 @@ while (true)
         case "bench" or "Bench":
         {
             Bench.runBench();
-            long bench = 1882370; 
-            int  nps   = 386364; 
+            long bench = 1445272; 
+            int  nps   = 370108; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;

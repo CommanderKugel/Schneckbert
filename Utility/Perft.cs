@@ -50,7 +50,7 @@ public static class Perft
             ref move m = ref moves[i];
             pos copy = new(root);
 
-            if (!copy.make_move(m)) {
+            if (!copy.make_move(m, ref ss)) {
                 //Console.WriteLine($"{m} - illegal");
                 continue;
             }
@@ -72,7 +72,7 @@ public static class Perft
             ref move m = ref moves[i];
             pos copy = new(p);
 
-            if (!copy.make_move(m))
+            if (!copy.make_move(m, ref ss))
                 continue;
 
             nodes += recurse(depth-1, copy, ref ss);

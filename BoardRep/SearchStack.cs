@@ -32,15 +32,13 @@ public static class SearchStack
         Array.Fill(stack, new SS());
     }
 
-    public static void Push(move m, pos p, int movingPieceType, int capturedPieceType, int ply)
+    public static void Push(ref SS ss, move m, pos p, int movingPieceType, int capturedPieceType)
     {
-        ref SS stack_entry = ref stack[ply];
+        ss.Move = m;
+        ss.MovedPiece    = (byte)movingPieceType;
+        ss.CapturedPiece = (byte)capturedPieceType;
 
-        stack_entry.Move = m;
-        stack_entry.MovedPiece    = (byte)movingPieceType;
-        stack_entry.CapturedPiece = (byte)capturedPieceType;
-
-        stack_entry.checkers = p.get_checkers();
+        ss.checkers = p.get_checkers();
     }
 
 }

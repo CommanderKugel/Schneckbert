@@ -27,7 +27,7 @@ public static class Search
         do
         {
             ResetPV(iteration);
-            int rootScore = Negamax(root, alpha, beta, iteration, 0, info);
+            int rootScore = Negamax(root, alpha, beta, iteration, 0, false, info);
 
 
             if (info)
@@ -47,7 +47,7 @@ public static class Search
     }
 
 
-    public static int Negamax(pos p, int alpha, int beta, int depth, int ply, bool info)
+    public static int Negamax(pos p, int alpha, int beta, int depth, int ply, bool doNull, bool info)
     {
         // #1 check for timeout and immediately return
         //    Negamax will negate this big score into the worst mateing score possible
@@ -69,6 +69,8 @@ public static class Search
         bool nonPV    = alpha + 1 == beta;
         bool inCheck  = p.get_checkers() != 0;
         int bestScore = -SCORE_MATE;
+        int score;
+
 
         // #3 Draw detection (besides Stalemate)
         if (!isRoot && (
@@ -82,44 +84,77 @@ public static class Search
 
         // #4 fetch the Transpositiontables entry
         //    also try for cutoffs if possible
-        ref var entry = ref TranspositionTable.Probe(p.ZobristKey);
-        bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref entry);
-        move ttMove = ttHit ? entry.move : move.NullMove;
+        ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
+        bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
+        move ttMove = ttHit ? ttEntry.move : move.NullMove;
 
         // TT Cutoff
-        if (nonPV && ttHit && entry.depth >= depth && Abs(entry.score) < SCORE_MATE/2 && (
-            entry.flag == BOUND_UPPER && entry.score <= alpha ||
-            entry.flag == BOUND_LOWER && entry.score >= beta
+        if (nonPV && ttHit && ttEntry.depth >= depth && Abs(ttEntry.score) < SCORE_MATE/2 && (
+            ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
+            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta
             )) 
         {
-            return entry.score;
+            return ttEntry.score;
         }
 
 
-        // #5 Quiescense Search Stand Pat & Evaluate
+        // #5 compute static Evaluation
+        int staticEval = Evaluation.Evaluate(p);
+
+
+        // #6 Quiescense Search Stand Pat & Evaluate
         //    when a Quiet Position is reached, return the static evaluation score
         //    int a Quiet Position the best move is quiet (mostly: not a capture)
         if (inQS)
         {
-            int eval = Evaluation.Evaluate(p);
-
-            if (eval >= beta)
+            if (staticEval >= beta)
             {
-                return eval;
+                return staticEval;
             }
 
-            if (eval >= alpha)
+            if (staticEval >= alpha)
             {
-                alpha = eval;
+                alpha = staticEval;
             }
 
-            bestScore = eval;
+            bestScore = staticEval;
         }
 
         // SearchStack Lookup
         // current entry is for ply+1 so we dont get out of bounds errors
         ref SS last_ss = ref SearchStack.stack[ply];
         ref SS ss      = ref SearchStack.stack[ply+1];
+
+
+        // #7 Reverse Futility Pruning
+        //    if the static Evaluation beats beta by a margin, we are probably a piece up
+        //    and the opponent needs to recapture somewhere earlier in the search-tree.
+        //    Thus, we can safely cut here
+        if (false && nonPV && !inCheck && !isRoot && !inQS && depth<=7 &&
+            staticEval - 75 * depth >= beta)
+        {
+            return staticEval;
+        }
+
+
+        // #8 Null Move Pruning
+        //    the Null-Move-Observation states, that in most positions, it is an advantage 
+        //    to be able to move first. So if we can give our opponent two moves in a row, and
+        //    still beat beta, this position is too good and we can cut off here.
+        //    Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
+        if (doNull && nonPV && !inCheck && depth>2 && staticEval>=beta)
+        {
+            pos copy = new pos(p);
+            copy.force_null_move(ref ss);
+
+            score = -Negamax(copy, -beta, -alpha, depth-3, ply+1, false, false);
+            RepetitionTable.Pop();
+
+            if (score >= beta)
+            {
+                return score;
+            }
+        }
 
 
         // init MovePicker and maybe later other stuff for main move loop
@@ -129,7 +164,6 @@ public static class Search
         // init stuff for main move loop        
         int startAlpha = alpha;
         int movesPlayed = 0;
-        int score;
         move m;
         move locBestMove = move.NullMove;
 
@@ -138,7 +172,7 @@ public static class Search
         while (!(m = picker.next()).IsNull)
         {
             pos nextPos = new pos(p);
-            if (!nextPos.make_move(m, ply+1))
+            if (!nextPos.make_move(m, ref ss))
             {
                 continue;
             }
@@ -149,7 +183,7 @@ public static class Search
             // will be null-window in non-pv-nodes because null window gets passed either way
             if (movesPlayed == 1)
             {
-                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, info);
+                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, true, info);
             }
             else
             {
@@ -161,18 +195,18 @@ public static class Search
                 }
 
                 // reduced zero-window search
-                score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, info);
+                score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, true, info);
 
                 // re-search at full depth, also with zero window
                 if (score > alpha && R > 1)
                 {
-                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, info);
+                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, true, info);
                 }
 
                 // if score beats alpha and its a PV node, re-search using a full-window
                 if (!nonPV && score > alpha)
                 {
-                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, info);
+                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, true, info);
                 }
             }
 
@@ -219,7 +253,7 @@ public static class Search
 
         // enter data into the TT
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
-        TranspositionTable.Push(ref entry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
+        TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
 
         return bestScore;
     }
