@@ -65,6 +65,16 @@ public static class Attacks
         };
     }
 
+    public static ulong SliderAttacks(int pt, int sq, ulong block)
+    {
+        return pt switch {
+            BISHOP => BishopAttacks(sq, block),
+            ROOK   => RookAttacks(sq, block),
+            QUEEN  => QueenAttacks(sq, block),
+            _      => 0
+        };
+    }
+
     private static ulong PseudoPawnMoves(pos p, int sq) 
     {
         ulong empty = ~p.get_blocker();

@@ -1,7 +1,7 @@
 using static Constants;
 using static Utils;
 
-using static Pesto;
+using static PestoTables;
 using static EvalUtils;
 using static Attacks;
 
@@ -60,7 +60,6 @@ public static class Evaluation
 
                     // PSQT
                     eval  += PestoTables[pt][relSq];
-                    
                 }
             }
             eval = -eval;

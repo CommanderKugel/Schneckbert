@@ -1,6 +1,6 @@
 using static Evaluation;
 
-public static class Pesto
+public static class PestoTables
 {
     public static readonly int[] pawn_table = {
         S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0),

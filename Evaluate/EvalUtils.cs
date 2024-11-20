@@ -44,7 +44,7 @@ public static class EvalUtils
     {
         ulong tripleFile = fileBB[file_of(sq)];
         tripleFile |= east(tripleFile) | west(tripleFile);
-        return color==WHITE ? tripleFile << (sq+8) : tripleFile >> (sq-8);
+        return color==WHITE ? north(tripleFile) << rank_of(sq) : south(tripleFile) >> rank_of(sq);
     }
 
     /// <summary>
