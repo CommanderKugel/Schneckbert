@@ -147,12 +147,12 @@ public struct pos
     /// </summary>
     public ulong attackers_to (int sq, ulong block) 
     {
-        return PawnAttacks[WHITE][sq] & pieceBB[PAWN] & colorBB[BLACK] | 
-               PawnAttacks[BLACK][sq] & pieceBB[PAWN] & colorBB[WHITE] | 
-               KnightAttacks(sq) & pieceBB[KNIGHT] | 
-               BishopAttacks(sq, block) & (pieceBB[BISHOP] | pieceBB[QUEEN]) | 
-               RookAttacks  (sq, block) & (pieceBB[ROOK]   | pieceBB[QUEEN]) | 
-               KingAttacks(sq) & pieceBB[KING];
+        return (PawnAttacks[WHITE][sq] & get_pieces(PAWN, BLACK)) | 
+               (PawnAttacks[BLACK][sq] & get_pieces(PAWN, WHITE)) | 
+               (KnightAttacks(sq) & pieceBB[KNIGHT]) | 
+               (BishopAttacks(sq, block) & (pieceBB[BISHOP] | pieceBB[QUEEN])) | 
+               (RookAttacks  (sq, block) & (pieceBB[ROOK]   | pieceBB[QUEEN])) | 
+               (KingAttacks(sq) & pieceBB[KING]);
     }
 
     /// <summary>
@@ -178,6 +178,11 @@ public struct pos
 
         movingPieceType   = piece_on(from);
         capturedPieceType = piece_on(to);
+
+        if (capturedPieceType == KING)
+        {
+            return false;
+        }
 
         // make quiet move
         pieceBB[movingPieceType] ^= FromTo;
@@ -241,9 +246,9 @@ public struct pos
             }
         }
 
+        bool IsLegal = (attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us]) == 0;
         us = (byte)(1-us);
 
-        bool IsLegal = (attackers_to(get_ksq(1-us), get_blocker()) & colorBB[us]) == 0;
 
         if (IsLegal) 
         {

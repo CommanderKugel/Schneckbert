@@ -38,7 +38,7 @@ public static class SearchStack
         ss.MovedPiece    = (byte)movingPieceType;
         ss.CapturedPiece = (byte)capturedPieceType;
 
-        ss.checkers = p.get_checkers();
+        //ss.checkers = p.get_checkers();
     }
 
 }

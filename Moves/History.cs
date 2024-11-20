@@ -42,6 +42,10 @@ public static class History
     public static void updateHistValues(move[] moves, int lastMoveIdx, int depth, int stm)
     {
         short delta = calcHistDelta(depth);
+        for (int i=0; i<lastMoveIdx; i++)
+        {
+            getHistVal(stm, moves[i]) -= delta;
+        }
         getHistVal(stm, moves[lastMoveIdx]) += delta;
     }
 }
