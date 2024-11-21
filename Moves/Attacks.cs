@@ -26,8 +26,11 @@ public static class Attacks
     /// </summary>
     public static ulong BishopAttacks(int sq, ulong block)
     {
-        ulong key = getKey(bishopMagics[sq], bishopMasks[sq], block, fancyBishopBits[sq]);
-        return bishopMagicLookup[sq][key];
+        ref Magic m = ref bishopMagicStructs[sq];
+        block  &= m.mask;
+        block  *= m.magic;
+        block >>= m.shift;
+        return bishopMagicLookup[sq][block];
     }
 
     /// <summary>
@@ -36,8 +39,11 @@ public static class Attacks
     /// </summary>
     public static ulong RookAttacks(int sq, ulong block)
     {
-        ulong key = getKey(rookMagics[sq], rookMasks[sq], block, fancyRookBits[sq]);
-        return rookMagicLookup[sq][key];
+        ref Magic m = ref rookMagicStructs[sq];
+        block  &= m.mask;
+        block  *= m.magic;
+        block >>= m.shift;
+        return rookMagicLookup[sq][block];
     }
 
     /// <summary>
@@ -77,18 +83,24 @@ public static class Attacks
 
     private static ulong PseudoPawnMoves(pos p, int sq) 
     {
+        // simple push
         ulong empty = ~p.get_blocker();
-        // push moves
         ulong push = up(1ul << sq, p.us) & empty;
+        
+        // double push
         if ((push & (p.us==WHITE ? Rank3 : Rank6)) != 0) {
             push |= up(push, p.us) & empty;
         }
 
-        // capture moves
-        ulong captures = PawnAttacks[p.us][sq] & p.colorBB[1-p.us];
-        if (sq == p.ep) {
-            captures |= 1ul << sq;
+        // normal captures
+        ulong enemies = p.colorBB[1-p.us];
+        if (p.ep != EPSQ_NONE)
+        {
+            enemies |= 1ul << p.ep;
         }
+
+        ulong captures = PawnAttacks[p.us][sq] & enemies;
+        
         return captures | push;
     }
 
@@ -159,7 +171,22 @@ public static class Attacks
         0x8A88000110020C1ul, 0x101001440008323ul, 0x50110108600041ul, 0x10892050000501ul, 0x86002004191002ul, 0x3001001400020801ul, 0x842010188021004ul, 0x898004400810AA2ul, 
     };
 
-    private static ulong indexToBlocker (int blockIdx, ulong mask, int maskPopCnt)
+    private struct Magic
+    {
+        public ulong mask;
+        public byte shift;
+        public ulong magic;
+        public Magic(int sq, bool isRook) 
+        {
+            this.mask  = isRook ? rookMasks[sq] : bishopMasks[sq];
+            this.shift = (byte)(64 - (isRook ? fancyRookBits[sq] : fancyBishopBits[sq]));
+            this.magic = isRook ? rookMagics[sq] : bishopMagics[sq];
+        }
+    }
+    private static Magic[] rookMagicStructs;
+    private static Magic[] bishopMagicStructs;
+
+    private static ulong indexToBlocker(int blockIdx, ulong mask, int maskPopCnt)
     {
         ulong block = 0;
         for (int i=0; i<maskPopCnt; i++)
@@ -185,6 +212,14 @@ public static class Attacks
 
     public static void init()
     {
+        rookMagicStructs = new Magic[64];
+        bishopMagicStructs = new Magic[64];
+        for (int i=0; i<64; i++)
+        {
+            rookMagicStructs[i] = new Magic(i, true);
+            bishopMagicStructs[i] = new Magic(i, false);
+        }
+
         bishopMagicLookup = new ulong[64][];
         rookMagicLookup   = new ulong[64][];
 

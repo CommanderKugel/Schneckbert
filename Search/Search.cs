@@ -79,7 +79,14 @@ public static class Search
         int score;
 
 
-        // #3 Draw detection (besides Stalemate)
+        // #3 Check Extensions
+        if (inCheck)
+        {
+            depth = Max(depth+1, 1);
+        }
+
+
+        // #4 Draw detection (besides Stalemate)
         if (!isRoot && (
             RepetitionTable.IsRepeatedPosition(p) ||
             p.IsFiftyMoveDraw ||
@@ -89,7 +96,7 @@ public static class Search
         }
 
 
-        // #4 fetch the Transpositiontables entry
+        // #5 fetch the Transpositiontables entry
         //    also try for cutoffs if possible
         ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
         bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
@@ -105,11 +112,11 @@ public static class Search
         }
 
 
-        // #5 compute static Evaluation
+        // #6 compute static Evaluation
         int staticEval = Evaluation.Evaluate(p);
 
 
-        // #6 Quiescense Search Stand Pat & Evaluate
+        // #7 Quiescense Search Stand Pat & Evaluate
         //    when a Quiet Position is reached, return the static evaluation score
         //    int a Quiet Position the best move is quiet (mostly: not a capture)
         if (inQS)
@@ -132,7 +139,7 @@ public static class Search
         ref SS ss = ref SearchStack.stack[ply];
 
 
-        // #7 Reverse Futility Pruning
+        // #8 Reverse Futility Pruning
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
@@ -143,7 +150,7 @@ public static class Search
         }
 
 
-        // #8 Null Move Pruning
+        // #9 Null Move Pruning
         //    the Null-Move-Observation states, that in most positions, it is an advantage 
         //    to be able to move first. So if we can give our opponent two moves in a row, and
         //    still beat beta, this position is too good and we can cut off here.

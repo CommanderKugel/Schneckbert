@@ -15,11 +15,11 @@ public struct move
     public readonly int flag   =>  value & 0xF000;
     public readonly int FromTo =>  value & 0x0FFF;
 
-    public bool IsPromo    => (value & KnightPromo) != 0;
-    public int  PromoPiece => ((value >> 12) & 0b11) + 1;
-    public bool IsEp       => (value & EpCapture) != 0;
+    public readonly bool IsPromo    => (value & KnightPromo) != 0;
+    public readonly int  PromoPiece => ((value >> 12) & 0b11) + 1;
+    public readonly bool IsEp       => (value & EpCapture) != 0;
 
-    public bool IsNull => value == 0;
+    public readonly bool IsNull => value == 0;
     public static move NullMove => new move() { value = 0 };
 
     public const ushort 

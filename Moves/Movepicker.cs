@@ -7,7 +7,7 @@ public class MovePicker
     private byte us;
     private move[] moves;
     private int[]  scores;
-    
+
     public MovePicker(pos p, bool inQS, move ttMove) 
     {
         moves  = new move[MAX_MOVE_CNT];
@@ -45,10 +45,10 @@ public class MovePicker
     
 
     public move next() 
-    {
-        move m = partialInsertionSort();
-        return m;
-    }
+                {
+                    move m = partialInsertionSort();
+                    return m;
+                }
 
     private move partialInsertionSort()
     {

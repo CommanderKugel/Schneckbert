@@ -18,8 +18,7 @@ public static class RepetitionTable
     /// </summary>
     public static void Push(ulong key) 
     {
-        repTable[ply] = key;
-        ply++;
+        repTable[ply++] = key;
     }
 
     /// <summary>
@@ -28,8 +27,7 @@ public static class RepetitionTable
     /// </summary>
     public static void Pop()
     {
-        repTable[ply] = 0;
-        ply--;
+        repTable[ply--] = 0;
     }
 
     /// <summary>
