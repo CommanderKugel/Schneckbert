@@ -1,0 +1,102 @@
+using static Constants;
+using static Utils;
+using static Attacks;
+
+public static class SEE
+{
+
+    private static int[] SEE_values = {
+        100, 450, 450, 650, 1250, 0, 0
+    };
+
+    public static bool see_threshold(move m, pos p, int attacker, int victim, int threshold)
+    {
+        int from = m.from;
+        int to   = m.to;
+
+        // best-case value: value of the captured piece
+        int balance = SEE_values[victim] - threshold;
+
+        // if we cant beat the threshhold in best-case, dont even try
+        if (balance < 0)
+        {
+            return false;
+        }
+
+        // worst-case szenario: attacker gets recaptured & we cant recapture
+        // if we still beat the threshhold, we always win this exchange
+        balance -= SEE_values[attacker];
+        if (balance >= 0)
+        {
+            return true;
+        }
+
+        // if we get here, we have to compute the correct SEE value
+        ulong bishops = p.pieceBB[BISHOP] | p.pieceBB[QUEEN];
+        ulong rooks   = p.pieceBB[ROOK] | p.pieceBB[QUEEN];
+
+        // pseudo make move
+        ulong block = p.get_blocker();
+        block = (block ^ (1ul << from)) | (1ul << to);
+        if (m.IsEp)
+        {
+            block ^= 1ul << p.ep;
+        }
+        
+        ulong allAttacker = p.attackers_to(to, block) & block;
+        allAttacker ^= p.pieceBB[KING];
+
+        // start with opponents turn to recapture
+        int stm = 1 - p.us;
+        int pt;
+        ulong myAttacker;
+
+        while (true)
+        {           
+            myAttacker = allAttacker & p.colorBB[stm];
+            if (myAttacker == 0)
+            {
+                break;
+            }
+
+            // get next least valuable attacker
+            for (pt=PAWN; pt<=KING; pt++)
+            {
+                if ((myAttacker & p.pieceBB[pt]) != 0)
+                {
+                    break;
+                }
+            }
+
+            // pseudo make capture on blocking Pieces
+            // need different Attacker and blocker bitboards for next step
+            block ^= 1ul << lsb(myAttacker & p.pieceBB[pt]);
+
+            // new slider attackers might be uncovered
+            if (pt == PAWN || pt == BISHOP || pt == QUEEN)
+            {
+                allAttacker |= BishopAttacks(to, block) & bishops;
+            }
+            if (pt == ROOK || pt == QUEEN)
+            {
+                allAttacker |= RookAttacks(to, block) & rooks;
+            }
+
+            // remove just moved Piece from attackers
+            allAttacker &= block;
+
+            stm = 1-stm;
+
+            // if the recapture wont let us beat the threshhold again, we lost this exchange
+            balance = -balance - 1 - SEE_values[pt];
+            if (balance >= 0)
+            {
+                break;
+            }
+        }
+
+        // loop breaks when a side lost the exchange
+        return stm != p.us;
+    }
+
+}

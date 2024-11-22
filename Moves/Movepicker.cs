@@ -38,17 +38,18 @@ public class MovePicker
             // #2 Captures Mvv-Lva
             // #3 Quiets Butterfly History
             scores[i] = m      == ttMove     ? 2_000_000
-                      : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker 
-                      : 1 + History.getHistVal(us, m);
+                      : victim != PIECE_NONE ? 1_000_000 + victim * 100_000
+                                             + History.getCaptureHistVal(p.us, attacker, victim, m.to)
+                      : History.getButterflyHistVal(p.us, m);
         }
     }
-    
+
 
     public move next() 
-                {
-                    move m = partialInsertionSort();
-                    return m;
-                }
+    {
+        move m = partialInsertionSort();
+        return m;
+    }
 
     private move partialInsertionSort()
     {
@@ -86,10 +87,15 @@ public class MovePicker
         // dont forget to increment mvIdx in the end
         return moves[mvIdx++];
     }
-
-    public void updateHistories(int depth)
+    
+    public void updateQuietHistories(int depth, pos p)
     {
-        History.updateHistValues(moves, mvIdx-1, depth, us);
+        History.updateQuietHistValues(moves, mvIdx-1, depth, p);
+    }
+
+    public void updateCaptHistories(int depth, pos p)
+    {
+        History.updateCaptureHistValues(moves, mvIdx-1, depth, p);
     }
 
 }

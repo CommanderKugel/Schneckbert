@@ -251,7 +251,14 @@ public static class Search
 
                     if (score >= beta)
                     {
-                        picker.updateHistories(depth);
+                        if (p.piece_on(m.to) == PIECE_TYPE_NONE)
+                        {
+                            picker.updateQuietHistories(depth, p);
+                        }
+                        else
+                        {
+                            picker.updateCaptHistories(depth, p);
+                        }
                         break;
                     }
                 }
