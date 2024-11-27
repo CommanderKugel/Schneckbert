@@ -30,7 +30,7 @@ public static class TranspositionTable
 {
 
     private static TTEntry[] TT;
-    private static ulong TTSize;
+    private static int TTSize;
 
     /// <summary>
     /// initializes the Transposition Table as a big array
@@ -39,7 +39,7 @@ public static class TranspositionTable
     /// </summary>
     public static void init(int size)
     {
-        TTSize = (ulong) size;
+        TTSize = size;
         TT = new TTEntry[TTSize];
         Reset();
     }
@@ -47,16 +47,13 @@ public static class TranspositionTable
     /// <summary>
     /// Cleats all Entries from the Transposition Table
     /// </summary>
-    public static void Reset()
-    {
-        Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
-    }
+    public static void Reset() => Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
 
     /// <summary>
     /// returns the entry of the Transposition Table for the given key
     /// the key is provided by the position
     /// </summary>
-    public static ref TTEntry Probe(ulong key) => ref TT[key % TTSize];
+    public static ref TTEntry Probe(ulong key) => ref TT[key % (ulong)TTSize];
 
     /// <summary>
     /// compares the stored bits of the entry with the provided key

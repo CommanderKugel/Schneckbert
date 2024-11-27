@@ -10,11 +10,13 @@ public static class Search
     static int seldepth;
     static move rootBestMove;
 
+    public static int rootScore;
+
     static move[][] PV;
 
 
     public static move iterativeDeepen(pos root, bool info = false,
-                                       int maxDepth = 32)
+                                       int maxDepth = 32, long maxNodes = long.MaxValue)
     {
         rootBestMove = move.NullMove;
         iteration = 1;
@@ -24,10 +26,11 @@ public static class Search
         int alpha = -SCORE_MATE;
         int beta  =  SCORE_MATE;
 
+        TimeManager.NodeCnt = 0;
         do
         {
             ResetPV(iteration);
-            int rootScore = Negamax(root, alpha, beta, iteration, 0, false, info);
+            rootScore = Negamax(root, alpha, beta, iteration, 0, false, info);
 
             if (rootScore <= alpha || rootScore >= beta)
             {
@@ -37,18 +40,16 @@ public static class Search
             alpha = rootScore - delta;
             beta  = rootScore + delta;
 
+
             if (info)
-            {
-                Console.WriteLine($"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}");
-            }
-            else
-            {
-                Console.WriteLine($"info depth {iteration} score cp {rootScore}");
-            }
+                Console.WriteLine(
+                    $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
+                );
+
 
             iteration++;
         }
-        while (iteration <= maxDepth && TimeManager.InSoftTimeLimit());
+        while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
 
         return rootBestMove;
     }
@@ -68,7 +69,7 @@ public static class Search
         // #2 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= Board.MAX_SEARCH_DEPTH)
         {
-            return Evaluation.Evaluate(p);
+            return NNUE.Evaluate(p);
         }
 
         bool inQS     = depth <= 0;
@@ -113,7 +114,7 @@ public static class Search
 
 
         // #6 compute static Evaluation
-        int staticEval = Evaluation.Evaluate(p);
+        int staticEval = NNUE.Evaluate(p);
 
 
         // #7 Quiescense Search Stand Pat & Evaluate

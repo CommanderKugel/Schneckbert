@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
 
     <Optimize>true</Optimize>
-
+    
   </PropertyGroup>
 
 </Project>

@@ -4,9 +4,9 @@ public class MovePicker
 {
     private byte mvCnt;
     private byte mvIdx;
-    private byte us;
     private move[] moves;
     private int[]  scores;
+
 
     public MovePicker(pos p, bool inQS, move ttMove) 
     {
@@ -14,8 +14,8 @@ public class MovePicker
         scores = new int [MAX_MOVE_CNT];
         
         mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS);
+        mvCnt = Math.Min(mvCnt, (byte)(MAX_MOVE_CNT-1));
         mvIdx = 0;
-        us = p.us;
 
         ScoreMoves(p, ttMove);
     }

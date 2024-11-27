@@ -4,7 +4,6 @@ using static MoveGen;
 public static class Perft
 {
 
-    public const string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     private struct testPosition 
     {

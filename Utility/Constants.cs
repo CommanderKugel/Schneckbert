@@ -111,6 +111,8 @@ public static class Constants
         return file < 4 ? file : file ^ 7;
     } 
 
+    public const string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
     /// <summary>
     /// maps a square index to its string representation
     /// starting at 0 = "a1" and ending at 63 = "h8"
@@ -126,7 +128,7 @@ public static class Constants
         "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
     };
 
-    public readonly static string PieceChars = "pnbrqk-";
+    public readonly static string[] PieceChars = { "pnbrqk-", "PNBRQK-" };
 
     /// <summary>
     /// contains the natural logarithm of all numbers up to 254.

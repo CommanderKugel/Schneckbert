@@ -3,9 +3,9 @@ using static Utils;
 
 public struct move 
 {
-    ushort value = 0;
+    public ushort value = 0;
 
-    public move(int from, int to, int flag=NoFlag) 
+    public move(int from, int to, ushort flag=NoFlag) 
     {
         value = (ushort) (from | (to << 6) |flag);
     }
@@ -53,14 +53,27 @@ public struct move
         }
 
         // read en passant from the context
+        // ep square is the square the victim-pawn moved onto
         else if (p.ep != EPSQ_NONE 
-             &&  to == (p.ep + p.us==WHITE ? 8 : -8) 
+             &&  to == (p.ep + (p.us==WHITE ? 8 : -8))
              &&  p.piece_on(from) == PAWN)
         {
             flag = EpCapture;
         }
 
         this.value = (ushort)(from | (to << 6) | flag);
+    }
+
+    public move(int from, int to, int promoPt)
+    {
+        ushort flag_ = promoPt switch {
+            KNIGHT => KnightPromo,
+            BISHOP => BishopPromo,
+            ROOK   => RookPromo,
+            QUEEN  => QueenPromo,
+            _      => NoFlag,
+        };
+        this.value = (ushort)(from | (to << 6) | flag_);
     }
 
     public static bool operator ==(move m1, move m2) => m1.value == m2.value;
@@ -72,7 +85,7 @@ public struct move
     /// <returns></returns>
     public override string ToString() 
     {
-        return IsPromo ? BoardNotation[from] + BoardNotation[to] + PieceChars[PromoPiece].ToString()
+        return IsPromo ? BoardNotation[from] + BoardNotation[to] + PieceChars[0][PromoPiece]
                        : BoardNotation[from] + BoardNotation[to];
     }
 }

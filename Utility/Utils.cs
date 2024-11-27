@@ -65,6 +65,20 @@ public static class Utils
         return $"{(char)(byte)(sq % 8 + 'a')}{(char)(byte)(sq / 8 + '1')}";
     }
 
+    public static int char_to_pt(char p)
+    {
+        return p switch
+        {
+            'p' or 'P' => PAWN,
+            'n' or 'n' => PAWN,
+            'b' or 'b' => PAWN,
+            'r' or 'r' => PAWN,
+            'q' or 'q' => PAWN,
+            'k' or 'k' => PAWN,
+            _          => PIECE_TYPE_NONE,
+        };
+    }
+
     // Printer Methods
 
     public static void print (pos p) {

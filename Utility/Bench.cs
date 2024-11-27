@@ -67,7 +67,7 @@ public static class Bench
         "rn1qkbnr/ppp1pppp/4b3/3p4/P1PP4/8/1P2PPPP/RNBQKBNR w KQkq - 0 5",
     };
 
-    public static void runBench(int depth=5, bool isTest=true) 
+    public static void runBench(int depth=5) 
     {
         int posCnt = 0;
         long ms = 0;
@@ -80,9 +80,9 @@ public static class Bench
             History.Reset();
             TranspositionTable.Reset();
             TimeManager.Reset();
-            TimeManager.RestartTimer();
 
-            Search.iterativeDeepen(p, isTest, maxDepth: depth);
+            TimeManager.RestartTimer();
+            Search.iterativeDeepen(p, info: true, maxDepth: depth);
             ms += TimeManager.ElapsedMilliseconds();
 
             Console.WriteLine($"{++posCnt}: nodes {TimeManager.NodeCnt}");
