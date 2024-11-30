@@ -195,7 +195,7 @@ public struct pos
         accumulator.deactivate(color, pt, from);
     }
 
-    public bool make_move(move m, ref SS ss, bool updateRepTable=true) 
+    public bool make_move(move m, ref SS ss) 
     {
         int from, to, dist, movingPieceType, capturedPieceType;
         ulong fromBB, toBB, FromTo;
@@ -283,12 +283,6 @@ public struct pos
             }
         }
 
-        var test = new NNUE.Accumulator(this);
-        if (accumulator != test)
-        {
-            throw null;
-        }
-
         bool IsLegal = (attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us]) == 0;
         us = (byte)(1-us);
 
@@ -312,10 +306,8 @@ public struct pos
 
             // recalculate Zobrist Keys, incremental updates coming soon
             ZobristKey = Zobrist.CalcZobrist(this);
-            if (updateRepTable)
-            {
-                RepetitionTable.Push(ZobristKey);
-            }
+
+            RepetitionTable.Push(ZobristKey);
         }
 
         return IsLegal;

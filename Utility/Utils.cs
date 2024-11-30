@@ -30,6 +30,40 @@ public static class Utils
         return bb;
     }
 
+    public static ulong[][] Rays;
+
+    public static void init()
+    {
+        Rays = new ulong[64][];
+        for (int x=0; x<64; x++)
+        {
+            Rays[x] = new ulong[64];
+            for (int y=0; y<64; y++)
+            {
+                ulong xbb = 1ul << x;
+                ulong ybb = 1ul << y;
+                ulong block = xbb | ybb;
+
+                if (file_of(x) == file_of(y) || rank_of(x) == rank_of(y))
+                {
+                    Rays[x][y] = 
+                        Ray(xbb, block, north) & Ray(ybb, block, south) |
+                        Ray(xbb, block, south) & Ray(ybb, block, north) |
+                        Ray(xbb, block, west)  & Ray(ybb, block, east) |
+                        Ray(xbb, block, east)  & Ray(ybb, block, west);
+                }
+                else if ((Attacks.BishopAttacks(x, block) & Attacks.BishopAttacks(y, block)) != 0)
+                {
+                    Rays[x][y] =
+                        Ray(xbb, block, nw) & Ray(ybb, block, se) |
+                        Ray(xbb, block, se) & Ray(ybb, block, nw) |
+                        Ray(xbb, block, sw) & Ray(ybb, block, ne) |
+                        Ray(xbb, block, ne) & Ray(ybb, block, sw);
+                }
+            }
+        }
+    }
+
 
     // Bit Manipulation
 

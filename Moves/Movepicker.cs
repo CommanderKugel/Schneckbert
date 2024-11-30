@@ -9,7 +9,7 @@ public class MovePicker
 
 
     public MovePicker(pos p, bool inQS, move ttMove) 
-    {
+    {        
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
         

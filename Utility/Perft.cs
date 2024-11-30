@@ -53,6 +53,7 @@ public static class Perft
                 //Console.WriteLine($"{m} - illegal");
                 continue;
             }
+            RepetitionTable.Pop();
 
             long nodes = recurse(depth-1, copy, ref ss);
             Console.WriteLine($"{m}- {nodes}");
@@ -73,6 +74,7 @@ public static class Perft
 
             if (!copy.make_move(m, ref ss))
                 continue;
+            RepetitionTable.Pop();
 
             nodes += recurse(depth-1, copy, ref ss);
         }

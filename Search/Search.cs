@@ -45,6 +45,8 @@ public static class Search
                 Console.WriteLine(
                     $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
                 );
+            else
+                Console.WriteLine("info score "+rootScore);
 
 
             iteration++;

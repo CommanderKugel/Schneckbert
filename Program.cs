@@ -1,16 +1,17 @@
 ﻿using System.Text.RegularExpressions;
 
-Board.init();
 SearchStack.init();
 Zobrist.init();
 TranspositionTable.init(1 << 17); // should be 1MB (i hope)
 History.init();
 Attacks.init();
+Utils.init();
 
 NNUE.init();
 
 
 pos root = new pos(Constants.startpos);
+string moves = "";
 
 while (true)
 {
@@ -65,8 +66,10 @@ while (true)
                 SearchStack.Reset();
                 RepetitionTable.Reset();
 
+                moves = "";
                 foreach (var moveStr in SkipPast("moves"))
                 {
+                    moves += moveStr + " ";
                     move m = new move(moveStr, root);
                     root.make_move(m, ref SearchStack.stack[0]);
                     RepetitionTable.Push(root.ZobristKey);
@@ -98,7 +101,7 @@ while (true)
                     : 5
                 );
                 long bench = 1016805; 
-                int  nps   = 435089; 
+                int  nps   = 1134827; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;
@@ -133,6 +136,11 @@ while (true)
                 Selfplay.play_and_write(games, randomPly, path);
                 break;
             }
+            case "perft":
+            {
+                Perft.perft();
+                break;
+            }
             default:
             {
                 Console.Error.WriteLine($"unknown uci command: {tokens[0]}");
@@ -143,14 +151,16 @@ while (true)
 
     // 28_166 - 34_695
 
-    catch (Exception e)
+    /*catch (Exception e)
     {
-        using (StreamWriter file = new StreamWriter("C:\\Users\\nikol\\Desktop\\fastchess\\error.txt"))
+        using (StreamWriter file = new StreamWriter("C:\\Users\\nikol\\Desktop\\fastchess\\error_dev.txt"))
         {
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
+            file.WriteLine("dev");
+            file.WriteLine(moves);
+            file.WriteLine(e.Message);
+            file.WriteLine(e.StackTrace);
         }
         Console.WriteLine("bestmove a1a1");
         continue;
-    }
+    }*/
 }
