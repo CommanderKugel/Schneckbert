@@ -48,6 +48,8 @@ public static class Constants
 
     public const int SCORE_MATE = 2_000_000_000;
 
+    public const int MAX_SEARCH_PLY = 128;
+    public const int MAX_GAME_PLY = 1024;
 
     /// <summary>
     /// enumerates all squares to give them names

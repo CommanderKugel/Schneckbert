@@ -69,7 +69,7 @@ public static class Search
         TimeManager.NodeCnt++;
 
         // #2 avoid stack-overflows or IndexOutOfBound Exceptions
-        if (ply >= Board.MAX_SEARCH_DEPTH)
+        if (ply >= MAX_SEARCH_PLY)
         {
             return NNUE.Evaluate(p);
         }

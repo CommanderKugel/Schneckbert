@@ -165,8 +165,6 @@ public static class NNUE
     /// </summary>
     public static void init()
     {
-        Console.WriteLine("loading NNUE");
-
         const string path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\Schneckbert\\Schneckbert\\Evaluate\\";
         using (FileStream fs = new FileStream(path+"simple_quantized.bin", FileMode.Open, FileAccess.Read))
         using (BinaryReader reader = new BinaryReader(fs))
@@ -192,7 +190,5 @@ public static class NNUE
 
             OutputBias = reader.ReadInt16();
         }
-
-        Console.WriteLine("Done loading NNUE weights!");
     }
 }

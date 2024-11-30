@@ -7,9 +7,6 @@ History.init();
 Attacks.init();
 Utils.init();
 
-NNUE.init();
-
-
 pos root = new pos(Constants.startpos);
 string moves = "";
 
@@ -32,7 +29,7 @@ while (true)
             }
             case "isready":
             {
-                // init Board
+                NNUE.init();
                 Console.WriteLine("readyok");
                 break;
             }
@@ -40,7 +37,6 @@ while (true)
             {
                 TranspositionTable.Reset();
                 History.Reset();
-                Board.Reset();
                 SearchStack.Reset();
                 TimeManager.Reset(resetTotalNodes: true);
                 break;
@@ -62,7 +58,6 @@ while (true)
                     break;
                 }
 
-                Board.Reset();
                 SearchStack.Reset();
                 RepetitionTable.Reset();
 
@@ -100,8 +95,8 @@ while (true)
                     ? int.Parse(tokens[1])
                     : 5
                 );
-                long bench = 1016805; 
-                int  nps   = 1134827; 
+                long bench = 1028220; 
+                int  nps   = 1187321; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;
@@ -149,9 +144,7 @@ while (true)
         }
     }
 
-    // 28_166 - 34_695
-
-    /*catch (Exception e)
+    catch (Exception e)
     {
         using (StreamWriter file = new StreamWriter("C:\\Users\\nikol\\Desktop\\fastchess\\error_dev.txt"))
         {
@@ -159,8 +152,11 @@ while (true)
             file.WriteLine(moves);
             file.WriteLine(e.Message);
             file.WriteLine(e.StackTrace);
+
+            Console.WriteLine(e.Message);
+            Console.WriteLine(e.StackTrace);
         }
         Console.WriteLine("bestmove a1a1");
         continue;
-    }*/
+    }
 }

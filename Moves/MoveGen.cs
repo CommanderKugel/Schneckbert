@@ -13,32 +13,44 @@ public static class MoveGen
         int them = 1 - us;
         bool wtm = us == WHITE;
 
-        ulong block = p.get_blocker();
-        ulong mask  = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
+        int ksq = p.get_ksq(us);
+        ulong checker = p.get_checkers();
 
-        GeneratePieceMoves(moves, KNIGHT, KnightAttacks);
-        GeneratePieceMoves(moves, BISHOP, BishopAttacks);
-        GeneratePieceMoves(moves, ROOK,   RookAttacks);
-        GeneratePieceMoves(moves, QUEEN,  QueenAttacks);
-        GeneratePieceMoves(moves, KING,   KingAttacks);
+        ulong block       = p.get_blocker();
+        ulong captureMask = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
+        ulong checkMask   = GenerateCheckmask(ksq, checker);
+        ulong mask        = captureMask & checkMask;
 
-        GeneratePawnMoves(moves);
+        GeneratePieceMoves(moves, KNIGHT, mask, KnightAttacks);
+        GeneratePieceMoves(moves, BISHOP, mask, BishopAttacks);
+        GeneratePieceMoves(moves, ROOK,   mask, RookAttacks);
+        GeneratePieceMoves(moves, QUEEN,  mask, QueenAttacks);
+        GeneratePieceMoves(moves, KING,   captureMask, KingAttacks);
+
+        GeneratePawnCaptures(moves, checkMask);
 
         if (!OnlyCaptures)
         {
+            GeneratePawnPushes(moves, checkMask);
             GenerateCastlingMoves(moves);
         }
 
         return moveCnt;
 
+        ulong GenerateCheckmask(int ksq, ulong checker)
+        {
+            if (checker == 0) return ulong.MaxValue;
+            if (more_than_one(checker)) return 0;
+            return checker | Rays[ksq][lsb(checker)];
+        }
 
-        void GeneratePieceMoves(Span<move> moves, int pt, Func<int, ulong, ulong> F)
+        void GeneratePieceMoves(Span<move> moves, int pt, ulong relevant, Func<int, ulong, ulong> F)
         {
             ulong pieces = p.get_pieces(pt, us);
             while (pieces != 0)
             {
                 int from = popLsb(ref pieces);
-                ulong attacks = F(from, block) & mask;
+                ulong attacks = F(from, block) & relevant;
 
                 while (attacks != 0)
                 {
@@ -70,46 +82,46 @@ public static class MoveGen
             }
         }
 
-        void GeneratePawnMoves(Span<move> moves)
+        void GeneratePawnPushes(Span<move> moves, ulong checkMask)
         {
-            int l, r, up;
-            ulong pawns, enemy, empty, temp, thirdRank;
-            Func<ulong, ulong> R, L, U;
+            ulong pawns = p.get_pieces(PAWN, us);
+            ulong empty = ~block;
 
-            pawns = p.get_pieces(PAWN, us);
-            enemy = p.colorBB[them];
+            int up = wtm ? 8 : -8;
+            Func<ulong, ulong> U = wtm ? north : south;
 
-            up = wtm ? 8 : -8;
-            l = wtm ? 7 : -9;
-            r = wtm ? 9 : -7;
-            U = wtm ? north : south;
-            R = wtm ? ne : se;
-            L = wtm ? nw : sw;
+            // simple push
+            ulong temp = U(pawns) & empty;
+            ExtractPawnMoves(moves, temp & checkMask, up);
 
-            // Quiet Moves
-            if (!OnlyCaptures)
-            {
-                empty = ~block;
-                // simple push
-                temp = U(pawns) & empty;
-                ExtractPawnMoves(moves, temp, up);
-                // double push
-                thirdRank = wtm ? 0x0000_0000_00FF_0000ul : 0x0000_FF00_0000_0000ul;
-                ExtractPawnMoves(moves, U(temp & thirdRank) & empty, up + up);
-            }
+            // double push
+            ulong thirdRank = wtm ? 0x0000_0000_00FF_0000ul : 0x0000_FF00_0000_0000ul;
+            ExtractPawnMoves(moves, U(temp & thirdRank) & empty & checkMask, up + up);
+        }
+
+        void GeneratePawnCaptures(Span<move> moves, ulong checkMask)
+        {
+            ulong pawns = p.get_pieces(PAWN, us);
+            ulong enemy = p.colorBB[them];
+
+            int l = wtm ? 7 : -9;
+            int r = wtm ? 9 : -7;
+
+            Func<ulong, ulong> R = wtm ? ne : se;
+            Func<ulong, ulong> L = wtm ? nw : sw;
 
             // simple right & left captures
-            ExtractPawnMoves(moves, R(pawns) & enemy, r);
-            ExtractPawnMoves(moves, L(pawns) & enemy, l);
+            ExtractPawnMoves(moves, R(pawns) & enemy & checkMask, r);
+            ExtractPawnMoves(moves, L(pawns) & enemy & checkMask, l);
 
             // en passant capture
             if (p.ep != EPSQ_NONE)
             {
-                temp = pawns & (west(1ul << p.ep) | east(1ul << p.ep));
+                ulong temp = pawns & (west(1ul << p.ep) | east(1ul << p.ep));
                 while (temp != 0)
                 {
-                    up = popLsb(ref temp);
-                    moves[moveCnt++] = new(up, wtm ? p.ep + 8 : p.ep - 8, move.EpCapture);
+                    int sq = popLsb(ref temp);
+                    moves[moveCnt++] = new(sq, wtm ? p.ep + 8 : p.ep - 8, move.EpCapture);
                 }
             }
         }

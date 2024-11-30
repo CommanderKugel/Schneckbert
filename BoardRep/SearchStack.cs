@@ -23,7 +23,7 @@ public static class SearchStack
     
     public static void init() 
     {
-        stack = new SS[Board.MAX_SEARCH_DEPTH];
+        stack = new SS[MAX_SEARCH_PLY];
         Array.Fill(stack, new SS());
     }
 

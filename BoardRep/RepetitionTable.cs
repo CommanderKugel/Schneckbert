@@ -1,7 +1,7 @@
 public static class RepetitionTable
 {
     private static int ply = 0;
-    private static ulong[] repTable = new ulong[Board.MAX_GAME_LENGTH];
+    private static ulong[] repTable = new ulong[Constants.MAX_GAME_PLY];
 
     /// <summary>
     /// completely clears the repetition table
