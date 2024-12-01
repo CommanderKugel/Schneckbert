@@ -42,7 +42,7 @@ public static class RandomPosition
         while (ply < n)
         {
             move[] moves = new move[MAX_MOVE_CNT];
-            int cnt = MoveGen.GenerateMoves(moves, root, false);
+            int cnt = MoveGen.GenerateMoves(moves, root, false, root.get_checkers());
 
             while (cnt > 0)
             {

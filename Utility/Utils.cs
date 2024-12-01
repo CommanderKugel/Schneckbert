@@ -60,6 +60,11 @@ public static class Utils
                         Ray(xbb, block, sw) & Ray(ybb, block, ne) |
                         Ray(xbb, block, ne) & Ray(ybb, block, sw);
                 }
+
+                if (Rays[x][y] != 0 || (Attacks.KingAttacks(x) & ybb) != 0)
+                {
+                    Rays[x][y] |= 1ul << y;
+                }
             }
         }
     }

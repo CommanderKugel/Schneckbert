@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <optimize>true</optimize>
-    
+    <Optimize>true</Optimize>
+
   </PropertyGroup>
 
 </Project>

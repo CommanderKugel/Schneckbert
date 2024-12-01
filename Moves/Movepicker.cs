@@ -8,12 +8,12 @@ public class MovePicker
     private int[]  scores;
 
 
-    public MovePicker(pos p, bool inQS, move ttMove) 
+    public MovePicker(pos p, bool inQS, move ttMove, ulong checker) 
     {        
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
         
-        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS);
+        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS, checker);
         mvCnt = Math.Min(mvCnt, (byte)(MAX_MOVE_CNT-1));
         mvIdx = 0;
 
@@ -35,7 +35,7 @@ public class MovePicker
             int victim   = p.piece_on(m.to);
 
             // #1 TT Move
-            // #2 Captures Mvv-Lva
+            // #2 Captures Mvv + Capture History
             // #3 Quiets Butterfly History
             scores[i] = m      == ttMove     ? 2_000_000
                       : victim != PIECE_NONE ? 1_000_000 + victim * 100_000

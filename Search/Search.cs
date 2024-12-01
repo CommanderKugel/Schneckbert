@@ -77,7 +77,8 @@ public static class Search
         bool inQS     = depth <= 0;
         bool isRoot   = ply == 0;
         bool nonPV    = alpha + 1 == beta;
-        bool inCheck  = p.get_checkers() != 0;
+        ulong checker = p.get_checkers();
+        bool inCheck  = checker != 0;
         int bestScore = -SCORE_MATE;
         int score;
 
@@ -174,7 +175,7 @@ public static class Search
 
 
         // init MovePicker and maybe later other stuff for main move loop
-        var picker = new MovePicker(p, inQS, ttMove);
+        var picker = new MovePicker(p, inQS, ttMove, checker);
 
 
         // init stuff for main move loop        

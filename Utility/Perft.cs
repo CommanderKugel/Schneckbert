@@ -3,8 +3,6 @@ using static MoveGen;
 
 public static class Perft
 {
-
-
     private struct testPosition 
     {
         public string name, fen;
@@ -31,7 +29,7 @@ public static class Perft
         ref SS ss = ref SearchStack.stack[0];
         foreach (var tp in positions)
         {
-            pos p = new(tp.fen);
+                        pos p = new(tp.fen);
             long nodes = recurse(tp.depth, p, ref ss);
             Console.WriteLine($"{tp.name} : {nodes}/{tp.nodes} - {nodes == tp.nodes}");
         }
@@ -42,10 +40,11 @@ public static class Perft
     {
         ref SS ss = ref SearchStack.stack[0];
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, root, false);
+        int moveCnt = GenerateMoves(moves, root, false, root.get_checkers());
 
 
-        for (int i=0; i<moveCnt; i++) {
+        for (int i=0; i<moveCnt; i++) 
+        {
             ref move m = ref moves[i];
             pos copy = new(root);
 
@@ -60,15 +59,17 @@ public static class Perft
         }
     }
 
-    private static long recurse(int depth, pos p, ref SS ss) {
+    private static long recurse(int depth, pos p, ref SS ss) 
+    {
         if (depth <= 0)
             return 1;
 
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, p, false);
+        int moveCnt = GenerateMoves(moves, p, false, p.get_checkers());
         long nodes = 0;
 
-        for (int i=0; i<moveCnt; i++) {
+        for (int i=0; i<moveCnt; i++) 
+        {
             ref move m = ref moves[i];
             pos copy = new(p);
 

@@ -6,7 +6,7 @@ using static Attacks;
 public static class MoveGen
 {
 
-    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures)
+    public static int GenerateMoves(Span<move> moves, pos p, bool OnlyCaptures, ulong checker)
     {
         int moveCnt = 0;
         int us   = p.us;
@@ -14,7 +14,6 @@ public static class MoveGen
         bool wtm = us == WHITE;
 
         int ksq = p.get_ksq(us);
-        ulong checker = p.get_checkers();
 
         ulong block       = p.get_blocker();
         ulong captureMask = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
@@ -32,7 +31,7 @@ public static class MoveGen
         if (!OnlyCaptures)
         {
             GeneratePawnPushes(moves, checkMask);
-            GenerateCastlingMoves(moves);
+            GenerateCastlingMoves(moves, ksq, checker);
         }
 
         return moveCnt;
@@ -126,28 +125,23 @@ public static class MoveGen
             }
         }
 
-        void GenerateCastlingMoves(Span<move> moves)
+        void GenerateCastlingMoves(Span<move> moves, int ksq, ulong checker)
         {
-
-            int ksq = p.get_ksq(us);
-
             // check for in check
-            if ((p.attackers_to(ksq, block) & p.colorBB[them]) != 0)
+            if (checker != 0)
                 return;
 
             // Kingside castlingrights
-            if (p.castling_rights[us + us] &&                             // singside castling rights
+            if (p.castling_rights[us + us] &&                             // kingside castling rights
                (p.attackers_to(ksq + 1, block) & p.colorBB[them]) == 0 && // dont move through check
                (block & (1ul << ksq + 1 | 1ul << ksq + 2)) == 0)            // no piece in the way
                 moves[moveCnt++] = new(ksq, ksq + 2);
 
             // Queenside castlingrights            
-            if (p.castling_rights[us + us + 1] &&                               // singside castling rights
+            if (p.castling_rights[us + us + 1] &&                               // queenside castling rights
                (p.attackers_to(ksq - 1, block) & p.colorBB[them]) == 0 &&     // dont move through check
                (block & (1ul << ksq - 1 | 1ul << ksq - 2 | 1ul << ksq - 3)) == 0) // no piece in the way
                 moves[moveCnt++] = new(ksq, ksq - 2);
         }
-
-
     }
 }

@@ -5,7 +5,6 @@ Zobrist.init();
 TranspositionTable.init(1 << 17); // should be 1MB (i hope)
 History.init();
 Attacks.init();
-Utils.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
@@ -30,6 +29,7 @@ while (true)
             case "isready":
             {
                 NNUE.init();
+                Utils.init();
                 Console.WriteLine("readyok");
                 break;
             }
@@ -155,6 +155,7 @@ while (true)
 
             Console.WriteLine(e.Message);
             Console.WriteLine(e.StackTrace);
+            Console.WriteLine("Du catch'st immernoch alles! so debuggst du falsch!");
         }
         Console.WriteLine("bestmove a1a1");
         continue;

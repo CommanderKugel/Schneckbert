@@ -195,6 +195,36 @@ public struct pos
         accumulator.deactivate(color, pt, from);
     }
 
+    public bool is_legal(move m)
+    {
+        if (m.IsNull)
+        {
+            return false;
+        }
+
+        int from = m.from;
+        int to   = m.to;
+        int pt   = piece_on(from);
+
+        int ksq = pt==KING ? to : get_ksq(us);
+        ulong block = (get_blocker() ^ (1ul << from)) | (1ul << to);
+
+        if (m.IsEp)
+        {
+            block ^= us==WHITE ? south(1ul << to) : north(1ul << to);
+            return (attackers_to(ksq, block) & colorBB[1-us] & block) == 0;
+        }
+        if (pt == KING)
+        {
+            return (attackers_to(to, block) & colorBB[1-us]) == 0;
+        }
+        if (Rays[ksq][from] == 0)
+        {
+            return true;
+        }
+        return (attackers_to(ksq, block) & ~(1ul << to) & colorBB[1-us]) == 0;
+    }
+
     public bool make_move(move m, ref SS ss) 
     {
         int from, to, dist, movingPieceType, capturedPieceType;
@@ -211,11 +241,6 @@ public struct pos
 
         movingPieceType   = piece_on(from);
         capturedPieceType = piece_on(to);
-
-        if (capturedPieceType == KING)
-        {
-            return false;
-        }
 
         // make quiet move
         move_piece(us, movingPieceType, from, to);
@@ -289,25 +314,25 @@ public struct pos
 
         if (IsLegal) 
         {
-            // update castling rights
-            // as soon as any piece on the relevant squares moves or gets captured,
-            // the right will be removed
-            for (int cr=0; cr<4; cr++)
+        // update castling rights
+        // as soon as any piece on the relevant squares moves or gets captured,
+        // the right will be removed
+        for (int cr=0; cr<4; cr++)
+        {
+            if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
             {
-                if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
-                {
-                    castling_rights[cr] = false;
-                    ZobristKey ^= Zobrist.get_castling_key(cr);
-                }
+                castling_rights[cr] = false;
+                ZobristKey ^= Zobrist.get_castling_key(cr);
             }
+        }
 
-            // update Search Stack
-            SearchStack.Push(ref ss, m, this, movingPieceType, capturedPieceType);
+        // update Search Stack
+        SearchStack.Push(ref ss, m, this, movingPieceType, capturedPieceType);
 
-            // recalculate Zobrist Keys, incremental updates coming soon
-            ZobristKey = Zobrist.CalcZobrist(this);
+        // recalculate Zobrist Keys, incremental updates coming soon
+        ZobristKey = Zobrist.CalcZobrist(this);
 
-            RepetitionTable.Push(ZobristKey);
+        RepetitionTable.Push(ZobristKey);
         }
 
         return IsLegal;
