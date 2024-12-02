@@ -24,21 +24,21 @@ public static class Perft
         new ("pos 6", "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", 5, 164075551),
     };
 
-    public static void perft()
+    public static unsafe void perft()
     {
-        ref SS ss = ref SearchStack.stack[0];
+        SS ss = SearchStack.stack[0];
         foreach (var tp in positions)
         {
-                        pos p = new(tp.fen);
-            long nodes = recurse(tp.depth, p, ref ss);
+            pos p = new(tp.fen);
+            long nodes = recurse(tp.depth, p, &ss);
             Console.WriteLine($"{tp.name} : {nodes}/{tp.nodes} - {nodes == tp.nodes}");
         }
     }
 
 
-    public static void goPerft(int depth, pos root) 
+    public static unsafe void goPerft(int depth, pos root) 
     {
-        ref SS ss = ref SearchStack.stack[0];
+        SS ss = SearchStack.stack[0];
         Span<move> moves = new move[213];
         int moveCnt = GenerateMoves(moves, root, false, root.get_checkers());
 
@@ -48,18 +48,18 @@ public static class Perft
             ref move m = ref moves[i];
             pos copy = new(root);
 
-            if (!copy.make_move(m, ref ss)) {
+            if (!copy.make_move(m, &ss)) {
                 //Console.WriteLine($"{m} - illegal");
                 continue;
             }
             RepetitionTable.Pop();
 
-            long nodes = recurse(depth-1, copy, ref ss);
+            long nodes = recurse(depth-1, copy, &ss);
             Console.WriteLine($"{m}- {nodes}");
         }
     }
 
-    private static long recurse(int depth, pos p, ref SS ss) 
+    private static unsafe long recurse(int depth, pos p, SS* ss) 
     {
         if (depth <= 0)
             return 1;
@@ -73,11 +73,11 @@ public static class Perft
             ref move m = ref moves[i];
             pos copy = new(p);
 
-            if (!copy.make_move(m, ref ss))
+            if (!copy.make_move(m, ss))
                 continue;
             RepetitionTable.Pop();
 
-            nodes += recurse(depth-1, copy, ref ss);
+            nodes += recurse(depth-1, copy, ss);
         }
         return nodes;
     }

@@ -15,9 +15,14 @@ public static class Search
     static move[][] PV;
 
 
-    public static move iterativeDeepen(pos root, bool info = false,
-                                       int maxDepth = 32, long maxNodes = long.MaxValue)
+    public static unsafe move iterativeDeepen(
+        pos root, bool info = false,
+        int maxDepth = 32, long maxNodes = long.MaxValue)
     {
+
+        fixed (SS* ss = SearchStack.stack)
+        {
+
         rootBestMove = move.NullMove;
         iteration = 1;
         seldepth = 1;
@@ -30,11 +35,11 @@ public static class Search
         do
         {
             ResetPV(iteration);
-            rootScore = Negamax(root, alpha, beta, iteration, 0, false, info);
+            rootScore = Negamax(root, alpha, beta, iteration, 0, ss+History.CONT_HIST_BACKWARDS_SIZE, false, info);
 
             if (rootScore <= alpha || rootScore >= beta)
             {
-                rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, false, info);
+                rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
             }
 
             alpha = rootScore - delta;
@@ -54,10 +59,12 @@ public static class Search
         while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
 
         return rootBestMove;
+
+        } // fixed SearchStack
     }
 
 
-    public static int Negamax(pos p, int alpha, int beta, int depth, int ply, bool doNull, bool info)
+    public static unsafe int Negamax(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
     {
         // #1 check for timeout and immediately return
         //    Negamax will negate this big score into the worst mateing score possible
@@ -74,11 +81,13 @@ public static class Search
             return NNUE.Evaluate(p);
         }
 
-        bool inQS     = depth <= 0;
-        bool isRoot   = ply == 0;
-        bool nonPV    = alpha + 1 == beta;
-        ulong checker = p.get_checkers();
-        bool inCheck  = checker != 0;
+        ss->checkers = p.get_checkers();
+
+        bool inQS     =  depth <= 0;
+        bool isRoot   =  ply == 0;
+        bool nonPV    =  alpha + 1 == beta;
+        bool inCheck  =  ss->checkers != 0;
+
         int bestScore = -SCORE_MATE;
         int score;
 
@@ -138,10 +147,6 @@ public static class Search
             bestScore = staticEval;
         }
 
-        // SearchStack Lookup
-        // current entry is for ply+1 so we dont get out of bounds errors
-        ref SS ss = ref SearchStack.stack[ply];
-
 
         // #8 Reverse Futility Pruning
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
@@ -162,9 +167,9 @@ public static class Search
         if (doNull && nonPV && !inCheck && depth>2 && staticEval>=beta)
         {
             pos copy = new pos(p);
-            copy.force_null_move(ref ss);
+            copy.force_null_move(ss);
 
-            score = -Negamax(copy, -beta, -alpha, depth-3, ply+1, false, false);
+            score = -Negamax(copy, -beta, -alpha, depth-3, ply+1, ss+1, false, false);
             RepetitionTable.Pop();
 
             if (score >= beta)
@@ -175,7 +180,7 @@ public static class Search
 
 
         // init MovePicker and maybe later other stuff for main move loop
-        var picker = new MovePicker(p, inQS, ttMove, checker);
+        var picker = new MovePicker(p, inQS, ttMove, ss);
 
 
         // init stuff for main move loop        
@@ -189,7 +194,7 @@ public static class Search
         while (!(m = picker.next()).IsNull)
         {
             pos nextPos = new pos(p);
-            if (!nextPos.make_move(m, ref ss))
+            if (!nextPos.make_move(m, ss))
             {
                 continue;
             }
@@ -200,30 +205,31 @@ public static class Search
             // will be null-window in non-pv-nodes because null window gets passed either way
             if (movesPlayed == 1)
             {
-                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, true, info);
+                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
             }
             else
             {
+                // Late Move Reductions
                 int R = 1;
 
-                if (depth>2 && nonPV && ss.CapturedPiece==PIECE_TYPE_NONE)
+                if (depth>2 && nonPV && ss->CapturedPiece==PIECE_TYPE_NONE)
                 {
                     R += 1;
                 }
 
                 // reduced zero-window search
-                score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, true, info);
+                score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
 
                 // re-search at full depth, also with zero window
                 if (score > alpha && R > 1)
                 {
-                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, true, info);
+                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
                 }
 
                 // if score beats alpha and its a PV node, re-search using a full-window
                 if (!nonPV && score > alpha)
                 {
-                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, true, info);
+                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
                 }
             }
 

@@ -6,7 +6,7 @@ using static Utils;
 public static class Selfplay
 {
 
-    public static void play_and_write(int games, int randomPly, string path)
+    public static unsafe void play_and_write(int games, int randomPly, string path)
     {
         using (StreamWriter file = new StreamWriter(path, true))
         {
@@ -36,7 +36,7 @@ public static class Selfplay
                     int  score = root.us==WHITE ? scores[i] : -scores[i];
 
                     // make the move and determine if its a quiet-position
-                    root.make_move(m, ref ss);
+                    root.make_move(m, &ss);
                     RepetitionTable.Pop();
                     bool isQuiet = ss.CapturedPiece == PIECE_NONE   // no capture
                                 && Math.Abs(score) < 1_000_000      // no mating scores
@@ -64,7 +64,7 @@ public static class Selfplay
         Console.WriteLine("Done playing "+games+" games!");
     }
 
-    public static (pos, List<move>, List<int>, string) play(int randomPly)
+    public static unsafe (pos, List<move>, List<int>, string) play(int randomPly)
     {
         SearchStack.Reset();
         RepetitionTable.Reset();
@@ -135,7 +135,7 @@ public static class Selfplay
 
             move m = Search.iterativeDeepen(root, info: false, maxNodes: 5000);
 
-            bool isLegal = root.make_move(m, ref ss);
+            bool isLegal = root.make_move(m, &ss);
             if (!isLegal)
             {
                 result = root.us==WHITE ? "0.0" : "1.0";
@@ -150,13 +150,13 @@ public static class Selfplay
         return (randoStartCopy, mainLine, mainLineScores, result);
     }
 
-    public static bool has_legal_moves(move[] moves, int mvCnt, pos p)
+    public static unsafe bool has_legal_moves(move[] moves, int mvCnt, pos p)
     {
         SS ss = new SS();
         for (int i=0; i<mvCnt; i++)
         {
             pos copy = new pos(p);
-            if (copy.make_move(moves[i], ref ss))
+            if (copy.make_move(moves[i], &ss))
             {
                 RepetitionTable.Pop();
                 return true;

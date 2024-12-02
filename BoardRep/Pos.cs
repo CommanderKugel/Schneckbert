@@ -225,7 +225,7 @@ public struct pos
         return (attackers_to(ksq, block) & ~(1ul << to) & colorBB[1-us]) == 0;
     }
 
-    public bool make_move(move m, ref SS ss) 
+    public unsafe bool make_move(move m, SS* ss) 
     {
         int from, to, dist, movingPieceType, capturedPieceType;
         ulong fromBB, toBB, FromTo;
@@ -327,7 +327,7 @@ public struct pos
         }
 
         // update Search Stack
-        SearchStack.Push(ref ss, m, this, movingPieceType, capturedPieceType);
+        SearchStack.Push(ss, m, this, movingPieceType, capturedPieceType);
 
         // recalculate Zobrist Keys, incremental updates coming soon
         ZobristKey = Zobrist.CalcZobrist(this);
@@ -342,14 +342,14 @@ public struct pos
         0x9000_0000_0000_0000ul, 0x1100_0000_0000_0000ul, 0x0000_0000_0000_0090ul, 0x0000_0000_0000_0011ul
     };
 
-    public void force_null_move(ref SS ss)
+    public unsafe void force_null_move(SS* ss)
     {
         ep = EPSQ_NONE;
         us = (byte)(1-us);
         FiftyMoveCnt++;
         ZobristKey = Zobrist.CalcZobrist(this);
         RepetitionTable.Push(ZobristKey);
-        SearchStack.Push(ref ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
+        SearchStack.Push(ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
     }
 
 

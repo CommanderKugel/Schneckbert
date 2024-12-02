@@ -8,19 +8,18 @@ public class MovePicker
     private int[]  scores;
 
 
-    public MovePicker(pos p, bool inQS, move ttMove, ulong checker) 
+    public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss) 
     {        
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
         
-        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS, checker);
-        mvCnt = Math.Min(mvCnt, (byte)(MAX_MOVE_CNT-1));
+        mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS, ss->checkers);
         mvIdx = 0;
 
-        ScoreMoves(p, ttMove);
+        ScoreMoves(p, ttMove, ss);
     }
 
-    private void ScoreMoves(pos p, move ttMove) 
+    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss) 
     {    
         for (int i=0; i<mvCnt; i++) 
         {
@@ -38,12 +37,10 @@ public class MovePicker
             // #2 Captures Mvv + Capture History
             // #3 Quiets Butterfly History
             scores[i] = m      == ttMove     ? 2_000_000
-                      : victim != PIECE_NONE ? 1_000_000 + victim * 100_000
-                                             + History.getCaptureHistVal(p.us, attacker, victim, m.to)
+                      : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker
                       : History.getButterflyHistVal(p.us, m);
         }
     }
-
 
     public move next() 
     {

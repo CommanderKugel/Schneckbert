@@ -62,27 +62,54 @@ while (true)
                 RepetitionTable.Reset();
 
                 moves = "";
-                foreach (var moveStr in SkipPast("moves"))
+                unsafe
                 {
-                    moves += moveStr + " ";
-                    move m = new move(moveStr, root);
-                    root.make_move(m, ref SearchStack.stack[0]);
-                    RepetitionTable.Push(root.ZobristKey);
+                    fixed (SS* ss = SearchStack.stack)
+                    {
+                        foreach (var moveStr in SkipPast("moves"))
+                        {
+                            moves += moveStr + " ";
+                            move m = new move(moveStr, root);
+                            root.make_move(m, ss);
+                            RepetitionTable.Push(root.ZobristKey);
+                        }
+                    }
                 }
                 break;
             }
             case "go":
             {  
-                var wtime = SkipPast("wtime").Select(int.Parse).FirstOrDefault();
-                var btime = SkipPast("btime").Select(int.Parse).FirstOrDefault();
-                var winc  = SkipPast("winc").Select(int.Parse).FirstOrDefault();
-                var binc  = SkipPast("binc").Select(int.Parse).FirstOrDefault();
 
-                TimeManager.SetNewTimelimit(root.us == Constants.WHITE ? wtime : btime);
+                int depth = Constants.MAX_SEARCH_PLY;
+                long nodes = long.MaxValue;
 
-                move bestmove = Search.iterativeDeepen(root, info: false);
+                if (tokens[1] == "wtime")
+                {
+                    var wtime = SkipPast("wtime").Select(int.Parse).FirstOrDefault();
+                    var btime = SkipPast("btime").Select(int.Parse).FirstOrDefault();
+                    var winc  = SkipPast("winc").Select(int.Parse).FirstOrDefault();
+                    var binc  = SkipPast("binc").Select(int.Parse).FirstOrDefault();
+
+                    TimeManager.SetNewTimelimit(root.us == Constants.WHITE ? wtime : btime);
+                }
+
+                else if (tokens[1] == "nodes")
+                {
+                    nodes = SkipPast("nodes").Select(int.Parse).FirstOrDefault();
+                    TimeManager.SetNewTimelimit(int.MaxValue);
+                }
+
+                else if (tokens[1] == "depth")
+                {
+                    depth = SkipPast("depth").Select(int.Parse).FirstOrDefault();
+                    TimeManager.SetNewTimelimit(int.MaxValue);
+                }
+
+                move bestmove = Search.iterativeDeepen(
+                    root, info: false, maxDepth: depth, maxNodes: nodes
+                );
                 Console.WriteLine($"bestmove {bestmove}");
-                
+                                    
                 break;
             }
             case "quit":
@@ -101,10 +128,10 @@ while (true)
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;
             }
-            case "eval" or "evaluate":
+            case "eval":
             {
                 Utils.print(root);
-                int eval = Evaluation.Evaluate(root);
+                int eval = NNUE.Evaluate(root);
                 Console.WriteLine(eval);
                 break;
             }

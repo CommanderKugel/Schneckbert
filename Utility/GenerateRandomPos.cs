@@ -33,11 +33,12 @@ public static class RandomPosition
         }
     }
 
-    public static pos RandAfterNPly(int n)
+    public static unsafe pos RandAfterNPly(int n)
     {
         pos root = new pos(startpos);
         int ply = 0;
         SS ss = new SS();
+        SS* ps = &ss;
 
         while (ply < n)
         {
@@ -51,7 +52,7 @@ public static class RandomPosition
                 move m = moves[idx];
 
                 // if move is illegal - remove it & get next one
-                if (!copy.make_move(m, ref ss))
+                if (!copy.make_move(m, ps))
                 {
                     cnt--;
                     swap(moves, idx, cnt);

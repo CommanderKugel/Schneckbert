@@ -9,12 +9,8 @@ public struct SS
     public move Move;
 
     public ulong checkers;
-    public ulong[] AttackTable;
 
-    public SS()
-    {
-        AttackTable = new ulong[6];
-    }
+    public short[] CounterHistory;
 }
 
 public static class SearchStack
@@ -32,13 +28,13 @@ public static class SearchStack
         Array.Fill(stack, new SS());
     }
 
-    public static void Push(ref SS ss, move m, pos p, int movingPieceType, int capturedPieceType)
+    public static unsafe void Push(SS* ss, move m, pos p, int movingPieceType, int capturedPieceType)
     {
-        ss.Move = m;
-        ss.MovedPiece    = (byte)movingPieceType;
-        ss.CapturedPiece = (byte)capturedPieceType;
-
-        //ss.checkers = p.get_checkers();
+        ss->Move = m;
+        ss->MovedPiece    = (byte)movingPieceType;
+        ss->CapturedPiece = (byte)capturedPieceType;
+        
+        ss->CounterHistory = 
+            History.getCounterHistReference(1-p.us, (ss-1)->MovedPiece, (ss-1)->Move.to);
     }
-
 }
