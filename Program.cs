@@ -11,7 +11,7 @@ string moves = "";
 
 while (true)
 {
-    //try
+    try
     {
         var command = Console.ReadLine() ?? "quit";
         var tokens = Regex.Split(command, @"\s+");
@@ -122,8 +122,8 @@ while (true)
                     ? int.Parse(tokens[1])
                     : 5
                 );
-                long bench = 1038092; 
-                int  nps   = 1165086; 
+                long bench = 1014563; 
+                int  nps   = 1085094; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;
@@ -171,7 +171,6 @@ while (true)
         }
     }
 
-    /*
     catch (Exception e)
     {
         using (StreamWriter file = new StreamWriter("C:\\Users\\nikol\\Desktop\\fastchess\\error_dev.txt"))
@@ -180,13 +179,8 @@ while (true)
             file.WriteLine(moves);
             file.WriteLine(e.Message);
             file.WriteLine(e.StackTrace);
-
-            Console.WriteLine(e.Message);
-            Console.WriteLine(e.StackTrace);
-            Console.WriteLine("Du catch'st immernoch alles! so debuggst du falsch!");
         }
         Console.WriteLine("bestmove a1a1");
         continue;
     }
-    */
 }

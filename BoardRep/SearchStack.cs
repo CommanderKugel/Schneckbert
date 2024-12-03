@@ -3,6 +3,7 @@ using static Constants;
 public struct SS
 {
     public int StaticEval;
+    public move killerMove;
 
     public byte MovedPiece;
     public byte CapturedPiece;

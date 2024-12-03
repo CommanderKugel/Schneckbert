@@ -8,59 +8,61 @@ public static class Search
 {
     static int iteration;
     static int seldepth;
-    static move rootBestMove;
 
+    static move rootBestMove;
     public static int rootScore;
 
     static move[][] PV;
 
 
     public static unsafe move iterativeDeepen(
-        pos root, bool info = false,
-        int maxDepth = 32, long maxNodes = long.MaxValue)
+        pos  root, 
+        bool info     = false,
+        int  maxDepth = 32, 
+        long maxNodes = long.MaxValue
+    )
     {
-
         fixed (SS* ss = SearchStack.stack)
         {
 
-        rootBestMove = move.NullMove;
-        iteration = 1;
-        seldepth = 1;
+            rootBestMove = move.NullMove;
+            iteration = 1;
+            seldepth = 1;
 
-        const int delta = 35;
-        int alpha = -SCORE_MATE;
-        int beta  =  SCORE_MATE;
+            const int delta = 35;
+            int alpha = -SCORE_MATE;
+            int beta  =  SCORE_MATE;
 
-        TimeManager.NodeCnt = 0;
-        do
-        {
-            ResetPV(iteration);
-            rootScore = Negamax(root, alpha, beta, iteration, 0, ss, false, info);
-
-            if (rootScore <= alpha || rootScore >= beta)
+            TimeManager.NodeCnt = 0;
+            do
             {
-                rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
+                ResetPV(iteration);
+                rootScore = Negamax(root, alpha, beta, iteration, 0, ss, false, info);
+
+                if (rootScore <= alpha || rootScore >= beta)
+                {
+                    rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
+                }
+
+                alpha = rootScore - delta;
+                beta  = rootScore + delta;
+
+
+                if (info)
+                {
+                    Console.WriteLine(
+                        $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
+                    );
+                }
+                else
+                    Console.WriteLine("info score "+rootScore);
+
+
+                iteration++;
             }
+            while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
 
-            alpha = rootScore - delta;
-            beta  = rootScore + delta;
-
-
-            if (info)
-            {
-                Console.WriteLine(
-                    $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
-                );
-            }
-            else
-                Console.WriteLine("info score "+rootScore);
-
-
-            iteration++;
-        }
-        while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
-
-        return rootBestMove;
+            return rootBestMove;
 
         } // fixed SearchStack
     }
@@ -265,6 +267,7 @@ public static class Search
                     {
                         if (p.piece_on(m.to) == PIECE_TYPE_NONE)
                         {
+                            ss->killerMove = m;
                             picker.updateQuietHistories(depth, p, ss);
                         }
     

@@ -36,9 +36,10 @@ public class MovePicker
             // #1 TT Move
             // #2 Captures Mvv + Capture History
             // #3 Quiets Butterfly History
-            scores[i] = m      == ttMove     ? 2_000_000
+            scores[i] = m == ttMove          ? 2_000_000
                       : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker
-                      : History.getButterflyHistVal(p.us, m);
+                      : m == ss->killerMove  ? 900_000
+                                             : History.getButterflyHistVal(p.us, m);
         }
     }
 
