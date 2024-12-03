@@ -54,6 +54,7 @@ public struct pos
         colorBB = [0, 0];
         pieceBB = [0, 0, 0, 0, 0, 0];
         this.accumulator = new NNUE.Accumulator(this);
+        SearchStack.stack[0] = new SS();
         
         int r = 7;
         int f = 0;
@@ -314,27 +315,25 @@ public struct pos
 
         if (IsLegal) 
         {
-        // update castling rights
-        // as soon as any piece on the relevant squares moves or gets captured,
-        // the right will be removed
-        for (int cr=0; cr<4; cr++)
-        {
-            if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
+            // update castling rights
+            // as soon as any piece on the relevant squares moves or gets captured,
+            // the right will be removed
+            for (int cr=0; cr<4; cr++)
             {
-                castling_rights[cr] = false;
-                ZobristKey ^= Zobrist.get_castling_key(cr);
+                if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
+                {
+                    castling_rights[cr] = false;
+                    ZobristKey ^= Zobrist.get_castling_key(cr);
+                }
             }
+
+            // update Search Stack
+            SearchStack.Push(ss, m, this, movingPieceType, capturedPieceType);
+
+            // recalculate Zobrist Keys, incremental updates coming soon
+            ZobristKey = Zobrist.CalcZobrist(this);
+            RepetitionTable.Push(ZobristKey);
         }
-
-        // update Search Stack
-        SearchStack.Push(ss, m, this, movingPieceType, capturedPieceType);
-
-        // recalculate Zobrist Keys, incremental updates coming soon
-        ZobristKey = Zobrist.CalcZobrist(this);
-
-        RepetitionTable.Push(ZobristKey);
-        }
-
         return IsLegal;
     }
 

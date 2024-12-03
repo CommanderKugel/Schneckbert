@@ -35,7 +35,7 @@ public static class Search
         do
         {
             ResetPV(iteration);
-            rootScore = Negamax(root, alpha, beta, iteration, 0, ss+History.CONT_HIST_BACKWARDS_SIZE, false, info);
+            rootScore = Negamax(root, alpha, beta, iteration, 0, ss, false, info);
 
             if (rootScore <= alpha || rootScore >= beta)
             {
@@ -47,9 +47,11 @@ public static class Search
 
 
             if (info)
+            {
                 Console.WriteLine(
                     $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
                 );
+            }
             else
                 Console.WriteLine("info score "+rootScore);
 
@@ -252,7 +254,7 @@ public static class Search
                 }
                 if (info && inQS)
                 {
-                    seldepth = Max(seldepth, iteration - depth);
+                    seldepth = Max(seldepth, ply);
                 }
 
                 if (score > alpha)
@@ -263,12 +265,9 @@ public static class Search
                     {
                         if (p.piece_on(m.to) == PIECE_TYPE_NONE)
                         {
-                            picker.updateQuietHistories(depth, p);
+                            picker.updateQuietHistories(depth, p, ss);
                         }
-                        else
-                        {
-                            picker.updateCaptHistories(depth, p);
-                        }
+    
                         break;
                     }
                 }

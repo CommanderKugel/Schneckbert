@@ -85,14 +85,8 @@ public class MovePicker
         return moves[mvIdx++];
     }
     
-    public void updateQuietHistories(int depth, pos p)
+    public unsafe void updateQuietHistories(int depth, pos p, SS* ss)
     {
-        History.updateQuietHistValues(moves, mvIdx-1, depth, p);
+        History.updateQuietHistValues(moves, mvIdx-1, depth, p, ss);
     }
-
-    public void updateCaptHistories(int depth, pos p)
-    {
-        History.updateCaptureHistValues(moves, mvIdx-1, depth, p);
-    }
-
 }
