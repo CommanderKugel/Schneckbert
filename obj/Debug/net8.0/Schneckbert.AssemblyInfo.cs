@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Schneckbert")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+50b68c54ca2a5b58217015273693b98b806de981")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8738fc192379000cd1efc54a369c69c6a629b3b5")]
 [assembly: System.Reflection.AssemblyProductAttribute("Schneckbert")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Schneckbert")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
