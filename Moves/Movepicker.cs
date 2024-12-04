@@ -2,30 +2,30 @@ using static Constants;
 
 public class MovePicker
 {
-    private byte mvCnt;
+    public byte mvCnt;
     private byte mvIdx;
     private move[] moves;
     private int[]  scores;
 
 
-    public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss) 
-    {        
+    public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss)
+    {
         moves  = new move[MAX_MOVE_CNT];
         scores = new int [MAX_MOVE_CNT];
-        
+
         mvCnt = (byte)MoveGen.GenerateMoves(moves, p, inQS, ss->checkers);
         mvIdx = 0;
 
         ScoreMoves(p, ttMove, ss);
     }
 
-    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss) 
-    {    
+    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss)
+    {
         for (int i=0; i<mvCnt; i++) 
         {
             ref move m = ref moves[i];
 
-            if (m.IsNull) 
+            if (m.IsNull)
             {
                 continue;
             }
@@ -43,7 +43,7 @@ public class MovePicker
         }
     }
 
-    public move next() 
+    public move next()
     {
         move m = partialInsertionSort();
         return m;
@@ -54,7 +54,8 @@ public class MovePicker
         // might have to return a null move
         // this is just more readable code, it should still return a null 
         // move due to move[mvIdx] containing one once mvIdy > mvCnt
-        if (mvIdx > mvCnt) {
+        if (mvIdx > mvCnt) 
+        {
             return move.NullMove;
         }
 
@@ -84,10 +85,5 @@ public class MovePicker
 
         // dont forget to increment mvIdx in the end
         return moves[mvIdx++];
-    }
-    
-    public unsafe void updateQuietHistories(int depth, pos p, SS* ss)
-    {
-        History.updateQuietHistValues(moves, mvIdx-1, depth, p, ss);
     }
 }

@@ -182,28 +182,49 @@ public static class Search
             }
         }
 
-
-        // init MovePicker and maybe later other stuff for main move loop
+        
+        // #10 Move Generating and Ordering
+        //     outsourced via the MovePicker class
+        //     ToDo: Staged Move Generation
         var picker = new MovePicker(p, inQS, ttMove, ss);
 
 
         // init stuff for main move loop        
         int startAlpha = alpha;
         int movesPlayed = 0;
+        Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
+
         move m;
         move locBestMove = move.NullMove;
 
+        bool canFP = nonPV && !inCheck && depth<5 && (staticEval+150*depth < alpha);
 
         // main move loop here
         while (!(m = picker.next()).IsNull)
         {
+
+            bool isCapture = p.is_capture(m);
+
+            // #11 Futility Pruning
+            //     If static evaluation falls below alpha, even by a margin
+            //     we dont think that quiet moves will gain enough to beat alpha again
+            //     only applicable after proving a non-mate line exists (includes mvsplayed>0 implicitly)
+            if ( Abs(bestScore)<SCORE_MATE/2 &&
+                !isCapture && 
+                !m.IsPromo &&
+                 canFP)
+            {
+                continue;
+            }
+
+
             pos nextPos = new pos(p);
             if (!nextPos.make_move(m, ss))
             {
                 continue;
             }
 
-            movesPlayed++;
+            playedAndLegal[movesPlayed++] = m;
 
             // Full window search in pv-nodes
             // will be null-window in non-pv-nodes because null window gets passed either way
@@ -216,7 +237,7 @@ public static class Search
                 // Late Move Reductions
                 int R = 1;
 
-                if (depth>2 && nonPV && ss->CapturedPiece==PIECE_TYPE_NONE)
+                if (depth>2 && nonPV && !isCapture)
                 {
                     R += 1;
                 }
@@ -265,10 +286,10 @@ public static class Search
 
                     if (score >= beta)
                     {
-                        if (p.piece_on(m.to) == PIECE_TYPE_NONE)
+                        if (!isCapture)
                         {
                             ss->killerMove = m;
-                            picker.updateQuietHistories(depth, p, ss);
+                            History.updateQuietHistValues(playedAndLegal, movesPlayed-1, depth, p);
                         }
     
                         break;

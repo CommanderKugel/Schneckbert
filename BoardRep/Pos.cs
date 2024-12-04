@@ -142,6 +142,11 @@ public struct pos
     }
 
     /// <summary>
+    /// returns true if the opponents colorBB has a bit set on the moves to-square
+    /// </summary>
+    public bool is_capture(move m) => m.IsEp || (colorBB[1-us] & (1ul << m.to)) != 0;
+
+    /// <summary>
     /// returns a bitboard containing all occupants of both WHITE and BLACK pieces
     /// </summary>
     public ulong get_blocker() => colorBB[WHITE] | colorBB[BLACK];

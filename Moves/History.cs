@@ -35,17 +35,18 @@ public static class History
     /// <summary>
     /// Updates the History Value of all moves that were played at this node
     /// </summary>
-    public static unsafe void updateQuietHistValues(move[] moves, int lastMoveIdx, int depth, pos p, SS* ss)
+    public static unsafe void updateQuietHistValues(Span<move> moves, int lastMoveIdx, int depth, pos p)
     {
         short delta = calcHistDelta(depth);
 
         for (int i=0; i<lastMoveIdx; i++)
         {
             ref move m = ref moves[i];
-            if (p.piece_on(m.to) != PIECE_TYPE_NONE)
+            if (p.is_capture(m) || m.IsNull)
+            {
                 continue;
+            }
 
-            int pt = p.piece_on(m.from);
             getButterflyHistVal(p.us, m) -= delta;
         }
 
