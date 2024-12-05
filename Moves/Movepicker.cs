@@ -39,7 +39,8 @@ public class MovePicker
             scores[i] = m == ttMove          ? 2_000_000
                       : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker
                       : m == ss->killerMove  ? 900_000
-                                             : History.getButterflyHistVal(p.us, m);
+                                             : History.getButterflyHistVal(p.us, m)
+                                             + History.getPieceToHistVal(p.us, attacker, m.to);
         }
     }
 

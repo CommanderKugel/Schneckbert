@@ -189,14 +189,16 @@ public static class Search
         var picker = new MovePicker(p, inQS, ttMove, ss);
 
 
-        // init stuff for main move loop        
-        int startAlpha = alpha;
+        // keep track of moves that were played out, some will be pruned or illegal        
         int movesPlayed = 0;
         Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
 
+        int startAlpha = alpha;
         move m;
         move locBestMove = move.NullMove;
-
+        
+        // prepare futility pruning, this is not the optimal way of doing things
+        // but changing would require another SPRT for probably 0.5 elo or so
         bool canFP = nonPV && !inCheck && depth<5 && (staticEval+150*depth < alpha);
 
         // main move loop here
@@ -217,7 +219,8 @@ public static class Search
                 continue;
             }
 
-
+            // Copy the position
+            // make the move, but only if it is legal
             pos nextPos = new pos(p);
             if (!nextPos.make_move(m, ss))
             {
@@ -227,31 +230,36 @@ public static class Search
             playedAndLegal[movesPlayed++] = m;
 
             // Full window search in pv-nodes
-            // will be null-window in non-pv-nodes because null window gets passed either way
+            // if this node is a nonPV node, we still pass the zero window
+            // The first move is assumed to be the best and shouldnt be pruned, reduced, etc.
             if (movesPlayed == 1)
             {
                 score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
             }
             else
             {
-                // Late Move Reductions
+                // #12 Late Move Reductions
+                //     Assuming that our Move-Ordering is good, the later moves should be increasingly bad.
+                //     We search later moves at shallower depths to prove that they really are worse
                 int R = 1;
-
                 if (depth>2 && nonPV && !isCapture)
                 {
                     R += 1;
                 }
 
-                // reduced zero-window search
+                // Reduced zero-window search á la #12
                 score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
 
-                // re-search at full depth, also with zero window
+                // If a reduced Search fails high, we need to re-search at full depth to confirm that it 
+                // really is better.
                 if (score > alpha && R > 1)
                 {
                     score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
                 }
 
-                // if score beats alpha and its a PV node, re-search using a full-window
+                // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
+                // and with a full window, to confirm we really beat alpha and get an exact score. 
+                // Searches using a null-window only return upper bounds.
                 if (!nonPV && score > alpha)
                 {
                     score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
@@ -266,6 +274,7 @@ public static class Search
                 bestScore = score;
                 locBestMove = m;
 
+                // updating root moves mid-iteration works, because we always search the roots best move first
                 if (isRoot)
                 {
                     rootBestMove = m;
@@ -284,11 +293,21 @@ public static class Search
                 {
                     alpha = score;
 
+                    // fail high
+                    // If we beat beta, our opponent has a move that guarantees a position that scores beta,
+                    // so he will never allow us to get to a position with a better score and we can safely prune here.
                     if (score >= beta)
-                    {
+                    {   
                         if (!isCapture)
                         {
+                            // Update the Killer-move heuristic, if this move was a quiet-move.
+                            // we shouldnt add captures to killer moves, or they would never be filled with quiet moves.
                             ss->killerMove = m;
+
+                            // Update the history-scores of all played quiet moves.
+                            // History Scores are greater for generally good moves, and smaller for worse ones.
+                            // History Scores can be falsified in favor for weaker but more common vs. stronger but rarer moves.
+                            // Currently the Butterfly- and PieceTo histories are implemented.
                             History.updateQuietHistValues(playedAndLegal, movesPlayed-1, depth, p);
                         }
     

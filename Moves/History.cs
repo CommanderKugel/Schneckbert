@@ -4,14 +4,22 @@ using static Constants;
 public static class History
 {   
     // Main Butterfly History
-    // side-from-to
+    // color-from-to
     private static short[][] ButterflyHistory;  // 2 * 64 * 64 
+
+    // Main Piece-To-History
+    // color-PieceType-to
+    private static short[][] PieceToHistory; // 2 * 6 * 64;
 
     public static void init()
     {
         ButterflyHistory = new short[2][];
         ButterflyHistory[BLACK] = new short[64 * 64];
         ButterflyHistory[WHITE] = new short[64 * 64];
+
+        PieceToHistory = new short[2][];
+        PieceToHistory[BLACK] = new short[6 * 64];
+        PieceToHistory[WHITE] = new short[6 * 64];
     }
 
     /// <summary>
@@ -19,14 +27,23 @@ public static class History
     /// </summary>
     public static void Reset()
     {
-        Array.Fill(ButterflyHistory[0], (short)0);
-        Array.Fill(ButterflyHistory[1], (short)0);
+        Array.Fill(ButterflyHistory[BLACK], (short)0);
+        Array.Fill(ButterflyHistory[WHITE], (short)0);
+
+        Array.Fill(PieceToHistory[BLACK], (short)0);
+        Array.Fill(PieceToHistory[WHITE], (short)0);
     }
 
     /// <summary>
-    /// returns the Butterly-History-Value of the given Move
+    /// returns a reference to the Butterly-History-Value of the given Move
     /// </summary>
     public static ref short getButterflyHistVal(int stm, move m) => ref ButterflyHistory[stm][m.FromTo];
+
+    /// <summary>
+    /// returns a reference to the Piece-To-History-Value of the given Piece-Movement
+    /// </summary>
+    public static ref short getPieceToHistVal(int stm, int pt, int sq) => ref ButterflyHistory[stm][pt * sq];
+
     /// <summary>
     /// Calculates the delta value used to increase or decrease the History Scores of moves
     /// </summary>
@@ -34,6 +51,7 @@ public static class History
 
     /// <summary>
     /// Updates the History Value of all moves that were played at this node
+    /// Supported Histories: Butterfly, PieceTo
     /// </summary>
     public static unsafe void updateQuietHistValues(Span<move> moves, int lastMoveIdx, int depth, pos p)
     {
@@ -48,6 +66,7 @@ public static class History
             }
 
             getButterflyHistVal(p.us, m) -= delta;
+            getPieceToHistVal(p.us, p.piece_on(m.from), m.to) -= delta;
         }
 
         ref move mv = ref moves[lastMoveIdx];

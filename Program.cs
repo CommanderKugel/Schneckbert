@@ -122,8 +122,8 @@ while (true)
                     ? int.Parse(tokens[1])
                     : 5
                 );
-                long bench = 649327; 
-                int  nps   = 1022562; 
+                long bench = 642484; 
+                int  nps   = 1021437; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;
