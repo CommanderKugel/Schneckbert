@@ -206,17 +206,36 @@ public static class Search
         {
 
             bool isCapture = p.is_capture(m);
+            bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
 
             // #11 Futility Pruning
             //     If static evaluation falls below alpha, even by a margin
             //     we dont think that quiet moves will gain enough to beat alpha again
             //     only applicable after proving a non-mate line exists (includes mvsplayed>0 implicitly)
-            if ( Abs(bestScore)<SCORE_MATE/2 &&
+            if ( nonMatingLineExists &&
                 !isCapture && 
                 !m.IsPromo &&
                  canFP)
             {
                 continue;
+            }
+
+            // #12 Static Exchange Evaluation pruning
+            //     If the move hat a bad SEE score in the scoring phase
+            //     and we can safely prune the move, run another SEE with a wider margin.
+            if ( nonMatingLineExists &&
+                 nonPV &&
+                !inQS &&
+                 picker.try_see)
+            {
+                int margin = 
+                    //inQS      ? alpha - staticEval - 300 :
+                    isCapture ? -200 * depth 
+                              : -25 * depth * depth;
+                if (!SEE.see_threshold(m, ref p, margin))
+                {
+                    continue;
+                }
             }
 
             // Copy the position
@@ -238,7 +257,7 @@ public static class Search
             }
             else
             {
-                // #12 Late Move Reductions
+                // #13 Late Move Reductions
                 //     Assuming that our Move-Ordering is good, the later moves should be increasingly bad.
                 //     We search later moves at shallower depths to prove that they really are worse
                 int R = 1;

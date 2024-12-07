@@ -117,8 +117,8 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 5
             );
-            long bench = 642484; 
-            int  nps   = 1361194; 
+            long bench = 477689; 
+            int  nps   = 1220181; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
@@ -152,7 +152,7 @@ while (true)
             Perft.perft();
             break;
         }
-            case "quit":
+        case "quit":
         {
             return 0;
         }

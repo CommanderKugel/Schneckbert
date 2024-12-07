@@ -48,6 +48,8 @@ public class MovePicker
         }
     }
 
+    public bool try_see => scores[mvIdx] < 1_000_000;
+
     public move next()
     {
         move m = partialInsertionSort();
