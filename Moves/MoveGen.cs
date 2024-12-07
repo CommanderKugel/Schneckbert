@@ -147,13 +147,13 @@ public static class MoveGen
         ulong block = p.get_blocker();
 
         // Kingside castlingrights
-        if (p.castling_rights[p.us + p.us] &&                               // kingside castling rights
+        if (p.castlingRights[p.us + p.us] &&                               // kingside castling rights
             (p.attackers_to(ksq + 1, block) & p.colorBB[1-p.us]) == 0 &&    // dont move through check
             (block & (1ul << ksq + 1 | 1ul << ksq + 2)) == 0)               // no piece in the way
             moves[moveCnt++] = new(ksq, ksq + 2);
 
         // Queenside castlingrights            
-        if (p.castling_rights[p.us + p.us + 1] &&                               // queenside castling rights
+        if (p.castlingRights[p.us + p.us + 1] &&                               // queenside castling rights
             (p.attackers_to(ksq - 1, block) & p.colorBB[1-p.us]) == 0 &&        // dont move through check
             (block & (1ul << ksq - 1 | 1ul << ksq - 2 | 1ul << ksq - 3)) == 0)  // no piece in the way
             moves[moveCnt++] = new(ksq, ksq - 2);

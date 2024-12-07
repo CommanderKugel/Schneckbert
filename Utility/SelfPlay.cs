@@ -41,7 +41,7 @@ public static class Selfplay
                     bool isQuiet = ss.CapturedPiece == PIECE_NONE   // no capture
                                 && Math.Abs(score) < 1_000_000      // no mating scores
                                 && root.get_checkers() == 0;        // no checks
-                    
+
                     // always make the move, but filter out checks and captures
                     if (isQuiet)
                     {
@@ -73,7 +73,7 @@ public static class Selfplay
         TimeManager.Reset(true);
 
         pos root = RandomPosition.RandAfterNPly(randomPly);
-        pos randoStartCopy = new pos(root);
+        pos randoStartCopy = root;
 
         List<move> mainLine = new List<move>();
         List<int> mainLineScores = new List<int>();
@@ -141,7 +141,7 @@ public static class Selfplay
                 result = root.us==WHITE ? "0.0" : "1.0";
                 break;
             }
-            
+
             mainLine.Add(m);
             mainLineScores.Add(Search.rootScore);
         }
@@ -155,7 +155,7 @@ public static class Selfplay
         SS ss = new SS();
         for (int i=0; i<mvCnt; i++)
         {
-            pos copy = new pos(p);
+            pos copy = p;
             if (copy.make_move(moves[i], &ss))
             {
                 RepetitionTable.Pop();

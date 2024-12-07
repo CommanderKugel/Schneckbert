@@ -7,7 +7,7 @@ public unsafe struct pos
 {   
     // Board Representation
     public fixed ulong pieceBB[6], colorBB[2];
-    public fixed bool castling_rights[4];   // kqKQ
+    public fixed bool castlingRights[4];   // kqKQ
 
     public int   ep = EPSQ_NONE;
     public byte  us = WHITE;
@@ -18,15 +18,6 @@ public unsafe struct pos
     public Accumulator accumulator;
 
 
-    /// <summary>
-    /// copies all values from the parent position
-    /// essential part of "copy/make"
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public pos(pos p) 
-    {
-        this = p;
-    }
 
     /// <summary>
     /// parses a fen an returns the expected position
@@ -35,7 +26,7 @@ public unsafe struct pos
     {
         for (int pt=PAWN;  pt<=KING;  pt++) pieceBB[pt] = 0;
         for (int cl=BLACK; cl<=WHITE; cl++) colorBB[cl] = 0;
-        for (int cr=0;     cr<4;      cr++) castling_rights[cr] = false;
+        for (int cr=0;     cr<4;      cr++) castlingRights[cr] = false;
         this.accumulator = new Accumulator(this);
         SearchStack.stack[0] = new SS();
         
@@ -76,10 +67,10 @@ public unsafe struct pos
         {
             switch (cr) 
             {
-                case 'K': castling_rights[WHITE+WHITE  ] = true; break;
-                case 'Q': castling_rights[WHITE+WHITE+1] = true; break;
-                case 'k': castling_rights[BLACK+BLACK  ] = true; break;
-                case 'q': castling_rights[BLACK+BLACK+1] = true; break;
+                case 'K': castlingRights[WHITE+WHITE  ] = true; break;
+                case 'Q': castlingRights[WHITE+WHITE+1] = true; break;
+                case 'k': castlingRights[BLACK+BLACK  ] = true; break;
+                case 'q': castlingRights[BLACK+BLACK+1] = true; break;
                 default: break;
             }
         }
@@ -196,6 +187,11 @@ public unsafe struct pos
         accumulator.deactivate(color, pt, from);
     }
 
+    /// <summary>
+    /// Applies a pseudolegal move to the position.
+    /// Returns true if the move is legal, false if the king is left in check.
+    /// Also updates the Search Stack and Repetiton Table.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public unsafe bool make_move(move m, SS* ss) 
     {
@@ -287,9 +283,9 @@ public unsafe struct pos
             ulong FromTo = (1ul << from) | (1ul << to);
             for (int cr=0; cr<4; cr++)
             {
-                if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
+                if (castlingRights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
                 {
-                    castling_rights[cr] = false;
+                    castlingRights[cr] = false;
                     ZobristKey ^= Zobrist.get_castling_key(cr);
                 }
             }
@@ -305,6 +301,10 @@ public unsafe struct pos
         0x9000_0000_0000_0000ul, 0x1100_0000_0000_0000ul, 0x0000_0000_0000_0090ul, 0x0000_0000_0000_0011ul
     };
 
+    /// <summary>
+    /// Applies a null-move to the position without checking for anything!
+    /// Also updates the Repetition Table and Search Stack.
+    /// </summary>
     public unsafe void force_null_move(SS* ss)
     {
         ep = EPSQ_NONE;
@@ -315,25 +315,29 @@ public unsafe struct pos
         SearchStack.Push(ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
     }
 
-
-    public bool IsPseudoLegal(move m) 
-    {
-        if (color_on(m.from) != us)
-            return false;
-        return (PieceAttacks(this, piece_on(m.from), m.from) & (1ul << m.to)) != 0;
-    }
-
     public static bool operator ==(pos p1, pos p2) => p1.ZobristKey == p2.ZobristKey;
     public static bool operator !=(pos p1, pos p2) => p1.ZobristKey != p2.ZobristKey;
     
+    /// <summary>
+    /// A Game ends in a draw, if there is not enough material to force a Checkmate for any Color.
+    /// Returns true, if there are no Rooks, Queen or Pawns, or not at least two Minor Pieces for either Color.
+    /// Ignores, that Two Knights alone are not enough material to force Checkmate in most Positions.
+    /// </summary>
     public bool IsInsufficientMaterial => (
         (pieceBB[PAWN] | pieceBB[ROOK] | pieceBB[QUEEN]) == 0 &&
         !more_than_one(get_pieces(BISHOP, KNIGHT, WHITE)) &&
         !more_than_one(get_pieces(BISHOP, KNIGHT, BLACK))
     );
 
-    public readonly bool IsFiftyMoveDraw => FiftyMoveCnt == 100;
+    /// <summary>
+    /// A Game ends in a draw, if 50 full moves were played out, without moving a Pawn or capturing a Piece.
+    /// Returns true, if the halfmovecounter for the fifty-move-rule is bigger than 100.
+    /// </summary>
+    public readonly bool IsFiftyMoveDraw => FiftyMoveCnt > 99;
 
+    /// <summary>
+    /// Returns a FEN (string) representation of the position.
+    /// </summary>
     public string get_fen()
     {
         string fen = "";
@@ -351,7 +355,6 @@ public unsafe struct pos
 
                 if (pt != PIECE_TYPE_NONE)
                 {
-                    // if there are 
                     if (cnt > 0)
                     {
                         fen += (char)(cnt + '0');
@@ -376,13 +379,13 @@ public unsafe struct pos
         // stm
         fen += us==WHITE ? "w " : "b ";
 
-        // castling rights (kqKQ)
-        if (castling_rights[2]) fen += 'K';
-        if (castling_rights[3]) fen += 'Q';
-        if (castling_rights[0]) fen += 'k';
-        if (castling_rights[1]) fen += 'q';
-        if (!(castling_rights[0] || castling_rights[1] || 
-              castling_rights[2] || castling_rights[3]))
+        // castling rights convention: kqKQ
+        if (castlingRights[2]) fen += 'K';
+        if (castlingRights[3]) fen += 'Q';
+        if (castlingRights[0]) fen += 'k';
+        if (castlingRights[1]) fen += 'q';
+        if (!(castlingRights[0] || castlingRights[1] || 
+              castlingRights[2] || castlingRights[3]))
         {
             fen += "-";
         }

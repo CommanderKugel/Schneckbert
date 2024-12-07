@@ -1,4 +1,6 @@
 
+using System.Runtime.CompilerServices;
+
 public struct TTEntry
 {
     public byte key, depth, flag;
@@ -47,7 +49,10 @@ public static class TranspositionTable
     /// <summary>
     /// Cleats all Entries from the Transposition Table
     /// </summary>
-    public static void Reset() => Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
+    public static void Reset()
+    {
+         Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
+    }
 
     /// <summary>
     /// returns the entry of the Transposition Table for the given key

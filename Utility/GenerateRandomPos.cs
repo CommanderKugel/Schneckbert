@@ -48,7 +48,7 @@ public static class RandomPosition
             while (cnt > 0)
             {
                 int idx = rng.Next(cnt);
-                pos copy = new pos(root);
+                pos copy = root;
                 move m = moves[idx];
 
                 // if move is illegal - remove it & get next one

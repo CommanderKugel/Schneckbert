@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Microsoft.VisualBasic;
 using static Constants;
 using static Utils;
 
@@ -68,7 +67,7 @@ public static class Zobrist
 
         for (int i=0; i<4; i++) 
         {
-            if (p.castling_rights[i])
+            if (p.castlingRights[i])
                 key ^= CastlingKeys[i];
         }
 

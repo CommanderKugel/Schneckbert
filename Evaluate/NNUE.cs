@@ -1,5 +1,4 @@
 using static Constants;
-using static Utils;
 
 using System.Runtime.CompilerServices;
 
@@ -50,35 +49,42 @@ public static class NNUE
         return (wfeat, bfeat);
     }
 
-    public static int Evaluate(pos p) => Evaluate(p.accumulator, p.us);
-
-    public static unsafe int Evaluate(Accumulator a, int stm)
+    /// <summary>
+    /// Returns the static Evaluation of the position.
+    /// Makes use of the positions Accumulators.
+    /// QS = 255, QB = 64, SCALE = 400
+    /// </summary>
+    public static unsafe int Evaluate(ref pos p)
     {
-        int sum = OutputBias;
-
-        // Perspective - order Accumulators based on side to move
-        short*   our_acc = stm==WHITE ? a.AccumulatorWhite : a.AccumulatorBlack;
-        short* their_acc = stm==WHITE ? a.AccumulatorBlack : a.AccumulatorWhite;
-
-        // first activate the values, then sum up the accumulators
-        for (int i=0; i<HIDDEN_SIZE; i++)
+        fixed (short* wptr = p.accumulator.AccumulatorWhite)
+        fixed (short* bptr = p.accumulator.AccumulatorBlack)
         {
-            sum += crelu(  our_acc[i]) * OutputWeight[i];
-            sum += crelu(their_acc[i]) * OutputWeight[i+HIDDEN_SIZE];
+            int sum = OutputBias;
+
+            // Perspective - order Accumulators based on side to move
+            short*   our_acc = p.us==WHITE ? wptr : bptr;
+            short* their_acc = p.us==WHITE ? bptr : wptr;
+
+            // first activate the values, then sum up the accumulators
+            for (int i=0; i<HIDDEN_SIZE; i++)
+            {
+                sum += crelu(  our_acc[i]) * OutputWeight[i];
+                sum += crelu(their_acc[i]) * OutputWeight[i+HIDDEN_SIZE];
+            }
+
+            // Scale from small original floating point numbers
+            // about centipawns now
+            sum *= SCALE;
+
+            // Remove Quantization
+            sum /= QA * QB;
+
+            return sum;
         }
-
-        // Scale from small original floating point numbers
-        // about centipawns now
-        sum *= SCALE;
-
-        // Remove Quantization
-        sum /= QA * QB;
-
-        return sum;
     }
 
     /// <summary>
-    /// reads the binary file that has been trained by the bullet trainer
+    /// reads the binary file that has been trained by the open source bullet trainer
     /// https://github.com/jw1912/bullet
     /// thanks to jw1912!
     /// </summary>
@@ -107,6 +113,7 @@ public static class NNUE
                 OutputWeight[i] = reader.ReadInt16();
             }
 
+            // read output bias
             OutputBias = reader.ReadInt16();
         }
     }

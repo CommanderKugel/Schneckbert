@@ -46,7 +46,7 @@ public static class Perft
         for (int i=0; i<moveCnt; i++) 
         {
             ref move m = ref moves[i];
-            pos copy = new(root);
+            pos copy = root;
 
             if (!copy.make_move(m, &ss)) {
                 //Console.WriteLine($"{m} - illegal");
@@ -71,7 +71,7 @@ public static class Perft
         for (int i=0; i<moveCnt; i++) 
         {
             ref move m = ref moves[i];
-            pos copy = new(p);
+            pos copy = p;
 
             if (!copy.make_move(m, ss))
                 continue;

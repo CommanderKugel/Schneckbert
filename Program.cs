@@ -111,18 +111,14 @@ while (true)
                                 
             break;
         }
-        case "quit":
-        {
-            return 0;
-        }
-        case "bench" or "Bench":
+        case "bench":
         {
             Bench.runBench(tokens.Length == 2
                 ? int.Parse(tokens[1])
                 : 5
             );
             long bench = 642484; 
-            int  nps   = 1252405; 
+            int  nps   = 1361194; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
@@ -130,18 +126,12 @@ while (true)
         case "eval":
         {
             Utils.print(root);
-            int eval = NNUE.Evaluate(root);
-            Console.WriteLine(eval);
+            Console.WriteLine("NNUE evaluation: "+NNUE.Evaluate(ref root));
             break;
         }
         case "print":
         {
             Utils.print(root);
-            break;
-        }
-        case "load":
-        {
-            NNUE.init();
             break;
         }
         case "selfplay":
@@ -161,6 +151,10 @@ while (true)
         {
             Perft.perft();
             break;
+        }
+        case "quit":
+        {
+            return 0;
         }
         default:
         {

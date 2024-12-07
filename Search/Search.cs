@@ -68,7 +68,6 @@ public static class Search
         } // fixed SearchStack
     }
 
-
     public static unsafe int Negamax(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
     {
         // #1 check for timeout and immediately return
@@ -83,7 +82,7 @@ public static class Search
         // #2 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
-            return NNUE.Evaluate(p);
+            return NNUE.Evaluate(ref p);
         }
 
         ss->checkers = p.get_checkers();
@@ -131,7 +130,7 @@ public static class Search
 
 
         // #6 compute static Evaluation
-        int staticEval = NNUE.Evaluate(p);
+        int staticEval = NNUE.Evaluate(ref p);
 
 
         // #7 Quiescense Search Stand Pat & Evaluate
@@ -171,7 +170,7 @@ public static class Search
         //    Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
         if (doNull && nonPV && !inCheck && depth>2 && staticEval>=beta)
         {
-            pos copy = new pos(p);
+            pos copy = p;
             copy.force_null_move(ss);
 
             score = -Negamax(copy, -beta, -alpha, depth-3, ply+1, ss+1, false, false);
@@ -222,7 +221,7 @@ public static class Search
 
             // Copy the position
             // make the move, but only if it is legal
-            pos nextPos = new pos(p);
+            pos nextPos = p;
             if (!nextPos.make_move(m, ss))
             {
                 continue;
