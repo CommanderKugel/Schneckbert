@@ -1,23 +1,25 @@
 using static Constants;
 using static Utils;
 using static Attacks;
+using System.Runtime.CompilerServices;
 
 public static class SEE
 {
-
     private static int[] SEE_values = {
         100, 450, 450, 650, 1250, 0, 0
     };
 
-    public static unsafe bool see_threshold(move m, pos p, int attacker, int victim, int threshold)
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static unsafe bool see_threshold(move m, ref pos p, int threshold)
     {
-        int from = m.from;
-        int to   = m.to;
+        int from     = m.from;
+        int to       = m.to;
+        int attacker = p.piece_on(from);
+        int victim   = p.piece_on(to);
 
-        // best-case value: value of the captured piece
+        // Best-case value: Value of the captured piece, as it simply hangs.
+        // Ff we can't beat the threshhold in best-case, dont even try
         int balance = SEE_values[victim] - threshold;
-
-        // if we cant beat the threshhold in best-case, dont even try
         if (balance < 0)
         {
             return false;
@@ -44,7 +46,6 @@ public static class SEE
         }
         
         ulong allAttacker = p.attackers_to(to, block) & block;
-        allAttacker ^= p.pieceBB[KING];
 
         // start with opponents turn to recapture
         int stm = 1 - p.us;
@@ -91,6 +92,13 @@ public static class SEE
             balance = -balance - 1 - SEE_values[pt];
             if (balance >= 0)
             {
+                // if the king is the last piece to take but the opponent still protects
+                // the piece, the kings capture is illegal
+                if (pt == KING && (allAttacker & p.colorBB[stm]) != 0)
+                {
+                    stm = 1-stm;
+                }
+
                 break;
             }
         }

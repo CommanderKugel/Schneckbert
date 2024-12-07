@@ -152,7 +152,7 @@ while (true)
             Perft.perft();
             break;
         }
-        case "quit":
+            case "quit":
         {
             return 0;
         }

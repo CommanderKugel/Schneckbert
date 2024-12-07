@@ -34,13 +34,17 @@ public class MovePicker
             int victim   = p.piece_on(m.to);
 
             // #1 TT Move
-            // #2 Captures Mvv + Capture History
-            // #3 Quiets Butterfly History
+            // #2 Captures: passed SEE + Mvv-Lva
+            // #3 Quiet: Killer move
+            // #4 Quiets: + Butterfly & PieceTo history
+            // #5 Captures: !passed SEE + Mvv-Lva 
             scores[i] = m == ttMove          ? 2_000_000
-                      : victim != PIECE_NONE ? 1_000_000 + victim * 100_000 - attacker
+                      : victim != PIECE_NONE ? 
+                            (SEE.see_threshold(m, ref p, 0) ? 1_000_000 : -1_000_000) 
+                            + victim * 100_000 - attacker
                       : m == ss->killerMove  ? 900_000
-                                             : History.getButterflyHistVal(p.us, m)
-                                             + History.getPieceToHistVal(p.us, attacker, m.to);
+                      : History.getButterflyHistVal(p.us, m) 
+                            + History.getPieceToHistVal(p.us, attacker, m.to);
         }
     }
 
