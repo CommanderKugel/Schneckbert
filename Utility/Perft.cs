@@ -40,7 +40,7 @@ public static class Perft
     {
         SS ss = SearchStack.stack[0];
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, root, false, root.get_checkers());
+        int moveCnt = GenerateMoves(moves, ref root, false, root.get_checkers());
 
 
         for (int i=0; i<moveCnt; i++) 
@@ -65,7 +65,7 @@ public static class Perft
             return 1;
 
         Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, p, false, p.get_checkers());
+        int moveCnt = GenerateMoves(moves, ref p, false, p.get_checkers());
         long nodes = 0;
 
         for (int i=0; i<moveCnt; i++) 

@@ -9,7 +9,7 @@ public static class SEE
         100, 450, 450, 650, 1250, 0, 0
     };
 
-    public static bool see_threshold(move m, pos p, int attacker, int victim, int threshold)
+    public static unsafe bool see_threshold(move m, pos p, int attacker, int victim, int threshold)
     {
         int from = m.from;
         int to   = m.to;

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.VisualBasic;
 using static Constants;
 using static Utils;
@@ -48,7 +49,7 @@ public static class Zobrist
     /// <summary>
     /// calculates the ZobristKey of a given position from zero
     /// </summary>
-    public static ulong CalcZobrist(pos p) 
+    public static unsafe ulong CalcZobrist(pos p) 
     {
         ulong key = p.us == WHITE ? StmKey : 0;
 
@@ -82,24 +83,25 @@ public static class Zobrist
     /// <summary>
     /// returns the ZobristKey of a given piece
     /// </summary>
-    public static ulong get_piece_key(int color, int pt, int sq)
-    {
-        return PieceSqKeys[color][pt][sq];
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong get_piece_key(int color, int pt, int sq) => PieceSqKeys[color][pt][sq];
 
     /// <summary>
     /// returns the ZobristKey of a given castling right
     /// </summary>
-    public static ulong get_castling_key(int cr)
-    {
-        return CastlingKeys[cr];
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong get_castling_key(int cr) => CastlingKeys[cr];
 
     /// <summary>
-    /// returns the ZobristKey representing the En Passant rights for a given square
+    /// returns the ZobristKey representing the En-Passant rights for a given square
     /// </summary>
-    public static ulong get_ep_key(int sq)
-    {
-        return EpFileKeys[file_of(sq)];
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong get_ep_key(int sq) => EpFileKeys[file_of(sq)];
+    
+    /// <summary>
+    /// returns the ZobristKey representing the side to move
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong get_stm_key() => StmKey;
+
 }

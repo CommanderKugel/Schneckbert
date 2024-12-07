@@ -2,6 +2,7 @@ using static Constants;
 using static Utils;
 
 using static System.Math;
+using System.Runtime.CompilerServices;
 
 
 public static class Search
@@ -15,12 +16,12 @@ public static class Search
     static move[][] PV;
 
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe move iterativeDeepen(
         pos  root, 
         bool info     = false,
         int  maxDepth = 32, 
-        long maxNodes = long.MaxValue
-    )
+        long maxNodes = long.MaxValue)
     {
         fixed (SS* ss = SearchStack.stack)
         {
@@ -340,6 +341,7 @@ public static class Search
         for (int i = ply + 1; i < iteration; i++)
             PV[ply][i] = PV[ply + 1][i];
     }
+    
     /// <summary>
     /// returns a uci-string-representation of the Principal Variation
     /// </summary>
@@ -350,6 +352,7 @@ public static class Search
             s += $"{PV[0][i]} ";
         return s;
     }
+
     /// <summary>
     /// clears the current PV-Arrays
     /// </summary>

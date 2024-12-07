@@ -81,7 +81,7 @@ public static class Attacks
         };
     }
 
-    private static ulong PseudoPawnMoves(pos p, int sq) 
+    private unsafe static ulong PseudoPawnMoves(pos p, int sq) 
     {
         // simple push
         ulong empty = ~p.get_blocker();

@@ -1,6 +1,8 @@
 using static Constants;
 using static Utils;
 
+using System.Runtime.CompilerServices;
+
 
 public static class NNUE
 {
@@ -15,11 +17,11 @@ public static class NNUE
     output Weights  = short[2 * HIDDEN_SIZE]    16 * 2 * 2   = 64
     output bias     = short                     2            = 2
     */ 
-    private static short[] HiddenWeights = new short[INPUT_SIZE * HIDDEN_SIZE];
-    private static short[] HiddenBias    = new short[HIDDEN_SIZE];
+    public static short[] HiddenWeights = new short[INPUT_SIZE * HIDDEN_SIZE];
+    public static short[] HiddenBias    = new short[HIDDEN_SIZE];
 
-    private static short[] OutputWeight  = new short[HIDDEN_SIZE * 2];
-    private static short   OutputBias    = 0;
+    public static short[] OutputWeight  = new short[HIDDEN_SIZE * 2];
+    public static short   OutputBias    = 0;
 
 
     const int SCALE = 400;
@@ -27,92 +29,11 @@ public static class NNUE
     const int QB = 64;
 
 
-    public struct Accumulator
-    {
-        public short[] AccumulatorWhite;
-        public short[] AccumulatorBlack;
-
-        public Accumulator(pos p)
-        {
-            AccumulatorWhite = new short[HIDDEN_SIZE];
-            AccumulatorBlack = new short[HIDDEN_SIZE];
-            accumulate_from_zero(p);
-        }
-
-        public Accumulator (Accumulator parent)
-        {
-            AccumulatorWhite = new short[HIDDEN_SIZE];
-            AccumulatorBlack = new short[HIDDEN_SIZE];
-            Array.Copy(parent.AccumulatorWhite, AccumulatorWhite, HIDDEN_SIZE);
-            Array.Copy(parent.AccumulatorBlack, AccumulatorBlack, HIDDEN_SIZE);
-        }
-
-        public void activate(int color, int pt, int sq)
-        {
-            var (us_feat, them_feat) = get_768_idx(color, pt, sq);
-
-            for (int i=0; i<HIDDEN_SIZE; i++)
-            {
-                AccumulatorWhite[i] += HiddenWeights[HIDDEN_SIZE * us_feat   + i];
-                AccumulatorBlack[i] += HiddenWeights[HIDDEN_SIZE * them_feat + i];
-            }
-        }
-
-        public void deactivate(int color, int pt, int sq)
-        {
-            var (us_feat, them_feat) = get_768_idx(color, pt, sq);
-
-            for (int i=0; i<HIDDEN_SIZE; i++)
-            {
-                AccumulatorWhite[i] -= HiddenWeights[HIDDEN_SIZE * us_feat   + i];
-                AccumulatorBlack[i] -= HiddenWeights[HIDDEN_SIZE * them_feat + i];
-            }
-        }
-
-        /// <summary>
-        /// resets the Accumulator, then activates according to the given position
-        /// </summary>
-        public void accumulate_from_zero(pos p)
-        {
-            Array.Copy(HiddenBias, AccumulatorWhite, HIDDEN_SIZE);
-            Array.Copy(HiddenBias, AccumulatorBlack, HIDDEN_SIZE);
-
-            // set all Pieces
-            for (int color=BLACK; color<=WHITE; color++)
-            {
-                for (int pt=PAWN; pt<=KING; pt++)
-                {
-                    ulong pieces = p.get_pieces(pt, color);
-                    while (pieces != 0)
-                    {
-                        int sq = popLsb(ref pieces);
-                        activate(color, pt, sq);
-                    }
-                }
-            }
-        }
-
-        public static bool operator ==(Accumulator lhs, Accumulator rhs)
-        {
-            for (int i=0; i<HIDDEN_SIZE; i++)
-            {                
-                if (lhs.AccumulatorWhite[i] != rhs.AccumulatorWhite[i] ||
-                    lhs.AccumulatorBlack[i] != rhs.AccumulatorBlack[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        public static bool operator !=(Accumulator lhs, Accumulator rhs) => !(lhs==rhs);
-
-    } // struct accumulator
-
-
     /// <summary>
     /// Clamped Rectified Linear Unit
     /// Activation Function for accumulated values
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int crelu(int x) => Math.Clamp(x, 0, QA);
 
 
@@ -121,25 +42,23 @@ public static class NNUE
     /// one for the view of side to move, and one for not side to move
     /// uses color=WHITE for stm and color=BLACK for not stm
     /// </summary>
-    private static (int, int) get_768_idx(int color, int pt, int sq)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (int, int) get_768_idx(int color, int pt, int sq)
     {
         int wfeat = (1-color) * 384 + pt * 64 +  sq;
         int bfeat = (  color) * 384 + pt * 64 + (sq ^ 56);
-
         return (wfeat, bfeat);
     }
 
     public static int Evaluate(pos p) => Evaluate(p.accumulator, p.us);
 
-    public static int Evaluate(Accumulator a, int stm)
+    public static unsafe int Evaluate(Accumulator a, int stm)
     {
-        //accumulate_from_zero(p);
-
         int sum = OutputBias;
 
         // Perspective - order Accumulators based on side to move
-        var (our_acc, their_acc) = stm==WHITE ? (a.AccumulatorWhite, a.AccumulatorBlack) 
-                                              : (a.AccumulatorBlack, a.AccumulatorWhite);
+        short*   our_acc = stm==WHITE ? a.AccumulatorWhite : a.AccumulatorBlack;
+        short* their_acc = stm==WHITE ? a.AccumulatorBlack : a.AccumulatorWhite;
 
         // first activate the values, then sum up the accumulators
         for (int i=0; i<HIDDEN_SIZE; i++)

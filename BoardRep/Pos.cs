@@ -1,24 +1,13 @@
 using static Constants;
 using static Utils;
 using static Attacks;
+using System.Runtime.CompilerServices;
 
-public struct pos
+public unsafe struct pos
 {   
     // Board Representation
-    public ulong[] 
-        pieceBB = {
-            0x00FF_0000_0000_FF00ul, // Pawns
-            0x4200_0000_0000_0042ul, // knights
-            0x2400_0000_0000_0024ul, // Bishops
-            0x8100_0000_0000_0081ul, // Rooks
-            0x0800_0000_0000_0008ul, // Queens
-            0x1000_0000_0000_0010ul, // Kings
-        }, 
-        colorBB = { 
-            0xFFFF, 0xFFFF_0000_0000_0000ul 
-        };
-    
-    public bool[] castling_rights = [true, true, true, true];   // kqKQ
+    public fixed ulong pieceBB[6], colorBB[2];
+    public fixed bool castling_rights[4];   // kqKQ
 
     public int   ep = EPSQ_NONE;
     public byte  us = WHITE;
@@ -26,24 +15,17 @@ public struct pos
     public byte FiftyMoveCnt = 0;
     public ulong ZobristKey = 0;
 
-    public NNUE.Accumulator accumulator;
+    public Accumulator accumulator;
 
 
     /// <summary>
     /// copies all values from the parent position
     /// essential part of "copy/make"
     /// </summary>
-    /// <param name="p"></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public pos(pos p) 
     {
-        Array.Copy(p.pieceBB, this.pieceBB, 6);
-        Array.Copy(p.colorBB, this.colorBB, 2);
-        Array.Copy(p.castling_rights, this.castling_rights, 4);
-        this.ep = p.ep;
-        this.us = p.us;
-        this.FiftyMoveCnt = p.FiftyMoveCnt;
-        this.ZobristKey = p.ZobristKey;
-        this.accumulator = new NNUE.Accumulator(p.accumulator);
+        this = p;
     }
 
     /// <summary>
@@ -51,9 +33,10 @@ public struct pos
     /// </summary>
     public pos (string fen) 
     {
-        colorBB = [0, 0];
-        pieceBB = [0, 0, 0, 0, 0, 0];
-        this.accumulator = new NNUE.Accumulator(this);
+        for (int pt=PAWN;  pt<=KING;  pt++) pieceBB[pt] = 0;
+        for (int cl=BLACK; cl<=WHITE; cl++) colorBB[cl] = 0;
+        for (int cr=0;     cr<4;      cr++) castling_rights[cr] = false;
+        this.accumulator = new Accumulator(this);
         SearchStack.stack[0] = new SS();
         
         int r = 7;
@@ -89,7 +72,6 @@ public struct pos
 
         us = (byte)((fen[idx++] == 'w') ? 1 : 0);
 
-        castling_rights = [false, false, false, false];
         for (char cr = fen[++idx]; cr != ' ' && cr != '-'; cr = fen[++idx]) 
         {
             switch (cr) 
@@ -112,15 +94,22 @@ public struct pos
 
     // QOL Methods
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong get_pieces(int pt) => pieceBB[pt];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong get_pieces(int pt, int c) => pieceBB[pt] & colorBB[c];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong get_pieces(int pt1, int pt2, int c) => (pieceBB[pt1] | pieceBB[pt2]) & colorBB[c];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int get_ksq(int c) => lsb(pieceBB[KING] & colorBB[c]);
 
     /// <summary>
     /// returns the PieceType of the Piece on the given Square-index
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte piece_on(int sq) 
     {
         for (byte i=PAWN; i<=KING; i++)
@@ -132,6 +121,7 @@ public struct pos
     /// <summary>
     /// returns the Color of the Piece on the given Square-index
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int color_on(int sq) 
     {
         if (((1ul << sq) & colorBB[WHITE]) != 0)
@@ -144,11 +134,13 @@ public struct pos
     /// <summary>
     /// returns true if the opponents colorBB has a bit set on the moves to-square
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool is_capture(move m) => m.IsEp || (colorBB[1-us] & (1ul << m.to)) != 0;
 
     /// <summary>
     /// returns a bitboard containing all occupants of both WHITE and BLACK pieces
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong get_blocker() => colorBB[WHITE] | colorBB[BLACK];
 
     /// <summary>
@@ -169,84 +161,51 @@ public struct pos
     /// returns a bitboard of all pieces that attack the side-to-move's king
     /// the pieces are of the opposing side's color
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong get_checkers() => attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us];
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void set_piece(int sq, int pt, int color) 
     {
         pieceBB[pt]    ^= 1ul << sq;
         colorBB[color] ^= 1ul << sq;
 
-        //ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
+        ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
         accumulator.activate(color, pt, sq);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void pop_piece(int sq, int pt, int color)
     {
         pieceBB[pt]    ^= 1ul << sq;
         colorBB[color] ^= 1ul << sq;
 
-        //ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
+        ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
         accumulator.deactivate(color, pt, sq);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void move_piece(int color, int pt, int from, int to)
     {
         pieceBB[pt] ^= (1ul << from) | (1ul << to);
         colorBB[color] ^= (1ul << from) | (1ul << to);
 
-        //ZobristKey ^= Zobrist.get_piece_key(color, pt, from)
-        //           ^  Zobrist.get_piece_key(color, pt, to);
+        ZobristKey ^= Zobrist.get_piece_key(color, pt, from)
+                   ^  Zobrist.get_piece_key(color, pt, to);
         accumulator.activate(color, pt, to);
         accumulator.deactivate(color, pt, from);
     }
 
-    public bool is_legal(move m)
-    {
-        if (m.IsNull)
-        {
-            return false;
-        }
-
-        int from = m.from;
-        int to   = m.to;
-        int pt   = piece_on(from);
-
-        int ksq = pt==KING ? to : get_ksq(us);
-        ulong block = (get_blocker() ^ (1ul << from)) | (1ul << to);
-
-        if (m.IsEp)
-        {
-            block ^= us==WHITE ? south(1ul << to) : north(1ul << to);
-            return (attackers_to(ksq, block) & colorBB[1-us] & block) == 0;
-        }
-        if (pt == KING)
-        {
-            return (attackers_to(to, block) & colorBB[1-us]) == 0;
-        }
-        if (Rays[ksq][from] == 0)
-        {
-            return true;
-        }
-        return (attackers_to(ksq, block) & ~(1ul << to) & colorBB[1-us]) == 0;
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public unsafe bool make_move(move m, SS* ss) 
     {
-        int from, to, dist, movingPieceType, capturedPieceType;
-        ulong fromBB, toBB, FromTo;
-        bool wtm;
+        int from = m.from;
+        int to   = m.to;
+        int dist = to-from;
+        bool wtm = us == WHITE;
 
-        from   = m.from;
-        to     = m.to;
-        fromBB = 1ul << from;
-        toBB   = 1ul << to;
-        FromTo = fromBB | toBB;
-        dist   = to-from;
-        wtm    = us == WHITE;
-
-        movingPieceType   = piece_on(from);
-        capturedPieceType = piece_on(to);
+        int movingPieceType   = piece_on(from);
+        int capturedPieceType = piece_on(to);
 
         // make quiet move
         move_piece(us, movingPieceType, from, to);
@@ -264,7 +223,7 @@ public struct pos
         // reset ep square, because was copyied from prev pos
         if (ep != EPSQ_NONE) 
         {
-            //ZobristKey ^= Zobrist.get_ep_key(ep);
+            ZobristKey ^= Zobrist.get_ep_key(ep);
             ep = EPSQ_NONE;
         }
 
@@ -274,7 +233,7 @@ public struct pos
             if (Math.Abs(dist) == 16) 
             {
                 ep = to;
-                //ZobristKey ^= Zobrist.get_ep_key(to);
+                ZobristKey ^= Zobrist.get_ep_key(to);
             }
 
             // promotion
@@ -315,7 +274,9 @@ public struct pos
         }
 
         bool IsLegal = (attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us]) == 0;
+        
         us = (byte)(1-us);
+        ZobristKey ^= Zobrist.get_stm_key();
 
 
         if (IsLegal) 
@@ -323,6 +284,7 @@ public struct pos
             // update castling rights
             // as soon as any piece on the relevant squares moves or gets captured,
             // the right will be removed
+            ulong FromTo = (1ul << from) | (1ul << to);
             for (int cr=0; cr<4; cr++)
             {
                 if (castling_rights[cr] && (FromTo & CastlingRightModifiers[cr]) != 0)
@@ -332,11 +294,8 @@ public struct pos
                 }
             }
 
-            // update Search Stack
+            // update Search Stack and Repetition Table
             SearchStack.Push(ss, m, this, movingPieceType, capturedPieceType);
-
-            // recalculate Zobrist Keys, incremental updates coming soon
-            ZobristKey = Zobrist.CalcZobrist(this);
             RepetitionTable.Push(ZobristKey);
         }
         return IsLegal;
@@ -366,7 +325,7 @@ public struct pos
 
     public static bool operator ==(pos p1, pos p2) => p1.ZobristKey == p2.ZobristKey;
     public static bool operator !=(pos p1, pos p2) => p1.ZobristKey != p2.ZobristKey;
-
+    
     public bool IsInsufficientMaterial => (
         (pieceBB[PAWN] | pieceBB[ROOK] | pieceBB[QUEEN]) == 0 &&
         !more_than_one(get_pieces(BISHOP, KNIGHT, WHITE)) &&
@@ -422,8 +381,8 @@ public struct pos
         if (castling_rights[3]) fen += 'Q';
         if (castling_rights[0]) fen += 'k';
         if (castling_rights[1]) fen += 'q';
-
-        if (!castling_rights.Contains(true))
+        if (!(castling_rights[0] || castling_rights[1] || 
+              castling_rights[2] || castling_rights[3]))
         {
             fen += "-";
         }

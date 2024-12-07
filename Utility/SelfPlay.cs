@@ -85,7 +85,7 @@ public static class Selfplay
         while (true)
         {
             move[] moves = new move[MAX_MOVE_CNT];
-            int mvCnt = MoveGen.GenerateMoves(moves, root, false, root.get_checkers());
+            int mvCnt = MoveGen.GenerateMoves(moves, ref root, false, root.get_checkers());
 
             bool hasLegalMoves = has_legal_moves(moves, mvCnt, root);
             bool inCheck = root.get_checkers() != 0;
