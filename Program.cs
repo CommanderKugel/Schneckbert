@@ -115,7 +115,7 @@ while (true)
         {
             Bench.runBench(tokens.Length == 2
                 ? int.Parse(tokens[1])
-                : 5
+                : 7
             );
             long bench = 477689; 
             int  nps   = 1220181; 

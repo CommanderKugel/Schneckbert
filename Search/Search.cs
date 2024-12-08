@@ -225,11 +225,10 @@ public static class Search
             //     and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                !inQS &&
                  picker.try_see)
             {
                 int margin = 
-                    //inQS      ? alpha - staticEval - 300 :
+                    inQS      ? alpha - staticEval - 300 :
                     isCapture ? -200 * depth 
                               : -25 * depth * depth;
                 if (!SEE.see_threshold(m, ref p, margin))
