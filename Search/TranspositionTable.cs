@@ -1,9 +1,8 @@
 
-using System.Runtime.CompilerServices;
-
 public struct TTEntry
 {
-    public byte key, depth, flag;
+    public byte depth, flag;
+    public ulong key;
     public int score;
     public move move;
 
@@ -11,20 +10,11 @@ public struct TTEntry
     
     public TTEntry(ulong key, int score, int depth, int flag, move move)
     {
-        this.key   = (byte)(key >> TT_SHIFT);
-        this.score =        score;
+        this.key   = key;
+        this.score = score;
+        this.move  = move;
         this.depth = (byte) depth;
         this.flag  = (byte) flag;
-        this.move  =        move;
-    }
-    
-    public TTEntry(byte key, int score, int depth, int flag, move move)
-    {
-        this.key   =        key;
-        this.score =        score;
-        this.depth = (byte) depth;
-        this.flag  = (byte) flag;
-        this.move  =        move;
     }
 }
 
@@ -64,7 +54,7 @@ public static class TranspositionTable
     /// compares the stored bits of the entry with the provided key
     /// compares the biggest 8 bits of the stored and to be stored position's keys
     /// </summary>
-    public static bool isTTHit(ulong ZobristKey, ref TTEntry entry) => entry.key == (byte)(ZobristKey >> TTEntry.TT_SHIFT);
+    public static bool isTTHit(ulong ZobristKey, ref TTEntry entry) => ZobristKey == entry.key;
 
     /// <summary>
     /// enters a new entry in the Transposition Table
@@ -72,10 +62,10 @@ public static class TranspositionTable
     /// </summary>
     public static void Push(ref TTEntry entry, ulong key, int score, int depth, int flag, move move)
     {
-        entry.key   = (byte)(key >> TTEntry.TT_SHIFT);
-        entry.score =        score;
+        entry.key   = key;
+        entry.score = score;
+        entry.move  =  move;
         entry.depth = (byte) depth;
         entry.flag  = (byte) flag;
-        entry.move  =        move;
     }
 }

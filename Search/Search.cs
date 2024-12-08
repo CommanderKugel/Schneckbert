@@ -68,6 +68,7 @@ public static class Search
         } // fixed SearchStack
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int Negamax(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
     {
         // #1 check for timeout and immediately return
@@ -129,7 +130,7 @@ public static class Search
         }
 
 
-        // #6 compute static Evaluation
+        // #6 Static Evaluation
         int staticEval = NNUE.Evaluate(ref p);
 
 
