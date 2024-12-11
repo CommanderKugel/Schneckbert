@@ -64,7 +64,7 @@ public static class TranspositionTable
     {
         entry.key   = key;
         entry.score = score;
-        entry.move  =  move;
+        entry.move  = move;
         entry.depth = (byte) depth;
         entry.flag  = (byte) flag;
     }

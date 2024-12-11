@@ -65,12 +65,19 @@ while (true)
             {
                 fixed (SS* ss = SearchStack.stack)
                 {
+                    int ply=0;
                     foreach (var moveStr in SkipPast("moves"))
                     {
+                        ply++;
                         moves += moveStr + " ";
+
                         move m = new move(moveStr, root);
                         root.make_move(m, ss);
-                        RepetitionTable.Push(root.ZobristKey);
+
+                        if (RepetitionTable.needs_set_back())
+                        {
+                            RepetitionTable.set_back_100();
+                        }
                     }
                 }
             }
@@ -117,7 +124,7 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 7
             );
-            long bench = 2017255; 
+            long bench = 2003759; 
             int  nps   = 1220181; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
