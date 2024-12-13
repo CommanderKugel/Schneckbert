@@ -1,0 +1,183 @@
+using static Constants;
+using static Utils;
+
+using static System.Math;
+using System.Runtime.CompilerServices;
+
+
+public static class Quiescense
+{
+    public static int seldepth;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static unsafe int QSearch(pos p, int alpha, int beta, int ply, SS* ss)
+    {
+        TimeManager.NodeCnt++;
+
+        // #1 avoid stack-overflows or IndexOutOfBound Exceptions
+        if (ply >= MAX_SEARCH_PLY)
+        {
+            return NNUE.Evaluate(ref p);
+        }
+
+        // #2 Draw detection (besides Stalemate)
+        if (RepetitionTable.IsRepeatedPosition(p) ||
+            p.IsFiftyMoveDraw ||
+            p.IsInsufficientMaterial)
+        {
+            return 0;
+        }
+
+        ss->checkers = p.get_checkers();
+        bool inCheck =  ss->checkers != 0;
+        bool nonPV   =  alpha + 1 == beta;
+
+        int bestScore = -SCORE_MATE;
+        int score;
+      
+
+        // #3 fetch the Transpositiontables entry
+        //    also try for cutoffs if possible
+        ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
+        bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
+        move ttMove = ttHit ? ttEntry.move : move.NullMove;
+
+        // TT Cutoff
+        if (nonPV && ttHit && Abs(ttEntry.score) < SCORE_MATE/2 && (
+            ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
+            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta
+            )) 
+        {
+            return ttEntry.score;
+        }
+
+
+        // #4 Static Evaluation
+        int staticEval = NNUE.Evaluate(ref p);
+
+
+        // #5 Quiescense Search Stand Pat & Evaluate
+        //    when a Quiet Position is reached, return the static evaluation score
+        //    int a Quiet Position the best move is quiet (mostly: not a capture)
+        if (staticEval >= beta)
+        {
+            return staticEval;
+        }
+
+        if (staticEval >= alpha)
+        {
+            alpha = staticEval;
+        }
+
+        bestScore = staticEval;
+
+
+        // #6 Move Generating and Ordering
+        //    outsourced via the MovePicker class
+        //    ToDo: Staged Move Generation
+        var picker = new MovePicker(p, true, ttMove, ss);
+
+
+        // keep track of moves that were played out, some will be pruned or illegal        
+        int movesPlayed = 0;
+        Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
+
+        int startAlpha = alpha;
+        move m;
+        move locBestMove = move.NullMove;
+
+        // main move loop here
+        while (!(m = picker.next()).IsNull)
+        {
+            bool isCapture = p.is_capture(m);
+            bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
+
+            // #7 Static Exchange Evaluation pruning
+            //    If the move hat a bad SEE score in the scoring phase
+            //    and we can safely prune the move, run another SEE with a wider margin.
+            if ( nonMatingLineExists &&
+                 nonPV &&
+                 picker.try_see &&
+                !SEE.see_threshold(m, ref p, alpha - staticEval - 300))
+            {
+                continue;
+            }
+
+            // Copy the position
+            // make the move, but only if it is legal
+            pos nextPos = p;
+            if (!nextPos.make_move(m, ss))
+            {
+                continue;
+            }
+
+            playedAndLegal[movesPlayed++] = m;
+
+            // Full window search in pv-nodes
+            // if this node is a nonPV node, we still pass the zero window
+            // The first move is assumed to be the best and shouldnt be pruned, reduced, etc.
+            if (movesPlayed == 1)
+            {
+                score = -QSearch(nextPos, -beta, -alpha, ply+1, ss+1);
+            }
+            else
+            {
+                // Reduced zero-window search
+                score = -QSearch(nextPos, -alpha-1, -alpha, ply+1, ss+1);
+
+
+                // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
+                // and with a full window, to confirm we really beat alpha and get an exact score. 
+                // Searches using a null-window only return upper bounds.
+                if (!nonPV && score > alpha)
+                {
+                    score = -QSearch(nextPos, -beta, -alpha, ply+1, ss+1);
+                }
+            }
+
+            // here would be the moment to undo the move but its just copy-make
+            RepetitionTable.Pop();
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                locBestMove = m;
+
+                seldepth = Max(seldepth, ply);
+
+                if (score > alpha)
+                {
+                    alpha = score;
+
+                    // fail high
+                    // If we beat beta, our opponent has a move that guarantees a position that scores beta,
+                    // so he will never allow us to get to a position with a better score and we can safely prune here.
+                    if (score >= beta)
+                    {   
+                        if (!isCapture)
+                        {
+                            // Update the Killer-move heuristic, if this move was a quiet-move.
+                            // we shouldnt add captures to killer moves, or they would never be filled with quiet moves.
+                            ss->killerMove = m;
+
+                            // Update the history-scores of all played quiet moves.
+                            // History Scores are greater for generally good moves, and smaller for worse ones.
+                            // History Scores can be falsified in favor for weaker but more common vs. stronger but rarer moves.
+                            // Currently the Butterfly- and PieceTo histories are implemented.
+                            History.updateQuietHistValues(playedAndLegal, movesPlayed-1, 1, p);
+                        }
+    
+                        break;
+                    }
+                }
+            }
+        }
+
+        // enter data into the TT
+        int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
+        TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, 0, flag, locBestMove);
+
+        return bestScore;
+    }
+}

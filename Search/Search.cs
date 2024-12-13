@@ -8,7 +8,6 @@ using System.Runtime.CompilerServices;
 public static class Search
 {
     static int iteration;
-    static int seldepth;
 
     static move rootBestMove;
     public static int rootScore;
@@ -28,23 +27,26 @@ public static class Search
 
             rootBestMove = move.NullMove;
             iteration = 1;
-            seldepth = 1;
+            Quiescense.seldepth = 1;
 
             const int delta = 35;
             int alpha = -SCORE_MATE;
             int beta  =  SCORE_MATE;
 
             TimeManager.NodeCnt = 0;
+
             do
             {
                 ResetPV(iteration);
                 rootScore = Negamax(root, alpha, beta, iteration, 0, ss, false, info);
 
+                // ToDo: Gradual widening
                 if (rootScore <= alpha || rootScore >= beta)
                 {
                     rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
                 }
 
+                // update the Windows
                 alpha = rootScore - delta;
                 beta  = rootScore + delta;
 
@@ -52,7 +54,7 @@ public static class Search
                 if (info)
                 {
                     Console.WriteLine(
-                        $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
+                        $"info depth {iteration} seldepth {Quiescense.seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
                     );
                 }
                 else
@@ -78,13 +80,20 @@ public static class Search
             return 30_000;
         }
 
-        TimeManager.NodeCnt++;
-
-        // #2 avoid stack-overflows or IndexOutOfBound Exceptions
+        // #2 Avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
             return NNUE.Evaluate(ref p);
         }
+        
+        // #3 Drop into QSearch if we found a leaf-node
+        //    It only makes sense to evaluate Quiet positions
+        if (depth <= 0)
+        {
+            return Quiescense.QSearch(p, alpha, beta, ply, ss);
+        }
+
+        TimeManager.NodeCnt++;
 
         ss->checkers = p.get_checkers();
 
@@ -302,10 +311,6 @@ public static class Search
                 if (info && ply < iteration)
                 {
                     UpdatePV(m, ply);
-                }
-                if (info && inQS)
-                {
-                    seldepth = Max(seldepth, ply);
                 }
 
                 if (score > alpha)
