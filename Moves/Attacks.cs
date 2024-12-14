@@ -87,7 +87,7 @@ public static class Attacks
 
         // normal captures
         ulong enemies = p.colorBB[1-p.us];
-        if (p.ep != EPSQ_NONE)
+        if (p.ep != SQ_NONE)
         {
             enemies |= 1ul << p.ep;
         }

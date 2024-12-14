@@ -71,7 +71,7 @@ public static class Zobrist
                 key ^= CastlingKeys[i];
         }
 
-        if (p.ep != EPSQ_NONE) 
+        if (p.ep != SQ_NONE) 
         {
             key ^= EpFileKeys[file_of(p.ep)];
         }

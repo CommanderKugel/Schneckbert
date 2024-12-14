@@ -79,7 +79,7 @@ public static class NNUE
             // Remove Quantization
             sum /= QA * QB;
 
-            return sum;
+            return Math.Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
         }
     }
 

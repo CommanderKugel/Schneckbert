@@ -126,7 +126,7 @@ public static class MoveGen
         ExtractPawnMoves(moves, ref moveCnt, L(pawns) & enemy & checkMask, l);
 
         // en passant capture
-        if (p.ep != EPSQ_NONE)
+        if (p.ep != SQ_NONE)
         {
             ulong temp = pawns & (west(1ul << p.ep) | east(1ul << p.ep));
             while (temp != 0)

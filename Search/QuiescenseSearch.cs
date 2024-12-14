@@ -46,7 +46,8 @@ public static class Quiescense
         // TT Cutoff
         if (nonPV && ttHit && Abs(ttEntry.score) < SCORE_MATE/2 && (
             ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
-            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta
+            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
+            ttEntry.flag == BOUND_EXACT
             )) 
         {
             return ttEntry.score;

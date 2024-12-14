@@ -1,4 +1,6 @@
 
+using System.Runtime.CompilerServices;
+
 public static class Constants
 {
 
@@ -47,6 +49,9 @@ public static class Constants
     public const int MAX_MOVE_CNT = 213;
 
     public const int SCORE_MATE = 2_000_000_000;
+    public const int EVAL_SCORE_MAX  = 1_000_000_000;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool score_is_terminal(int score) => Math.Abs(score) > EVAL_SCORE_MAX;
 
     public const int MAX_SEARCH_PLY = 128;
     public const int MAX_GAME_PLY = 1024;
@@ -63,7 +68,7 @@ public static class Constants
         A6=40, B6=41, C6=42, D6=43, E6=44, F6=45, G6=46, H6=47, 
         A7=48, B7=49, C7=50, D7=51, E7=52, F7=53, G7=54, H7=55, 
         A8=56, B8=57, C8=58, D8=59, E8=60, F8=61, G8=62, H8=63,
-        EPSQ_NONE = 255;
+        SQ_NONE = 255;
 
     public const ulong
         Rank1 = 0xFFul <<  0,

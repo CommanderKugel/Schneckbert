@@ -130,9 +130,10 @@ public static class Search
         move ttMove = ttHit ? ttEntry.move : move.NullMove;
 
         // TT Cutoff
-        if (nonPV && ttHit && ttEntry.depth >= depth && Abs(ttEntry.score) < SCORE_MATE/2 && (
+        if (nonPV && ttHit && ttEntry.depth >= depth && !score_is_terminal(ttEntry.score) && (
             ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
-            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta
+            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
+            ttEntry.flag == BOUND_EXACT
             )) 
         {
             return ttEntry.score;
@@ -216,7 +217,7 @@ public static class Search
         {
 
             bool isCapture = p.is_capture(m);
-            bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
+            bool nonMatingLineExists = !score_is_terminal(bestScore);
 
             // #11 Futility Pruning
             //     If static evaluation falls below alpha, even by a margin
@@ -275,7 +276,7 @@ public static class Search
                     R += 1;
                 }
 
-                // Reduced zero-window search á la #12
+                // Reduced zero-window search
                 score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
 
                 // If a reduced Search fails high, we need to re-search at full depth to confirm that it 

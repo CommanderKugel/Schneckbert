@@ -54,7 +54,7 @@ public struct move
 
         // read en passant from the context
         // ep square is the square the victim-pawn moved onto
-        else if (p.ep != EPSQ_NONE 
+        else if (p.ep != SQ_NONE 
              &&  to == (p.ep + (p.us==WHITE ? 8 : -8))
              &&  p.piece_on(from) == PAWN)
         {

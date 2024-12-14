@@ -6,14 +6,15 @@ using System.Runtime.CompilerServices;
 public unsafe struct pos
 {   
     // Board Representation
-    public fixed ulong pieceBB[6], colorBB[2];
-    public fixed bool castlingRights[4];   // kqKQ
+    public fixed ulong pieceBB[6], 
+                       colorBB[2];
+    public fixed bool  castlingRights[4]; // kqKQ
 
-    public int   ep = EPSQ_NONE;
-    public byte  us = WHITE;
+    public int  ep;
+    public byte us;
 
-    public byte FiftyMoveCnt = 0;
-    public ulong ZobristKey = 0;
+    public byte FiftyMoveCnt;
+    public ulong ZobristKey;
 
     public Accumulator accumulator;
 
@@ -61,7 +62,7 @@ public unsafe struct pos
         }
 
 
-        us = (byte)((fen[idx++] == 'w') ? 1 : 0);
+        us = (byte)((fen[idx++] == 'w') ? WHITE : BLACK);
 
         for (char cr = fen[++idx]; cr != ' ' && cr != '-'; cr = fen[++idx]) 
         {
@@ -79,8 +80,13 @@ public unsafe struct pos
         {
             ep = CharsToSquare(fen[idx], fen[++idx]);
         }
+        else
+        {
+            ep = SQ_NONE;
+        }
 
         ZobristKey = Zobrist.CalcZobrist(this);
+        FiftyMoveCnt = 0;
     }
 
     // QOL Methods
@@ -217,10 +223,10 @@ public unsafe struct pos
         }
 
         // reset ep square, because was copyied from prev pos
-        if (ep != EPSQ_NONE) 
+        if (ep != SQ_NONE) 
         {
             ZobristKey ^= Zobrist.get_ep_key(ep);
-            ep = EPSQ_NONE;
+            ep = SQ_NONE;
         }
 
         if (movingPieceType == PAWN) 
@@ -307,7 +313,7 @@ public unsafe struct pos
     /// </summary>
     public unsafe void force_null_move(SS* ss)
     {
-        ep = EPSQ_NONE;
+        ep = SQ_NONE;
         us = (byte)(1-us);
         FiftyMoveCnt++;
         ZobristKey = Zobrist.CalcZobrist(this);
@@ -392,7 +398,7 @@ public unsafe struct pos
 
         fen += " ";
 
-        if (ep != EPSQ_NONE)
+        if (ep != SQ_NONE)
         {
             int epsq = ep + (us==WHITE ? 8 : -8);
             fen += BoardNotation[epsq];
