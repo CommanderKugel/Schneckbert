@@ -84,10 +84,10 @@ public static class Selfplay
 
         while (true)
         {
-            move[] moves = new move[MAX_MOVE_CNT];
-            int mvCnt = MoveGen.GenerateMoves(moves, ref root, false, root.get_checkers());
+            Span<move> moves = new move[MAX_MOVE_CNT];
+            int mvCnt = MoveGen.GenerateMoves(ref moves, ref root, false, root.get_checkers());
 
-            bool hasLegalMoves = has_legal_moves(moves, mvCnt, root);
+            bool hasLegalMoves = has_legal_moves(ref moves, mvCnt, root);
             bool inCheck = root.get_checkers() != 0;
 
             // check for illegal Positions
@@ -150,7 +150,7 @@ public static class Selfplay
         return (randoStartCopy, mainLine, mainLineScores, result);
     }
 
-    public static unsafe bool has_legal_moves(move[] moves, int mvCnt, pos p)
+    public static unsafe bool has_legal_moves(ref Span<move> moves, int mvCnt, pos p)
     {
         SS ss = new SS();
         for (int i=0; i<mvCnt; i++)

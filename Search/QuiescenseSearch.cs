@@ -77,7 +77,9 @@ public static class Quiescense
         // #6 Move Generating and Ordering
         //    outsourced via the MovePicker class
         //    ToDo: Staged Move Generation
-        var picker = new MovePicker(p, true, ttMove, ss);
+        Span<move> moves = stackalloc move[MAX_MOVE_CNT];
+        Span<int> scores = stackalloc int[MAX_MOVE_CNT];
+        var picker = new MovePicker(p, true, ttMove, ss, ref moves, ref scores);
 
 
         // keep track of moves that were played out, some will be pruned or illegal        
@@ -89,7 +91,7 @@ public static class Quiescense
         move locBestMove = move.NullMove;
 
         // main move loop here
-        while (!(m = picker.next()).IsNull)
+        while (!(m = picker.next(ref moves, ref scores)).IsNull)
         {
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
@@ -99,7 +101,7 @@ public static class Quiescense
             //    and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                 picker.try_see &&
+                 picker.try_see(ref scores) &&
                 !SEE.see_threshold(m, ref p, alpha - staticEval - 300))
             {
                 continue;

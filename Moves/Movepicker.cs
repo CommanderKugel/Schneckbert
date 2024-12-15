@@ -1,25 +1,20 @@
 using static Constants;
 
-public class MovePicker
+public unsafe class MovePicker
 {
     public byte mvCnt;
     private byte mvIdx;
-    private move[] moves;
-    private int[]  scores;
 
 
-    public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss)
+    public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss, ref Span<move> moves, ref Span<int> scores)
     {
-        moves  = new move[MAX_MOVE_CNT];
-        scores = new int [MAX_MOVE_CNT];
-
-        mvCnt = (byte)MoveGen.GenerateMoves(moves, ref p, inQS, ss->checkers);
+        mvCnt = (byte)MoveGen.GenerateMoves(ref moves, ref p, inQS, ss->checkers);
         mvIdx = 0;
 
-        ScoreMoves(p, ttMove, ss);
+        ScoreMoves(p, ttMove, ss, ref moves, ref scores);
     }
 
-    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss)
+    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss, ref Span<move> moves, ref Span<int> scores)
     {
         for (int i=0; i<mvCnt; i++) 
         {
@@ -48,15 +43,15 @@ public class MovePicker
         }
     }
 
-    public bool try_see => scores[mvIdx] < 1_000_000;
+    public bool try_see(ref Span<int> scores) => scores[mvIdx] < 1_000_000;
 
-    public move next()
+    public move next(ref Span<move> moves, ref Span<int> scores)
     {
-        move m = partialInsertionSort();
+        move m = partialInsertionSort(ref moves, ref scores);
         return m;
     }
 
-    private move partialInsertionSort()
+    private move partialInsertionSort(ref Span<move> moves, ref Span<int> scores)
     {
         // might have to return a null move
         // this is just more readable code, it should still return a null 

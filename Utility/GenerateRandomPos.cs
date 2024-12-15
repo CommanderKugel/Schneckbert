@@ -42,8 +42,9 @@ public static class RandomPosition
 
         while (ply < n)
         {
-            move[] moves = new move[MAX_MOVE_CNT];
-            int cnt = MoveGen.GenerateMoves(moves, ref root, false, root.get_checkers());
+            move[] moves_ = new move[MAX_MOVE_CNT];
+            Span<move> moves = moves_;
+            int cnt = MoveGen.GenerateMoves(ref moves, ref root, false, root.get_checkers());
 
             while (cnt > 0)
             {
@@ -55,7 +56,7 @@ public static class RandomPosition
                 if (!copy.make_move(m, ps))
                 {
                     cnt--;
-                    swap(moves, idx, cnt);
+                    (moves[idx], moves[cnt]) = (moves[cnt], moves[idx]);
                 }
                 else
                 {
@@ -73,12 +74,4 @@ public static class RandomPosition
 
         return root;
     }
-
-    private static void swap(move[] moves, int a, int b)
-    {
-        move copy = moves[a];
-        moves[a] = moves[b];
-        moves[b] = copy;
-    }
-
 }

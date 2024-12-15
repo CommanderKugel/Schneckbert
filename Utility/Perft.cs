@@ -39,8 +39,8 @@ public static class Perft
     public static unsafe void goPerft(int depth, pos root) 
     {
         SS ss = SearchStack.stack[0];
-        Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, ref root, false, root.get_checkers());
+        Span<move> moves = new move[Constants.MAX_MOVE_CNT];
+        int moveCnt = GenerateMoves(ref moves, ref root, false, root.get_checkers());
 
 
         for (int i=0; i<moveCnt; i++) 
@@ -64,8 +64,8 @@ public static class Perft
         if (depth <= 0)
             return 1;
 
-        Span<move> moves = new move[213];
-        int moveCnt = GenerateMoves(moves, ref p, false, p.get_checkers());
+        Span<move> moves = new move[Constants.MAX_MOVE_CNT];
+        int moveCnt = GenerateMoves(ref moves, ref p, false, p.get_checkers());
         long nodes = 0;
 
         for (int i=0; i<moveCnt; i++) 

@@ -58,8 +58,7 @@ public static class Search
                     );
                 }
                 else
-                    Console.WriteLine("info score "+rootScore);
-
+                    Console.WriteLine("info depth "+iteration+" score "+rootScore);
 
                 iteration++;
             }
@@ -73,31 +72,36 @@ public static class Search
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int Negamax(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
     {
-        // #1 check for timeout and immediately return
-        //    Negamax will negate this big score into the worst mateing score possible
+        // #1 check for timeout, maybe stop searching
+        //    Negamax will negate this big score into the worst mate-score possible
         if (iteration > 1 && !TimeManager.InHardTimeLimit())
         {
             return 30_000;
         }
+
 
         // #2 Avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
             return NNUE.Evaluate(ref p);
         }
+
         
         // #3 Drop into QSearch if we found a leaf-node
-        //    It only makes sense to evaluate Quiet positions
+        //    It only makes sense to evaluate Quiet positions.
+        //    Quiescense Search plays all captures possible until a capture is no longer
+        //    the best move in a position - a quiet Position.
         if (depth <= 0)
         {
             return Quiescense.QSearch(p, alpha, beta, ply, ss);
         }
 
+        // Only now count this node as visited, to not count double in QSearch
         TimeManager.NodeCnt++;
 
+        // initialize some important variables to use later on
         ss->checkers = p.get_checkers();
 
-        bool inQS     =  depth <= 0;
         bool isRoot   =  ply == 0;
         bool nonPV    =  alpha + 1 == beta;
         bool inCheck  =  ss->checkers != 0;
@@ -106,14 +110,16 @@ public static class Search
         int score;
 
 
-        // #3 Check Extensions
+        // #4 Check Extensions
+        //    Lines that give check 
         if (inCheck)
         {
             depth = Max(depth+1, 1);
         }
 
 
-        // #4 Draw detection (besides Stalemate)
+        // #5 Draw detection (excluding Stalemate)
+        //    Exclude RootNodes, otherwise we will return an illegal null-move in ID
         if (!isRoot && (
             RepetitionTable.IsRepeatedPosition(p) ||
             p.IsFiftyMoveDraw ||
@@ -123,7 +129,7 @@ public static class Search
         }
 
 
-        // #5 fetch the Transpositiontables entry
+        // #6 fetch the Transpositiontables entry
         //    also try for cutoffs if possible
         ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
         bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
@@ -140,37 +146,20 @@ public static class Search
         }
 
 
-        // #6 Static Evaluation
-        int staticEval = NNUE.Evaluate(ref p);
-
-
-        // #7 Quiescense Search Stand Pat & Evaluate
-        //    when a Quiet Position is reached, return the static evaluation score
-        //    int a Quiet Position the best move is quiet (mostly: not a capture)
-        if (inQS)
-        {
-            if (staticEval >= beta)
-            {
-                return staticEval;
-            }
-
-            if (staticEval >= alpha)
-            {
-                alpha = staticEval;
-            }
-
-            bestScore = staticEval;
-        }
+        // #7 Static Evaluation
+        //    We will not return this score, because we cant prove that this position is quiet,
+        //    but we can use it to make educated guesses about this branch of the game tree
+        ss->StaticEval = NNUE.Evaluate(ref p);
 
 
         // #8 Reverse Futility Pruning
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
-        if (nonPV && !inCheck && !isRoot && !inQS && depth<=7 &&
-            staticEval - 75 * depth >= beta)
+        if (nonPV && !inCheck && !isRoot && depth<=7 &&
+            ss->StaticEval - 75 * depth >= beta)
         {
-            return staticEval;
+            return ss->StaticEval;
         }
 
 
@@ -179,7 +168,7 @@ public static class Search
         //    to be able to move first. So if we can give our opponent two moves in a row, and
         //    still beat beta, this position is too good and we can cut off here.
         //    Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
-        if (doNull && nonPV && !inCheck && depth>2 && staticEval>=beta)
+        if (doNull && nonPV && !inCheck && depth>2 && ss->StaticEval>=beta)
         {
             pos copy = p;
             copy.force_null_move(ss);
@@ -197,7 +186,9 @@ public static class Search
         // #10 Move Generating and Ordering
         //     outsourced via the MovePicker class
         //     ToDo: Staged Move Generation
-        var picker = new MovePicker(p, inQS, ttMove, ss);
+        Span<move> moves = stackalloc move[MAX_MOVE_CNT];
+        Span<int> scores = stackalloc int[MAX_MOVE_CNT];
+        var picker = new MovePicker(p, false, ttMove, ss, ref moves, ref scores);
 
 
         // keep track of moves that were played out, some will be pruned or illegal        
@@ -210,10 +201,10 @@ public static class Search
         
         // prepare futility pruning, this is not the optimal way of doing things
         // but changing would require another SPRT for probably 0.5 elo or so
-        bool canFP = nonPV && !inCheck && depth<5 && (staticEval+150*depth < alpha);
+        bool canFP = nonPV && !inCheck && depth<5 && (ss->StaticEval + 150*depth < alpha);
 
         // main move loop here
-        while (!(m = picker.next()).IsNull)
+        while (!(m = picker.next(ref moves, ref scores)).IsNull)
         {
 
             bool isCapture = p.is_capture(m);
@@ -236,10 +227,9 @@ public static class Search
             //     and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                 picker.try_see)
+                 picker.try_see(ref scores))
             {
                 int margin = 
-                    inQS      ? alpha - staticEval - 300 :
                     isCapture ? -200 * depth 
                               : -25 * depth * depth;
                 if (!SEE.see_threshold(m, ref p, margin))
@@ -343,7 +333,7 @@ public static class Search
         }
 
         // check-/stalemate detection
-        if (!inQS && movesPlayed == 0)
+        if (movesPlayed == 0)
         {
             return inCheck ? ply - SCORE_MATE : 0;
         }

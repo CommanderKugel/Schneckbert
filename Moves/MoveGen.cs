@@ -8,7 +8,7 @@ public static class MoveGen
 {
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe int GenerateMoves(Span<move> moves, ref pos p, bool OnlyCaptures, ulong checker)
+    public static unsafe int GenerateMoves(ref Span<move> moves, ref pos p, bool OnlyCaptures, ulong checker)
     {
         int moveCnt = 0;
         int us   = p.us;
@@ -22,18 +22,18 @@ public static class MoveGen
         ulong checkMask   = GenerateCheckmask(ksq, checker);
         ulong mask        = captureMask & checkMask;
 
-        GeneratePieceMoves(moves, ref moveCnt, p.get_pieces(KNIGHT, us), block, mask, KnightAttacks);
-        GeneratePieceMoves(moves, ref moveCnt, p.get_pieces(BISHOP, us), block, mask, BishopAttacks);
-        GeneratePieceMoves(moves, ref moveCnt, p.get_pieces(ROOK,   us), block, mask, RookAttacks);
-        GeneratePieceMoves(moves, ref moveCnt, p.get_pieces(QUEEN,  us), block, mask, QueenAttacks);
-        GeneratePieceMoves(moves, ref moveCnt, p.get_pieces(KING,   us), block, captureMask, KingAttacks);
+        GeneratePieceMoves(ref moves, ref moveCnt, p.get_pieces(KNIGHT, us), block, mask, KnightAttacks);
+        GeneratePieceMoves(ref moves, ref moveCnt, p.get_pieces(BISHOP, us), block, mask, BishopAttacks);
+        GeneratePieceMoves(ref moves, ref moveCnt, p.get_pieces(ROOK,   us), block, mask, RookAttacks);
+        GeneratePieceMoves(ref moves, ref moveCnt, p.get_pieces(QUEEN,  us), block, mask, QueenAttacks);
+        GeneratePieceMoves(ref moves, ref moveCnt, p.get_pieces(KING,   us), block, captureMask, KingAttacks);
 
-        GeneratePawnCaptures(moves, ref moveCnt, ref p, checkMask);
+        GeneratePawnCaptures(ref moves, ref moveCnt, ref p, checkMask);
 
         if (!OnlyCaptures)
         {
-            GeneratePawnPushes(moves, ref moveCnt, ref p, checkMask);
-            GenerateCastlingMoves(moves, ref moveCnt, ref p, ksq, checker);
+            GeneratePawnPushes(ref moves, ref moveCnt, ref p, checkMask);
+            GenerateCastlingMoves(ref moves, ref moveCnt, ref p, ksq, checker);
         }
 
         return moveCnt;
@@ -48,10 +48,7 @@ public static class MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void GeneratePieceMoves(
-        Span<move> moves, ref int moveCnt, 
-        ulong pieces, ulong block, ulong relevant, 
-        Func<int, ulong, ulong> F)
+    private static unsafe void GeneratePieceMoves(ref Span<move> moves, ref int moveCnt, ulong pieces, ulong block, ulong relevant, Func<int, ulong, ulong> F)
     {
         while (pieces != 0)
         {
@@ -67,7 +64,7 @@ public static class MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ExtractPawnMoves(Span<move> moves, ref int moveCnt, ulong pawns, int dir)
+    private static void ExtractPawnMoves(ref Span<move> moves, ref int moveCnt, ulong pawns, int dir)
     {
         int to; ulong temp;
         temp = pawns & 0x00FF_FFFF_FFFF_FF00ul;
@@ -92,7 +89,7 @@ public static class MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void GeneratePawnPushes(Span<move> moves, ref int moveCnt, ref pos p, ulong checkMask)
+    private static void GeneratePawnPushes(ref Span<move> moves, ref int moveCnt, ref pos p, ulong checkMask)
     {
         ulong pawns =  p.get_pieces(PAWN, p.us);
         ulong empty = ~p.get_blocker();
@@ -102,15 +99,15 @@ public static class MoveGen
 
         // simple push
         ulong temp = U(pawns) & empty;
-        ExtractPawnMoves(moves, ref moveCnt, temp & checkMask, up);
+        ExtractPawnMoves(ref moves, ref moveCnt, temp & checkMask, up);
 
         // double push
         ulong thirdRank = p.us==WHITE ? 0x0000_0000_00FF_0000ul : 0x0000_FF00_0000_0000ul;
-        ExtractPawnMoves(moves, ref moveCnt, U(temp & thirdRank) & empty & checkMask, up + up);
+        ExtractPawnMoves(ref moves, ref moveCnt, U(temp & thirdRank) & empty & checkMask, up + up);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void GeneratePawnCaptures(Span<move> moves, ref int moveCnt, ref pos p, ulong checkMask)
+    private static unsafe void GeneratePawnCaptures(ref Span<move> moves, ref int moveCnt, ref pos p, ulong checkMask)
     {
         ulong pawns = p.get_pieces(PAWN, p.us);
         ulong enemy = p.colorBB[1-p.us];
@@ -122,8 +119,8 @@ public static class MoveGen
         Func<ulong, ulong> L = p.us==WHITE ? nw : sw;
 
         // simple right & left captures
-        ExtractPawnMoves(moves, ref moveCnt, R(pawns) & enemy & checkMask, r);
-        ExtractPawnMoves(moves, ref moveCnt, L(pawns) & enemy & checkMask, l);
+        ExtractPawnMoves(ref moves, ref moveCnt, R(pawns) & enemy & checkMask, r);
+        ExtractPawnMoves(ref moves, ref moveCnt, L(pawns) & enemy & checkMask, l);
 
         // en passant capture
         if (p.ep != SQ_NONE)
@@ -138,7 +135,7 @@ public static class MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void GenerateCastlingMoves(Span<move> moves, ref int moveCnt, ref pos p, int ksq, ulong checker)
+    private static unsafe void GenerateCastlingMoves(ref Span<move> moves, ref int moveCnt, ref pos p, int ksq, ulong checker)
     {
         // check for in check
         if (checker != 0)

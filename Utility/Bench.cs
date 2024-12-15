@@ -1,3 +1,5 @@
+using static System.Math;
+
 public static class Bench
 {
     public static readonly string[] Positions = {
@@ -88,6 +90,7 @@ public static class Bench
             Console.WriteLine($"{++posCnt}: nodes {TimeManager.NodeCnt}");
         }
 
-        Console.WriteLine($"nodes {TimeManager.TotalNodes} nps {(int)(TimeManager.TotalNodes * 1000 / ms)}");
+        double bf = Round(Exp(Log(TimeManager.TotalNodes / Positions.Length) / (depth-1)), 2);
+        Console.WriteLine($"nodes {TimeManager.TotalNodes} nps {(int)(TimeManager.TotalNodes * 1000 / ms)} bf {bf}");
     }
 }
