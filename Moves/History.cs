@@ -8,7 +8,11 @@ public static class History
 
     // Main Piece-To-History
     // color-PieceType-to
-    private static short[][] PieceToHistory; // 2 * 6 * 64;
+    private static short[][] PieceToHistory; // 2 * 6 * 64
+
+
+    const int PAWN_HIST_SIZE = 256;
+    private static short[][][] PawnHistory; // 2 * 256 * 6*64
 
     public static void init()
     {
@@ -19,6 +23,15 @@ public static class History
         PieceToHistory = new short[2][];
         PieceToHistory[BLACK] = new short[6 * 64];
         PieceToHistory[WHITE] = new short[6 * 64];
+
+        PawnHistory = new short[2][][];
+        PawnHistory[BLACK] = new short[PAWN_HIST_SIZE][];
+        PawnHistory[WHITE] = new short[PAWN_HIST_SIZE][];
+        for (int p=0; p<PAWN_HIST_SIZE; p++)
+        {
+            PawnHistory[BLACK][p] = new short[6*64];
+            PawnHistory[WHITE][p] = new short[6*64];
+        }
     }
 
     /// <summary>
@@ -31,17 +44,32 @@ public static class History
 
         Array.Fill(PieceToHistory[BLACK], (short)0);
         Array.Fill(PieceToHistory[WHITE], (short)0);
+
+        for (int p=0; p<PAWN_HIST_SIZE; p++)
+        {
+            Array.Fill(PawnHistory[BLACK][p], (short)0);
+            Array.Fill(PawnHistory[WHITE][p], (short)0);
+        }
     }
 
     /// <summary>
     /// returns a reference to the Butterly-History-Value of the given Move
     /// </summary>
-    public static ref short getButterflyHistVal(int stm, move m) => ref ButterflyHistory[stm][m.FromTo];
+    public static ref short getButterflyHistVal(int stm, move m) 
+        => ref ButterflyHistory[stm][m.FromTo];
 
     /// <summary>
     /// returns a reference to the Piece-To-History-Value of the given Piece-Movement
     /// </summary>
-    public static ref short getPieceToHistVal(int stm, int pt, int sq) => ref ButterflyHistory[stm][pt * sq];
+    public static ref short getPieceToHistVal(int stm, int pt, int sq) 
+        => ref ButterflyHistory[stm][pt * 64 + sq];
+
+    /// <summary>
+    /// returns a reference to the Pawn-History-Value of the given Piece-Movement
+    /// depending on the current Pawn Structure
+    /// </summary>
+    public static ref short getPawnHistVal(int stm, ulong key, int pt, int sq)
+        => ref PawnHistory[stm][key % PAWN_HIST_SIZE][pt * 64 + sq];
 
     /// <summary>
     /// Calculates the delta value used to increase or decrease the History Scores of moves
@@ -70,5 +98,6 @@ public static class History
 
         ref move mv = ref moves[lastMoveIdx];
         getButterflyHistVal(p.us, mv) += delta;
+        getPieceToHistVal(p.us, p.piece_on(mv.from), mv.to) += delta;
     }
 }

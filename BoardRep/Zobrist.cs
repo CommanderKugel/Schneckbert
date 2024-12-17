@@ -48,7 +48,7 @@ public static class Zobrist
     /// <summary>
     /// calculates the ZobristKey of a given position from zero
     /// </summary>
-    public static unsafe ulong CalcZobrist(pos p) 
+    public static unsafe ulong calc_zobrist_key(ref pos p) 
     {
         ulong key = p.us == WHITE ? StmKey : 0;
 
@@ -76,6 +76,25 @@ public static class Zobrist
             key ^= EpFileKeys[file_of(p.ep)];
         }
 
+        return key;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static ulong calc_pawn_key(ref pos p)
+    {
+        ulong key = 0;
+        // White Pawns
+        ulong pawns = p.get_pieces(PAWN, WHITE);
+        while (pawns != 0)
+        {
+            key ^= PieceSqKeys[WHITE][PAWN][popLsb(ref pawns)];
+        }
+        // Black Pawns
+        pawns = p.get_pieces(PAWN, BLACK);
+        while (pawns != 0)
+        {
+            key ^= PieceSqKeys[BLACK][PAWN][popLsb(ref pawns)];
+        }
         return key;
     }
 

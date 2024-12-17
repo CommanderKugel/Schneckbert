@@ -14,7 +14,8 @@ public unsafe struct pos
     public byte us;
 
     public byte FiftyMoveCnt;
-    public ulong ZobristKey;
+    public ulong ZobristKey,
+                 PawnKey;
 
     public Accumulator accumulator;
 
@@ -85,7 +86,8 @@ public unsafe struct pos
             ep = SQ_NONE;
         }
 
-        ZobristKey = Zobrist.CalcZobrist(this);
+        ZobristKey = Zobrist.calc_zobrist_key(ref this);
+        PawnKey    = Zobrist.calc_pawn_key(ref this);
         FiftyMoveCnt = 0;
     }
 
@@ -316,7 +318,7 @@ public unsafe struct pos
         ep = SQ_NONE;
         us = (byte)(1-us);
         FiftyMoveCnt++;
-        ZobristKey = Zobrist.CalcZobrist(this);
+        ZobristKey = Zobrist.calc_zobrist_key(ref this);
         RepetitionTable.Push(ZobristKey);
         SearchStack.Push(ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
     }
