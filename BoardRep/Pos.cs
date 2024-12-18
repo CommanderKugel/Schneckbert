@@ -222,6 +222,11 @@ public unsafe struct pos
 
             // captures reset the fifty move rule
             FiftyMoveCnt = 0;
+
+            if (capturedPieceType == PAWN)
+            {
+                PawnKey ^= Zobrist.get_piece_key(1-us, PAWN, to);
+            }
         }
 
         // reset ep square, because was copyied from prev pos
@@ -233,6 +238,9 @@ public unsafe struct pos
 
         if (movingPieceType == PAWN) 
         {
+            PawnKey ^= Zobrist.get_piece_key(us, PAWN, from)
+                    ^  Zobrist.get_piece_key(us, PAWN, to);
+
             // double pawn push
             if (Math.Abs(dist) == 16) 
             {
@@ -245,13 +253,16 @@ public unsafe struct pos
             {
                 pop_piece(to, PAWN, us);
                 set_piece(to, m.PromoPiece, us);
+                PawnKey ^= Zobrist.get_piece_key(us, PAWN, to);
             }
 
             // en passant capture
             else if (m.IsEp) 
             {
                 capturedPieceType = PAWN;
-                pop_piece(wtm ? to-8 : to+8, PAWN, 1-us);
+                int sq = wtm ? to-8 : to+8;
+                pop_piece(sq, PAWN, 1-us);
+                PawnKey ^= Zobrist.get_piece_key(1-us, PAWN, sq);
             }
             
             // reset at every Pawn move

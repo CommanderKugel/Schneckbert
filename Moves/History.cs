@@ -94,10 +94,12 @@ public static class History
 
             getButterflyHistVal(p.us, m) -= delta;
             getPieceToHistVal(p.us, p.piece_on(m.from), m.to) -= delta;
+            getPawnHistVal(p.us, p.PawnKey, p.piece_on(m.from), m.to) -= delta;
         }
 
         ref move mv = ref moves[lastMoveIdx];
         getButterflyHistVal(p.us, mv) += delta;
         getPieceToHistVal(p.us, p.piece_on(mv.from), mv.to) += delta;
+        getPawnHistVal(p.us, p.PawnKey, p.piece_on(mv.from), mv.to) += delta;
     }
 }

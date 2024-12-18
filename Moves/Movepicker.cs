@@ -39,7 +39,8 @@ public unsafe class MovePicker
                             + victim * 100_000 - attacker
                       : m == ss->killerMove  ? 900_000
                       : History.getButterflyHistVal(p.us, m) 
-                            + History.getPieceToHistVal(p.us, attacker, m.to);
+                            + History.getPieceToHistVal(p.us, attacker, m.to)
+                            + History.getPawnHistVal(p.us, p.PawnKey, attacker, m.to);
         }
     }
 
