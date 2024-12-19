@@ -1,17 +1,23 @@
+using System.Runtime.CompilerServices;
 using static Constants;
 
 public static class History
 {   
     // Main Butterfly History
     // color-from-to
-    private static short[][] ButterflyHistory;  // 2 * 64 * 64 
+    private static short[][] ButterflyHistory; // 2 * 64 * 64 
 
     // Main Piece-To-History
     // color-PieceType-to
     private static short[][] PieceToHistory; // 2 * 6 * 64
 
+    /// <summary>
+    /// determines the size fot the Pawn-History-Table
+    /// </summary>
+    private const int PAWN_HIST_SIZE = 256;
 
-    const int PAWN_HIST_SIZE = 256;
+    // Secondary Piece-To-History
+    // color-PawnKey-PieceType-to
     private static short[][][] PawnHistory; // 2 * 256 * 6*64
 
     public static void init()
@@ -77,9 +83,31 @@ public static class History
     public static short calcHistDelta(int depth) => (short)(depth * depth);
 
     /// <summary>
-    /// Updates the History Value of all moves that were played at this node
-    /// Supported Histories: Butterfly, PieceTo
+    /// Value used for History-gravity formula
     /// </summary>
+    private const int HISTORY_DIVISOR = 512;
+    
+    /// <summary>
+    /// Decreases the given History-Value for bad moves.
+    /// The smaller the value already is, the less it is decreased
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void decreaseHistVal(int delta, ref short value)
+        => value = (short)(value - delta - delta*value/HISTORY_DIVISOR);
+
+    /// <summary>
+    /// Increases the given History-Value for good moves.
+    /// The bigger the value already is, the less it is decreased
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void increaseHistVal(int delta, ref short value)
+        => value = (short)(value + delta - delta*value/HISTORY_DIVISOR);
+
+    /// <summary>
+    /// Updates the History Value of all moves that were played at this node
+    /// Supported Histories: Butterfly, PieceTo, Pawn-PieceTo
+    /// </summary> 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe void updateQuietHistValues(Span<move> moves, int lastMoveIdx, int depth, pos p)
     {
         short delta = calcHistDelta(depth);
@@ -92,14 +120,14 @@ public static class History
                 continue;
             }
 
-            getButterflyHistVal(p.us, m) -= delta;
-            getPieceToHistVal(p.us, p.piece_on(m.from), m.to) -= delta;
-            getPawnHistVal(p.us, p.PawnKey, p.piece_on(m.from), m.to) -= delta;
+            decreaseHistVal(delta, ref getButterflyHistVal(p.us, m));
+            decreaseHistVal(delta, ref getPieceToHistVal(p.us, p.piece_on(m.from), m.to));
+            decreaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, p.piece_on(m.from), m.to));
         }
 
         ref move mv = ref moves[lastMoveIdx];
-        getButterflyHistVal(p.us, mv) += delta;
-        getPieceToHistVal(p.us, p.piece_on(mv.from), mv.to) += delta;
-        getPawnHistVal(p.us, p.PawnKey, p.piece_on(mv.from), mv.to) += delta;
+        increaseHistVal(delta, ref getButterflyHistVal(p.us, mv));
+        increaseHistVal(delta, ref getPieceToHistVal(p.us, p.piece_on(mv.from), mv.to));
+        increaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, p.piece_on(mv.from), mv.to));
     }
 }
