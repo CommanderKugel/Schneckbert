@@ -40,12 +40,6 @@ public static class RepetitionTable
     /// </summary>
     public static bool IsRepeatedPosition(pos p)
     {
-        // Just one full-move can not cause a repetition, so we take a quick exit. 
-        if (p.FiftyMoveCnt < 4) 
-        {
-            return false;
-        }
-
         // If the fifts-move-rule-counter is updated, a position can no longer repeat itself,
         // as Pawn-moves or Captures can never be undone.
         // So we dont need to check further than the fifty-move-counter.
@@ -53,13 +47,14 @@ public static class RepetitionTable
 
         // Also, a Repetition can only occur after every full move,
         // so we only need to check every two half-moves -> i-=2
-        for (int i = ply-2; i >= earliestPossibleRepetition; i -= 2) 
-        { 
+        for (int i=ply-4; i>=earliestPossibleRepetition; i--)
+        {
             if (repTable[i] == p.ZobristKey)
             {
                 return true;
             }
-        }
+        } 
+        
         return false;
     }
 
