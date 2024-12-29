@@ -22,6 +22,13 @@ public static class TimeManager
         RestartTimer();
     }
 
+    public static void SetMaxTimelimit(int maxtime)
+    {
+        SoftTimeLimit = maxtime;
+        HardTimeLimit = maxtime;
+        RestartTimer();
+    }
+
     public static bool InSoftTimeLimit() => watch.ElapsedMilliseconds < SoftTimeLimit;
     public static bool InHardTimeLimit() => watch.ElapsedMilliseconds < HardTimeLimit;
 

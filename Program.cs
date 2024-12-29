@@ -105,6 +105,17 @@ while (true)
                 TimeManager.SetNewTimelimit(int.MaxValue);
             }
 
+            else if (tokens[1] == "movetime")
+            {
+                var movetime = SkipPast("movetime").Select(int.Parse).FirstOrDefault();
+                TimeManager.SetMaxTimelimit(movetime);
+
+                if (tokens.Length == 5 && tokens[3] == "nodes")
+                {
+                    nodes = SkipPast("nodes").Select(int.Parse).FirstOrDefault();
+                }
+            }
+
             else if (tokens[1] == "depth")
             {
                 depth = SkipPast("depth").Select(int.Parse).FirstOrDefault();
@@ -112,7 +123,7 @@ while (true)
             }
 
             move bestmove = Search.iterativeDeepen(
-                root, info: false, maxDepth: depth, maxNodes: nodes
+                root, info: true, maxDepth: depth, maxNodes: nodes
             );
             Console.WriteLine($"bestmove {bestmove}");
                                 
