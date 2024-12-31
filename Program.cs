@@ -2,7 +2,7 @@
 
 SearchStack.init();
 Zobrist.init();
-TranspositionTable.init(1 << 17); // should be 1MB (i hope)
+TranspositionTable.Resize(16); // initializes the TT to 16MB
 History.init();
 Attacks.init();
 
@@ -30,6 +30,25 @@ while (true)
             NNUE.init();
             Utils.init();
             Console.WriteLine("readyok");
+            break;
+        }
+        case "setoption":
+        {
+            // setoption name Hash value MBValue
+            if (tokens.Length >= 5 && tokens[2] == "Hash")
+            {
+                int sizeMB = SkipPast("value").Select(int.Parse).FirstOrDefault();
+                try
+                {
+                    Console.WriteLine($"info string set Hash to {TranspositionTable.Resize(sizeMB)} mb");
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"Could not use {sizeMB} as hash size!");
+                    Console.Error.WriteLine(e.Message);
+                }
+            }
+
             break;
         }
         case "ucinewgame":
@@ -135,8 +154,8 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 7
             );
-            long bench = 1924195; 
-            int  nps   = 1317899; 
+            long bench = 1854975; 
+            int  nps   = 1291717; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;

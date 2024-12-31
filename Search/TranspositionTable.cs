@@ -5,8 +5,6 @@ public struct TTEntry
     public ulong key;
     public int score;
     public move move;
-
-    public const int TT_SHIFT = 56;
     
     public TTEntry(ulong key, int score, int depth, int flag, move move)
     {
@@ -22,26 +20,37 @@ public static class TranspositionTable
 {
 
     private static TTEntry[] TT;
-    private static int TTSize;
+    private static long TTSize;
+
+    private const int MAX_SIZE = 4 * 1024; // max 4 GB
+    private const int MIN_SIZE = 1;        // min 1 MB
 
     /// <summary>
-    /// initializes the Transposition Table as a big array
-    /// the size sets the amonunt of entries
-    /// one TTEntry is 70 bytes in size
+    /// Creates a new TranspositionTable for the given size.
+    /// Calls the Garbage Collector to clean up any old Transposition Tables.
     /// </summary>
-    public static void init(int size)
+    public static unsafe int Resize(int sizeMB)
     {
-        TTSize = size;
+        sizeMB = Math.Clamp(sizeMB, MIN_SIZE, MAX_SIZE);
+        int  entrySizeByte = sizeof(TTEntry);
+        long TTSizeByte = sizeMB * 1024 * 1024;
+        
+        TTSize = TTSizeByte / entrySizeByte;
         TT = new TTEntry[TTSize];
         Reset();
+
+        // clean the garbage rather sooner than later
+        GC.Collect();
+
+        return sizeMB;
     }
 
     /// <summary>
-    /// Cleats all Entries from the Transposition Table
+    /// Clears all Entries from the Transposition Table
     /// </summary>
     public static void Reset()
     {
-         Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
+        Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
     }
 
     /// <summary>
