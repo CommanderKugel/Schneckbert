@@ -123,7 +123,7 @@ while (true)
             }
 
             move bestmove = Search.iterativeDeepen(
-                root, info: true, maxDepth: depth, maxNodes: nodes
+                root, info: false, maxDepth: depth, maxNodes: nodes
             );
             Console.WriteLine($"bestmove {bestmove}");
                                 
@@ -135,8 +135,8 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 7
             );
-            long bench = 1727539; 
-            int  nps   = 1220181; 
+            long bench = 1924195; 
+            int  nps   = 1317899; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;

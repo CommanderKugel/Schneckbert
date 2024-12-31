@@ -55,23 +55,23 @@ public static class Quiescense
 
 
         // #4 Static Evaluation
-        int staticEval = NNUE.Evaluate(ref p);
+        int staticEval = !inCheck ? NNUE.Evaluate(ref p) : 0;
 
 
         // #5 Quiescense Search Stand Pat & Evaluate
         //    when a Quiet Position is reached, return the static evaluation score
         //    int a Quiet Position the best move is quiet (mostly: not a capture)
-        if (staticEval >= beta)
+        if (staticEval >= beta && !inCheck)
         {
             return staticEval;
         }
 
-        if (staticEval >= alpha)
+        if (staticEval >= alpha && !inCheck)
         {
             alpha = staticEval;
         }
 
-        bestScore = staticEval;
+        bestScore = !inCheck ? staticEval : -SCORE_MATE + ply ;
 
 
         // #6 Move Generating and Ordering
@@ -79,7 +79,7 @@ public static class Quiescense
         //    ToDo: Staged Move Generation
         Span<move> moves = stackalloc move[MAX_MOVE_CNT];
         Span<int> scores = stackalloc int[MAX_MOVE_CNT];
-        var picker = new MovePicker(p, true, ttMove, ss, ref moves, ref scores);
+        var picker = new MovePicker(p, !inCheck, ttMove, ss, ref moves, ref scores);
 
 
         // keep track of moves that were played out, some will be pruned or illegal        
