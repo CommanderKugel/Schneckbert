@@ -89,6 +89,8 @@ public unsafe struct pos
         ZobristKey = Zobrist.calc_zobrist_key(ref this);
         PawnKey    = Zobrist.calc_pawn_key(ref this);
         FiftyMoveCnt = 0;
+
+        accumulator = new Accumulator(this);
     }
 
     // QOL Methods
@@ -288,14 +290,21 @@ public unsafe struct pos
             }
         }
 
+
         bool IsLegal = (attackers_to(get_ksq(us), get_blocker()) & colorBB[1-us]) == 0;
         
-        us = (byte)(1-us);
-        ZobristKey ^= Zobrist.get_stm_key();
-
 
         if (IsLegal) 
         {
+
+            accumulator.update_hm(movingPieceType, from, to, ref this);
+
+            //var testAcc = new Accumulator(this);
+            //var _ = accumulator == testAcc;
+
+            us = (byte)(1-us);
+            ZobristKey ^= Zobrist.get_stm_key();
+
             // update castling rights
             // as soon as any piece on the relevant squares moves or gets captured,
             // the right will be removed

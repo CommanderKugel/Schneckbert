@@ -154,16 +154,34 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 7
             );
-            long bench = 1854975; 
-            int  nps   = 1291717; 
+            long bench = 1659709; 
+            int  nps   = 1277851; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
         }
         case "eval":
         {
-            Utils.print(root);
-            Console.WriteLine("NNUE evaluation: "+NNUE.Evaluate(ref root));
+            if (root == (new pos(Constants.startpos)))
+            {
+                foreach (var fen in new string[] {"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+                                                    "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+                                                    "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+                                                    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
+                                                    "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" })
+                {
+                    pos p = new pos(fen);
+                    p.accumulator.accumulate_from_zero(ref p);
+                    int eval = NNUE.Evaluate(ref p);
+                    Console.WriteLine("FEN: "+fen);
+                    Console.WriteLine("EVAL: "+eval);
+                }
+            }
+            else 
+            {
+                Utils.print(root);
+                Console.WriteLine("NNUE evaluation: "+NNUE.Evaluate(ref root));
+            }
             break;
         }
         case "print":

@@ -36,18 +36,7 @@ public static class NNUE
     private static int crelu(int x) => Math.Clamp(x, 0, QA);
 
 
-    /// <summary>
-    /// returns the index for the 768 input representation
-    /// one for the view of side to move, and one for not side to move
-    /// uses color=WHITE for stm and color=BLACK for not stm
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (int, int) get_768_idx(int color, int pt, int sq)
-    {
-        int wfeat = (1-color) * 384 + pt * 64 +  sq;
-        int bfeat = (  color) * 384 + pt * 64 + (sq ^ 56);
-        return (wfeat, bfeat);
-    }
+    
 
     /// <summary>
     /// Returns the static Evaluation of the position.
@@ -83,6 +72,10 @@ public static class NNUE
         }
     }
 
+    
+    public static readonly string NET_NAME = main;
+    public const string main = "simple16_hm";
+
     /// <summary>
     /// reads the binary file that has been trained by the open source bullet trainer
     /// https://github.com/jw1912/bullet
@@ -90,8 +83,9 @@ public static class NNUE
     /// </summary>
     public static void init()
     {
-        const string path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\Schneckbert\\Schneckbert\\Evaluate\\";
-        using (FileStream fs = new FileStream(path+"simple_quantized.bin", FileMode.Open, FileAccess.Read))
+        
+        const string path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\Schneckbert\\Schneckbert\\Evaluate\\Nets\\";
+        using (FileStream fs = new FileStream(path+NET_NAME+".bin", FileMode.Open, FileAccess.Read))
         using (BinaryReader reader = new BinaryReader(fs))
         {
 
