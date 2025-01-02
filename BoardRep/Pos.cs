@@ -29,7 +29,7 @@ public unsafe struct pos
         for (int pt=PAWN;  pt<=KING;  pt++) pieceBB[pt] = 0;
         for (int cl=BLACK; cl<=WHITE; cl++) colorBB[cl] = 0;
         for (int cr=0;     cr<4;      cr++) castlingRights[cr] = false;
-        this.accumulator = new Accumulator(this);
+        this.accumulator = new Accumulator();
         SearchStack.stack[0] = new SS();
         
         int r = 7;
@@ -58,10 +58,10 @@ public unsafe struct pos
                 case 'q': set_piece(sq, QUEEN,  BLACK); break;
                 case 'k': set_piece(sq, KING,   BLACK); break;
                 case '/': f=0; r--; break;
+                case ' ': break;
                 default: try{f += int.Parse(c.ToString())-1;} catch{} break;
             }
         }
-
 
         us = (byte)((fen[idx++] == 'w') ? WHITE : BLACK);
 

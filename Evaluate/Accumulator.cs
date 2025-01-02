@@ -2,11 +2,14 @@ using static Constants;
 using static Utils;
 using static NNUE;
 using System.Runtime.CompilerServices;
+using System.Numerics;
 
 public unsafe struct Accumulator
 {
-    public fixed short AccumulatorWhite[HIDDEN_SIZE];
-    public fixed short AccumulatorBlack[HIDDEN_SIZE];
+    //public fixed short AccumulatorWhite[HIDDEN_SIZE];
+    //public fixed short AccumulatorBlack[HIDDEN_SIZE];
+    public Vector<short> AccWhite;
+    public Vector<short> AccBlack;
 
     public int wflip = 0;
     public int bflip = 0;
@@ -39,22 +42,20 @@ public unsafe struct Accumulator
     {
         var (us_feat, them_feat) = get_768_idx(color, pt, sq);
 
-        for (int i=0; i<HIDDEN_SIZE; i++)
-        {
-            AccumulatorWhite[i] += HiddenWeights[HIDDEN_SIZE * us_feat   + i];
-            AccumulatorBlack[i] += HiddenWeights[HIDDEN_SIZE * them_feat + i];
-        }
+        var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
+        var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
+        AccWhite += weightsWhite;
+        AccBlack += weightsBlack;
     }
 
     public void deactivate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx(color, pt, sq);
 
-        for (int i=0; i<HIDDEN_SIZE; i++)
-        {
-            AccumulatorWhite[i] -= HiddenWeights[HIDDEN_SIZE * us_feat   + i];
-            AccumulatorBlack[i] -= HiddenWeights[HIDDEN_SIZE * them_feat + i];
-        }
+        var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
+        var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
+        AccWhite -= weightsWhite;
+        AccBlack -= weightsBlack;
     }
 
     /// <summary>
@@ -62,13 +63,8 @@ public unsafe struct Accumulator
     /// </summary>
     public unsafe void accumulate_from_zero(ref pos p)
     {
-        fixed (short* whiteDestPtr = AccumulatorWhite)
-        fixed (short* blackDestPtr = AccumulatorBlack)
-        fixed (short* biasPtr = HiddenBias)
-        {
-            Unsafe.CopyBlock(whiteDestPtr, biasPtr, sizeof(short)*HIDDEN_SIZE);
-            Unsafe.CopyBlock(blackDestPtr, biasPtr, sizeof(short)*HIDDEN_SIZE);
-        }
+        AccWhite = new Vector<short>(HiddenBias);
+        AccBlack = new Vector<short>(HiddenBias);
 
         // set all Pieces
         for (int color=BLACK; color<=WHITE; color++)
@@ -95,10 +91,10 @@ public unsafe struct Accumulator
 
     public static bool operator ==(Accumulator lhs, Accumulator rhs)
     {
-        for (int i=0; i<HIDDEN_SIZE; i++)
+        for (int i=0; i<Vector<short>.Count; i++)
         {
-            if (lhs.AccumulatorWhite[i] != rhs.AccumulatorWhite[i] ||
-                lhs.AccumulatorBlack[i] != rhs.AccumulatorBlack[i])
+            if (lhs.AccWhite[i] != rhs.AccWhite[i] ||
+                lhs.AccBlack[i] != rhs.AccBlack[i])
             {
                 throw new Exception("Accumulated values don't match!");
             }

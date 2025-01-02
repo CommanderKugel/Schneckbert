@@ -1,6 +1,9 @@
 using static Constants;
+using static System.Numerics.Vector;
+using static System.Math;
 
 using System.Runtime.CompilerServices;
+using System.Numerics;
 
 
 public static class NNUE
@@ -24,18 +27,8 @@ public static class NNUE
 
 
     const int SCALE = 400;
-    const int QA = 255;
-    const int QB = 64;
-
-
-    /// <summary>
-    /// Clamped Rectified Linear Unit
-    /// Activation Function for accumulated values
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int crelu(int x) => Math.Clamp(x, 0, QA);
-
-
+    const short QA = 255;
+    const short QB = 64;
     
 
     /// <summary>
@@ -45,31 +38,33 @@ public static class NNUE
     /// </summary>
     public static unsafe int Evaluate(ref pos p)
     {
-        fixed (short* wptr = p.accumulator.AccumulatorWhite)
-        fixed (short* bptr = p.accumulator.AccumulatorBlack)
-        {
-            int sum = OutputBias;
+        // CRelu activation function
+        // Clamped Rectified Linear Unit
+        var activatedWhite = Max(Vector<short>.Zero, Min(new Vector<short>(QA), p.accumulator.AccWhite));
+        var activatedBlack = Max(Vector<short>.Zero, Min(new Vector<short>(QA), p.accumulator.AccBlack));
 
-            // Perspective - order Accumulators based on side to move
-            short*   our_acc = p.us==WHITE ? wptr : bptr;
-            short* their_acc = p.us==WHITE ? bptr : wptr;
+        // load output weights into Vectors
+        var weightsWhite = new Vector<short>(OutputWeight, p.us==WHITE ? 0 : HIDDEN_SIZE);
+        var weightsBlack = new Vector<short>(OutputWeight, p.us==BLACK ? 0 : HIDDEN_SIZE);
 
-            // first activate the values, then sum up the accumulators
-            for (int i=0; i<HIDDEN_SIZE; i++)
-            {
-                sum += crelu(  our_acc[i]) * OutputWeight[i];
-                sum += crelu(their_acc[i]) * OutputWeight[i+HIDDEN_SIZE];
-            }
+        // Multiply the Accumulator and the Weights
+        // Dont compute the Dot Product yet to avoid overflow errors
+        var mult = Multiply(activatedWhite, weightsWhite)
+                 + Multiply(activatedBlack, weightsBlack);
 
-            // Scale from small original floating point numbers
-            // about centipawns now
-            sum *= SCALE;
+        // widen the <short> datatype to <int>
+        Vector<int> lower, upper;
+        Widen(mult, out lower, out upper);
+        int sum = Sum(lower) + Sum(upper) + OutputBias;
 
-            // Remove Quantization
-            sum /= QA * QB;
+        // Scaling from small original floating point numbers
+        // comparable to ~centipawns now
+        sum *= SCALE;
 
-            return Math.Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
-        }
+        // Remove Quantization
+        sum /= QA * QB;
+
+        return Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
     }
 
     
