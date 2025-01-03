@@ -299,9 +299,6 @@ public unsafe struct pos
 
             accumulator.update_hm(movingPieceType, from, to, ref this);
 
-            //var testAcc = new Accumulator(this);
-            //var _ = accumulator == testAcc;
-
             us = (byte)(1-us);
             ZobristKey ^= Zobrist.get_stm_key();
 

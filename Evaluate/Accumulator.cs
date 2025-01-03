@@ -25,12 +25,8 @@ public unsafe struct Accumulator
     private static readonly int[] flanks = [ 0, 0, 0, 0, 1, 1, 1, 1 ];
     public void update_hm(int pt, int from, int to, ref pos p)
     {
-        if (pt != KING)
-        {
-            return;
-        }
-
-        if (flanks[file_of(from)] != flanks[file_of(to)])
+        if (pt == KING &&
+            flanks[file_of(from)] != flanks[file_of(to)])
         {
             wflip = file_of(p.get_ksq(WHITE)) > 3 ? 7 : 0;
             bflip = file_of(p.get_ksq(BLACK)) > 3 ? 7 : 0;
@@ -40,7 +36,7 @@ public unsafe struct Accumulator
 
     public void activate(int color, int pt, int sq)
     {
-        var (us_feat, them_feat) = get_768_idx(color, pt, sq);
+        var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
         var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
         var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
@@ -50,7 +46,7 @@ public unsafe struct Accumulator
 
     public void deactivate(int color, int pt, int sq)
     {
-        var (us_feat, them_feat) = get_768_idx(color, pt, sq);
+        var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
         var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
         var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
@@ -81,7 +77,15 @@ public unsafe struct Accumulator
         }
     }
 
+
     public (int, int) get_768_idx(int color, int pt, int sq)
+    {
+        int wfeat = (1-color) * 384 + pt * 64 + (sq);
+        int bfeat =    color  * 384 + pt * 64 + (sq ^ 56);
+        return (wfeat, bfeat);
+    }
+
+    public (int, int) get_768_idx_hm(int color, int pt, int sq)
     {
         int wfeat = (1-color) * 384 + pt * 64 + (sq ^ wflip);
         int bfeat =    color  * 384 + pt * 64 + (sq ^ bflip ^ 56);

@@ -11,14 +11,10 @@ public static class NNUE
     public const int INPUT_SIZE = 768;
     public const int HIDDEN_SIZE = 16;
     public const int OUTPUT_SIZE = 1;
+    
+    public static readonly string NET_NAME = main;
+    public const string main = "simple16_hm";
 
-    /*
-    Accumulator     = short[HIDDNE_SIZE]        16 * 2
-    feature weights = Accumulator[768]          16 * 2 * 768 = 24.576
-    feature bias    = Accumulator               16 * 2       = 32
-    output Weights  = short[2 * HIDDEN_SIZE]    16 * 2 * 2   = 64
-    output bias     = short                     2            = 2
-    */ 
     public static short[] HiddenWeights = new short[INPUT_SIZE * HIDDEN_SIZE];
     public static short[] HiddenBias    = new short[HIDDEN_SIZE];
 
@@ -67,9 +63,6 @@ public static class NNUE
         return Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
     }
 
-    
-    public static readonly string NET_NAME = main;
-    public const string main = "simple16_hm";
 
     /// <summary>
     /// reads the binary file that has been trained by the open source bullet trainer
@@ -80,22 +73,22 @@ public static class NNUE
     {
         
         const string path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\Schneckbert\\Schneckbert\\Evaluate\\Nets\\";
-        using (FileStream fs = new FileStream(path+NET_NAME+".bin", FileMode.Open, FileAccess.Read))
-        using (BinaryReader reader = new BinaryReader(fs))
+        using (var fs     = new FileStream(path+NET_NAME+".bin", FileMode.Open, FileAccess.Read))
+        using (var reader = new BinaryReader(fs))
         {
 
             // read hidden weights
             for (int i=0; i<HIDDEN_SIZE*INPUT_SIZE; i++)
-            {
+                    {
                 HiddenWeights[i] = reader.ReadInt16();
             }
-
+            
             // read hidden bias
             for (int i=0; i<HIDDEN_SIZE; i++)
             {
                 HiddenBias[i] = reader.ReadInt16();
             }
-
+            
             // read output weights
             for (int i=0; i<HIDDEN_SIZE*2; i++)
             {
