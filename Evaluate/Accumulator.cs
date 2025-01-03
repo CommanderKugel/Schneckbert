@@ -11,13 +11,32 @@ public unsafe struct Accumulator
     public Vector<short> AccWhite;
     public Vector<short> AccBlack;
 
-    public int wflip = 0;
-    public int bflip = 0;
+    int wflip = 0;
+    int bflip = 0;
+
+    int wbuck;
+    int bbuck;
+
+
+    public static readonly int[] buckets = {
+        0, 0, 1, 1, 1, 1, 0, 0,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2,
+    };
 
     public Accumulator(pos p)
     {
         wflip = file_of(p.get_ksq(WHITE)) > 3 ? 7 : 0;
         bflip = file_of(p.get_ksq(BLACK)) > 3 ? 7 : 0;
+
+        wbuck = buckets[p.get_ksq(WHITE)];
+        bbuck = buckets[p.get_ksq(BLACK)];
+
         accumulate_from_zero(ref p);
     }
 
@@ -25,11 +44,16 @@ public unsafe struct Accumulator
     private static readonly int[] flanks = [ 0, 0, 0, 0, 1, 1, 1, 1 ];
     public void update_hm(int pt, int from, int to, ref pos p)
     {
-        if (pt == KING &&
-            flanks[file_of(from)] != flanks[file_of(to)])
+        if (pt == KING && (
+            flanks[file_of(from)] != flanks[file_of(to)] ||
+            buckets[from] != buckets[to]))
         {
             wflip = file_of(p.get_ksq(WHITE)) > 3 ? 7 : 0;
             bflip = file_of(p.get_ksq(BLACK)) > 3 ? 7 : 0;
+
+            wbuck = buckets[p.get_ksq(WHITE)];
+            bbuck = buckets[p.get_ksq(BLACK)];
+
             accumulate_from_zero(ref p);
         }
     }
@@ -38,8 +62,8 @@ public unsafe struct Accumulator
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
-        var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
-        var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
+        var weightsWhite = new Vector<short>(HiddenWeights[wbuck][us_feat]);
+        var weightsBlack = new Vector<short>(HiddenWeights[bbuck][them_feat]);
         AccWhite += weightsWhite;
         AccBlack += weightsBlack;
     }
@@ -48,8 +72,8 @@ public unsafe struct Accumulator
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
-        var weightsWhite = new Vector<short>(HiddenWeights, HIDDEN_SIZE * us_feat);
-        var weightsBlack = new Vector<short>(HiddenWeights, HIDDEN_SIZE * them_feat);
+        var weightsWhite = new Vector<short>(HiddenWeights[wbuck][us_feat]);
+        var weightsBlack = new Vector<short>(HiddenWeights[bbuck][them_feat]);
         AccWhite -= weightsWhite;
         AccBlack -= weightsBlack;
     }

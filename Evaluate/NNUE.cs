@@ -11,11 +11,14 @@ public static class NNUE
     public const int INPUT_SIZE = 768;
     public const int HIDDEN_SIZE = 16;
     public const int OUTPUT_SIZE = 1;
+
+    public const int BUCKET_CNT = 3;
     
-    public static readonly string NET_NAME = main;
+    public static readonly string NET_NAME = bucket;
+    public const string bucket = "simple16_hm_buckets3";
     public const string main = "simple16_hm";
 
-    public static short[] HiddenWeights = new short[INPUT_SIZE * HIDDEN_SIZE];
+    public static short[][][] HiddenWeights = new short[BUCKET_CNT][][];
     public static short[] HiddenBias    = new short[HIDDEN_SIZE];
 
     public static short[] OutputWeight  = new short[HIDDEN_SIZE * 2];
@@ -25,6 +28,18 @@ public static class NNUE
     const int SCALE = 400;
     const short QA = 255;
     const short QB = 64;
+
+
+    static NNUE() {
+        for (int i=0; i<BUCKET_CNT; i++)
+        {
+            HiddenWeights[i] = new short[INPUT_SIZE][];
+            for (int j=0; j<INPUT_SIZE; j++)
+            {
+                HiddenWeights[i][j] = new short[HIDDEN_SIZE];
+            }
+        }
+    }
     
 
     /// <summary>
@@ -71,17 +86,18 @@ public static class NNUE
     /// </summary>
     public static void init()
     {
-        
         const string path = "C:\\Users\\nikol\\Desktop\\VS_Code_Dateien\\Schneckbert\\Schneckbert\\Evaluate\\Nets\\";
         using (var fs     = new FileStream(path+NET_NAME+".bin", FileMode.Open, FileAccess.Read))
         using (var reader = new BinaryReader(fs))
         {
 
             // read hidden weights
-            for (int i=0; i<HIDDEN_SIZE*INPUT_SIZE; i++)
+            for (int buck=0; buck<BUCKET_CNT; buck++)
+                for (int feat=0; feat<INPUT_SIZE; feat++)
+                    for (int h=0; h<HIDDEN_SIZE; h++)
                     {
-                HiddenWeights[i] = reader.ReadInt16();
-            }
+                        HiddenWeights[buck][feat][h] = reader.ReadInt16();
+                    }
             
             // read hidden bias
             for (int i=0; i<HIDDEN_SIZE; i++)
