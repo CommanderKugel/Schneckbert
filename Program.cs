@@ -5,6 +5,7 @@ Zobrist.init();
 TranspositionTable.Resize(16); // initializes the TT to 16MB
 History.init();
 Attacks.init();
+NNUEWeights.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
@@ -27,7 +28,6 @@ while (true)
         }
         case "isready":
         {
-            NNUE.init();
             Utils.init();
             Console.WriteLine("readyok");
             break;
@@ -171,7 +171,7 @@ while (true)
                                                     "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" })
                 {
                     pos p = new pos(fen);
-                    int eval = NNUE.Evaluate(ref p);
+                    int eval = p.accumulator.Evaluate(ref p);
                     Console.WriteLine("FEN: "+fen);
                     Console.WriteLine("EVAL: "+eval);
                 }
@@ -179,7 +179,7 @@ while (true)
             else 
             {
                 Utils.print(root);
-                Console.WriteLine("NNUE evaluation: "+NNUE.Evaluate(ref root));
+                Console.WriteLine("NNUE evaluation: "+root.accumulator.Evaluate(ref root));
             }
             break;
         }

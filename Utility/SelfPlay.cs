@@ -20,16 +20,6 @@ public static class Selfplay
                 // play the game and receive all the necessary information
                 var (root, moves, scores, result) = play(randomPly);
 
-                if (result == "stalemate")
-                {
-                    Console.WriteLine(result);
-                    Console.WriteLine(root.get_fen());
-                    foreach (move m in moves)
-                    {
-                        Console.Write(m.ToString() + " ");
-                    }
-                }
-
                 for (int i=0; i<moves.Count; i++)
                 {
                     move m     = moves[i];

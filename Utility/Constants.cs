@@ -159,6 +159,9 @@ public static class Constants
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
     };
-
 }
+
+public interface COL {}
+public struct COL_WHITE : COL {}
+public struct COL_BLACK : COL {}
 

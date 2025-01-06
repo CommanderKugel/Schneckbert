@@ -6,7 +6,8 @@ public static class TimeManager
     public static long TotalNodes = 0;
 
     private static Stopwatch watch = new Stopwatch();    
-    public static void   RestartTimer() => watch.Restart();
+    public static void RestartTimer() => watch.Restart();
+    public static void StopTimer() => watch.Stop();
 
     public static long ElapsedMilliseconds() => Math.Max(watch.ElapsedMilliseconds, 1);
     public static int  NPS() => (int)((double)NodeCnt / (double)ElapsedMilliseconds() * 1000.0d);

@@ -83,7 +83,7 @@ public static class Search
         // #2 Avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
-            return NNUE.Evaluate(ref p);
+            return p.accumulator.Evaluate(ref p);
         }
 
         
@@ -149,7 +149,7 @@ public static class Search
         // #7 Static Evaluation
         //    We will not return this score, because we cant prove that this position is quiet,
         //    but we can use it to make educated guesses about this branch of the game tree
-        ss->StaticEval = !inCheck ? NNUE.Evaluate(ref p) : 0;
+        ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
 
 
         // #8 Reverse Futility Pruning

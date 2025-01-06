@@ -18,7 +18,7 @@ public static class Quiescense
         // #1 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
-            return NNUE.Evaluate(ref p);
+            return p.accumulator.Evaluate(ref p);
         }
 
         // #2 Draw detection (besides Stalemate)
@@ -55,7 +55,7 @@ public static class Quiescense
 
 
         // #4 Static Evaluation
-        int staticEval = !inCheck ? NNUE.Evaluate(ref p) : 0;
+        int staticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
 
 
         // #5 Quiescense Search Stand Pat & Evaluate
