@@ -2,10 +2,6 @@
 
 SearchStack.init();
 Zobrist.init();
-TranspositionTable.Resize(16); // initializes the TT to 16MB
-History.init();
-Attacks.init();
-NNUEWeights.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
@@ -28,6 +24,10 @@ while (true)
         }
         case "isready":
         {
+            TranspositionTable.Resize(16); // initializes the TT to 16MB
+            History.init();
+            Attacks.init();
+            NNUEWeights.load();
             Utils.init();
             Console.WriteLine("readyok");
             break;
