@@ -107,7 +107,7 @@ public static class Search
         bool inCheck  =  ss->checkers != 0;
 
         int bestScore = -SCORE_MATE;
-        int score;
+        int score     = -SCORE_MATE;
 
 
         // #4 Check Extensions
@@ -248,42 +248,28 @@ public static class Search
 
             playedAndLegal[movesPlayed++] = m;
 
-            // Full window search in pv-nodes
-            // if this node is a nonPV node, we still pass the zero window
-            // The first move is assumed to be the best and shouldnt be pruned, reduced, etc.
-            if (movesPlayed == 1)
+            
+            if (movesPlayed > 1 && depth > 2 && !isCapture && nonPV)
             {
-                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
-            }
-            else
-            {
-                // #13 Late Move Reductions
-                //     Assuming that our Move-Ordering is good, the later moves should be increasingly bad.
-                //     We search later moves at shallower depths to prove that they really are worse
-                int R = 1;
-                if (depth>2 && nonPV && !isCapture)
-                {
-                    R += 1;
-                }
+                int R = ln[movesPlayed];
 
-                // Reduced zero-window search
                 score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
 
-                // If a reduced Search fails high, we need to re-search at full depth to confirm that it 
-                // really is better.
-                if (score > alpha && R > 1)
+                if (R > 1 && score > alpha)
                 {
                     score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
                 }
-
-                // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
-                // and with a full window, to confirm we really beat alpha and get an exact score. 
-                // Searches using a null-window only return upper bounds.
-                if (!nonPV && score > alpha)
-                {
-                    score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
-                }
             }
+            else if (nonPV || movesPlayed > 1)
+            {
+                score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
+            }
+
+            if (!nonPV && (score > alpha || movesPlayed == 1))
+            {
+                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
+            }
+
 
             // here would be the moment to undo the move but its just copy-make
             RepetitionTable.Pop();

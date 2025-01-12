@@ -156,7 +156,7 @@ try
                     ? int.Parse(tokens[1])
                     : 7
                 );
-                long bench = 1637325; 
+                long bench = 1516630; 
                 int  nps   = 1277851; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
