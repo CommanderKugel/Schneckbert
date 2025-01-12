@@ -17,17 +17,21 @@ public unsafe partial struct Accumulator
     {
         // CRelu activation function
         // Clamped Rectified Linear Unit
-        var activatedWhite = Max(Vector<short>.Zero, Min(new Vector<short>(QA), p.accumulator.AccWhite));
-        var activatedBlack = Max(Vector<short>.Zero, Min(new Vector<short>(QA), p.accumulator.AccBlack));
+        var actWhiteLo = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccWhiteLo));
+        var actWhiteHi = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccWhiteHi));
+        var actBlackLo = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccBlackLo));
+        var actBlackHi = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccBlackHi));
 
         // load output weights into Vectors
-        var weightsWhite = new Vector<short>(OutputWeight, p.us==WHITE ? 0 : HIDDEN_SIZE);
-        var weightsBlack = new Vector<short>(OutputWeight, p.us==BLACK ? 0 : HIDDEN_SIZE);
+        var weightsWhiteLo = new Vector<short>(OutputWeight, p.us==WHITE ? 0  : HIDDEN_SIZE);
+        var weightsWhiteHi = new Vector<short>(OutputWeight, p.us==WHITE ? 16 : HIDDEN_SIZE+16);
+        var weightsBlackLo = new Vector<short>(OutputWeight, p.us==BLACK ? 0  : HIDDEN_SIZE);
+        var weightsBlackHi = new Vector<short>(OutputWeight, p.us==BLACK ? 16 : HIDDEN_SIZE+16);
 
         // Multiply the Accumulator and the Weights
         // Dont compute the Dot Product yet to avoid overflow errors
-        var mult = Multiply(activatedWhite, weightsWhite)
-                 + Multiply(activatedBlack, weightsBlack);
+        var mult = Multiply(actWhiteLo, weightsWhiteLo) + Multiply(actWhiteHi, weightsWhiteHi)
+                 + Multiply(actBlackLo, weightsBlackLo) + Multiply(actBlackHi, weightsBlackHi);
 
         // widen the <short> datatype to <int>
         Vector<int> lower, upper;

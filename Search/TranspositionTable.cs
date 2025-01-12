@@ -1,19 +1,13 @@
 
 public struct TTEntry
 {
-    public byte depth, flag;
-    public ulong key;
-    public int score;
-    public move move;
-    
-    public TTEntry(ulong key, int score, int depth, int flag, move move)
-    {
-        this.key   = key;
-        this.score = score;
-        this.move  = move;
-        this.depth = (byte) depth;
-        this.flag  = (byte) flag;
-    }
+    public byte depth = 0;
+    public byte flag  = 0;
+    public ulong key  = 0ul;
+    public int score  = 0;
+    public move move  = move.NullMove;
+
+    public TTEntry() {}
 }
 
 public static class TranspositionTable
@@ -50,7 +44,7 @@ public static class TranspositionTable
     /// </summary>
     public static void Reset()
     {
-        Array.Fill(TT, new TTEntry(0, 0, 0, 0, move.NullMove));
+        Array.Fill(TT, new TTEntry());
     }
 
     /// <summary>

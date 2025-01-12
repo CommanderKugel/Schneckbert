@@ -8,8 +8,8 @@ using System.Numerics;
 
 public unsafe partial struct Accumulator
 {
-    public Vector<short> AccWhite;
-    public Vector<short> AccBlack;
+    public Vector<short> AccWhiteHi, AccWhiteLo;
+    public Vector<short> AccBlackHi, AccBlackLo;
 
     int wflip;
     int bflip;
@@ -47,15 +47,19 @@ public unsafe partial struct Accumulator
     public void activate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
-        AccWhite += new Vector<short>(HiddenWeights[wbuck][us_feat]);
-        AccBlack += new Vector<short>(HiddenWeights[bbuck][them_feat]);
+        AccWhiteLo += new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
+        AccWhiteHi += new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
+        AccBlackLo += new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
+        AccBlackHi += new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
     }
 
     public void deactivate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
-        AccWhite -= new Vector<short>(HiddenWeights[wbuck][us_feat]);
-        AccBlack -= new Vector<short>(HiddenWeights[bbuck][them_feat]);
+        AccWhiteLo -= new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
+        AccWhiteHi -= new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
+        AccBlackLo -= new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
+        AccBlackHi -= new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
     }
 
     /// <summary>
@@ -63,8 +67,10 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe void accumulate_from_zero(ref pos p)
     {
-        AccWhite = new Vector<short>(HiddenBias);
-        AccBlack = new Vector<short>(HiddenBias);
+        AccWhiteLo = new Vector<short>(HiddenBias,  0);
+        AccWhiteHi = new Vector<short>(HiddenBias, 16);
+        AccBlackLo = new Vector<short>(HiddenBias,  0);
+        AccBlackHi = new Vector<short>(HiddenBias, 16);
 
         // set all Pieces
         for (int color=BLACK; color<=WHITE; color++)
@@ -103,18 +109,4 @@ public unsafe partial struct Accumulator
     public int get_hm<Color>(ref pos p) where Color : COL
         =>  file_of(p.get_ksq(typeof(Color)==typeof(COL_WHITE) ? WHITE : BLACK)) > 3 ? 7 : 0;
 
-
-
-    public static bool operator ==(Accumulator lhs, Accumulator rhs)
-    {
-        for (int i=0; i<Vector<short>.Count; i++)
-            if (lhs.AccWhite[i] != rhs.AccWhite[i] || lhs.AccBlack[i] != rhs.AccBlack[i])
-                throw new Exception("Accumulated values don't match!");
-        if (lhs.wflip != rhs.wflip || lhs.bflip != rhs.bflip)
-            throw new Exception("flanks of white King dont match!");
-        if (lhs.wbuck != rhs.wflip || lhs.bflip != rhs.bflip)
-            throw new Exception("king buckets dont match!");
-        return true;
-    }
-    public static bool operator !=(Accumulator lhs, Accumulator rhs) => !(lhs==rhs);
 }
