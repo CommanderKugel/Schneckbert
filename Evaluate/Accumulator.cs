@@ -8,8 +8,8 @@ using System.Numerics;
 
 public unsafe partial struct Accumulator
 {
-    public Vector<short> AccWhiteHi, AccWhiteLo;
-    public Vector<short> AccBlackHi, AccBlackLo;
+    public Vector<short> AccWhite16, AccWhite32, AccWhite48;
+    public Vector<short> AccBlack16, AccBlack32, AccBlack48;
 
     int wflip;
     int bflip;
@@ -47,19 +47,27 @@ public unsafe partial struct Accumulator
     public void activate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
-        AccWhiteLo += new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
-        AccWhiteHi += new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
-        AccBlackLo += new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
-        AccBlackHi += new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
+
+        AccWhite16 += new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
+        AccWhite32 += new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
+        AccWhite48 += new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
+
+        AccBlack16 += new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
+        AccBlack32 += new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
+        AccBlack48 += new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
     }
 
     public void deactivate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
-        AccWhiteLo -= new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
-        AccWhiteHi -= new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
-        AccBlackLo -= new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
-        AccBlackHi -= new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
+
+        AccWhite16 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
+        AccWhite32 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
+        AccWhite48 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
+
+        AccBlack16 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
+        AccBlack32 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
+        AccBlack48 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
     }
 
     /// <summary>
@@ -67,10 +75,13 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe void accumulate_from_zero(ref pos p)
     {
-        AccWhiteLo = new Vector<short>(HiddenBias,  0);
-        AccWhiteHi = new Vector<short>(HiddenBias, 16);
-        AccBlackLo = new Vector<short>(HiddenBias,  0);
-        AccBlackHi = new Vector<short>(HiddenBias, 16);
+        AccWhite16 = new Vector<short>(HiddenBias,  0);
+        AccWhite32 = new Vector<short>(HiddenBias, 16);
+        AccWhite48 = new Vector<short>(HiddenBias, 32);
+        
+        AccBlack16 = new Vector<short>(HiddenBias,  0);
+        AccBlack32 = new Vector<short>(HiddenBias, 16);
+        AccBlack48 = new Vector<short>(HiddenBias, 32);
 
         // set all Pieces
         for (int color=BLACK; color<=WHITE; color++)

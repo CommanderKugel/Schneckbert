@@ -17,26 +17,42 @@ public unsafe partial struct Accumulator
     {
         // CRelu activation function
         // Clamped Rectified Linear Unit
-        var actWhiteLo = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccWhiteLo));
-        var actWhiteHi = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccWhiteHi));
-        var actBlackLo = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccBlackLo));
-        var actBlackHi = Max(Vector<short>.Zero, Min(new Vector<short>(QA), AccBlackHi));
+        var VECTOR_QA = new Vector<short>(QA);
+        var actWhite16 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccWhite16));
+        var actWhite32 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccWhite32));
+        var actWhite48 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccWhite48));
+
+        var actBlack16 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccBlack16));
+        var actBlack32 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccBlack32));
+        var actBlack48 = Max(Vector<short>.Zero, Min(VECTOR_QA, AccBlack48));
 
         // load output weights into Vectors
-        var weightsWhiteLo = new Vector<short>(OutputWeight, p.us==WHITE ? 0  : HIDDEN_SIZE);
-        var weightsWhiteHi = new Vector<short>(OutputWeight, p.us==WHITE ? 16 : HIDDEN_SIZE+16);
-        var weightsBlackLo = new Vector<short>(OutputWeight, p.us==BLACK ? 0  : HIDDEN_SIZE);
-        var weightsBlackHi = new Vector<short>(OutputWeight, p.us==BLACK ? 16 : HIDDEN_SIZE+16);
+        var weightsWhite16 = new Vector<short>(OutputWeight, p.us==WHITE ? 0  : HIDDEN_SIZE);
+        var weightsWhite32 = new Vector<short>(OutputWeight, p.us==WHITE ? 16 : HIDDEN_SIZE+16);
+        var weightsWhite48 = new Vector<short>(OutputWeight, p.us==WHITE ? 32 : HIDDEN_SIZE+32);
+
+        var weightsBlack16 = new Vector<short>(OutputWeight, p.us==BLACK ? 0  : HIDDEN_SIZE);
+        var weightsBlack32 = new Vector<short>(OutputWeight, p.us==BLACK ? 16 : HIDDEN_SIZE+16);
+        var weightsBlack48 = new Vector<short>(OutputWeight, p.us==BLACK ? 32 : HIDDEN_SIZE+32);
 
         // Multiply the Accumulator and the Weights
         // Dont compute the Dot Product yet to avoid overflow errors
-        var mult = Multiply(actWhiteLo, weightsWhiteLo) + Multiply(actWhiteHi, weightsWhiteHi)
-                 + Multiply(actBlackLo, weightsBlackLo) + Multiply(actBlackHi, weightsBlackHi);
+        var mult16 = Multiply(actWhite16, weightsWhite16) + Multiply(actBlack16, weightsBlack16);
+        var mult32 = Multiply(actWhite32, weightsWhite32) + Multiply(actBlack32, weightsBlack32);
+        var mult48 = Multiply(actWhite48, weightsWhite48) + Multiply(actBlack48, weightsBlack48);
 
         // widen the <short> datatype to <int>
+        int sum = OutputBias;
         Vector<int> lower, upper;
-        Widen(mult, out lower, out upper);
-        int sum = Sum(lower) + Sum(upper) + OutputBias;
+
+        Widen(mult16, out lower, out upper);
+        sum += Sum(lower) + Sum(upper);
+
+        Widen(mult32, out lower, out upper);
+        sum += Sum(lower) + Sum(upper);
+
+        Widen(mult48, out lower, out upper);
+        sum += Sum(lower) + Sum(upper);
 
         // Scaling from small original floating point numbers
         // comparable to ~centipawns now
