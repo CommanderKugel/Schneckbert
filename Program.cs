@@ -154,10 +154,10 @@ try
             {
                 Bench.runBench(tokens.Length == 2
                     ? int.Parse(tokens[1])
-                    : 7
+                    : 10
                 );
-                long bench = 1592855; 
-                int  nps   = 1394692; 
+                long bench = 5274458; 
+                int  nps   = 1269424; 
                 Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
                 Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
                 break;

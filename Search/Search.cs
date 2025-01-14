@@ -249,7 +249,7 @@ public static class Search
             playedAndLegal[movesPlayed++] = m;
 
             
-            if (movesPlayed > 1 && depth > 2 && !isCapture && nonPV)
+            if (movesPlayed > 1 && depth > 2 && !isCapture)
             {
                 int R = ln[movesPlayed];
 
