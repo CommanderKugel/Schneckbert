@@ -324,8 +324,14 @@ public static class Search
             return inCheck ? ply - SCORE_MATE : 0;
         }
 
-        // enter data into the TT
+        // If this is an all-node and the tt contains a move for this position,
+        // dont overwrite the ttMove if alphy was not beaten
+        locBestMove = ttHit && !ttMove.IsNull && bestScore < alpha ? ttMove : locBestMove;
+
+        // set the flag
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
+
+        // enter data into the TT
         TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
 
         return bestScore;

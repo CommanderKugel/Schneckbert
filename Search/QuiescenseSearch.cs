@@ -177,6 +177,13 @@ public static class Quiescense
             }
         }
 
+        // if we have a valid move in the TT and we dont beat alpha or want to overwrite it with
+        // a null move, don't
+        if ((locBestMove.IsNull || bestScore < alpha) && ttHit && !ttMove.IsNull)
+        {
+            locBestMove = ttMove;
+        }
+
         // enter data into the TT
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
         TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, 0, flag, locBestMove);
