@@ -257,16 +257,7 @@ public static class Search
             }
 
             // #17 Late Move Pruning
-            if ( nonMatingLineExists &&
-                !isCapture &&
-                !m.IsPromo &&
-                 nonPV &&
-                !inCheck &&
-                 depth<=4 &&
-                (movesPlayed > depth * depth + 2))
-            {
-                continue;
-            }
+            // *COMING SOON*
 
             // #18 Static Exchange Evaluation Pruning
             //     If the move hat a bad SEE score in move ordering,
