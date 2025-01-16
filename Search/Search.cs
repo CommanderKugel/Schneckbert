@@ -74,6 +74,10 @@ public static class Search
         where NodeType : NODE
     {
 
+        bool isRoot = typeof(NodeType) == typeof(ROOT_NODE);
+        bool nonPV  = typeof(NodeType) == typeof(NON_PV);
+        bool isPV   = typeof(NodeType) == typeof(PV_NODE) || isRoot;
+
         // #1 Quiescense Search
         //    If we arrive at a leafe node, drop into QSearch.
         //    It only makes sense to evaluate Quiet positions, because captures 
@@ -97,8 +101,6 @@ public static class Search
             return p.accumulator.Evaluate(ref p);
         }
 
-        bool isRoot = typeof(NodeType) == typeof(ROOT_NODE);
-
         // #4 Draw Detection
         //    Excludes Stalemate, this is left to the move loop
         //    Exclude RootNodes, to always return a valid move.
@@ -111,7 +113,14 @@ public static class Search
         }
 
         // #5 Mate Distance Pruning
-        // *COMING SOON*
+        //    If we already found a mate and the current search-depth guarantees
+        //    that we cant find a quicker mate anymore, prune this branch.
+        int mdAplha = Max(alpha, -SCORE_MATE + ply);
+        int mdBeta  = Min(beta,   SCORE_MATE - ply - 1);
+        if (!isRoot && mdAplha >= mdBeta)
+        {
+            return mdAplha;
+        }
         
 
         // Count the Node as visited now
@@ -121,10 +130,6 @@ public static class Search
         ss->checkers = p.get_checkers();
         bool inCheck = ss->checkers != 0;
 
-        // together with isRoot, determine the NodeType
-        // nonPV = alpha+1==beta; erroneously becomes true in some rare occasions.
-        bool nonPV  = typeof(NodeType) == typeof(NON_PV);
-        bool isPV   = typeof(NodeType) == typeof(PV_NODE) || isRoot;
 
         // bestScore will contain this nodes score, score is a tmp variable
         int bestScore = -SCORE_MATE;
@@ -252,7 +257,16 @@ public static class Search
             }
 
             // #17 Late Move Pruning
-            // *COMING SOON*
+            if ( nonMatingLineExists &&
+                !isCapture &&
+                !m.IsPromo &&
+                 nonPV &&
+                !inCheck &&
+                 depth<=4 &&
+                (movesPlayed > depth * depth + 2))
+            {
+                continue;
+            }
 
             // #18 Static Exchange Evaluation Pruning
             //     If the move hat a bad SEE score in move ordering,
