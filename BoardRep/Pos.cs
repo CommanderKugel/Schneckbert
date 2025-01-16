@@ -4,18 +4,18 @@ using static Attacks;
 using System.Runtime.CompilerServices;
 
 public unsafe struct pos
-{   
+{
     // Board Representation
-    public fixed ulong pieceBB[6], 
-                       colorBB[2];
+    public fixed ulong pieceBB[6]; 
+    public fixed ulong colorBB[2];
     public fixed bool  castlingRights[4]; // kqKQ
 
     public int  ep;
     public byte us;
-
     public byte FiftyMoveCnt;
-    public ulong ZobristKey,
-                 PawnKey;
+
+    public ulong ZobristKey;
+    public ulong PawnKey;
 
     public Accumulator accumulator;
 

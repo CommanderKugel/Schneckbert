@@ -11,7 +11,8 @@ public static class Quiescense
 
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe int QSearch(pos p, int alpha, int beta, int ply, SS* ss)
+    public static unsafe int QSearch<NodeType>(pos p, int alpha, int beta, int ply, SS* ss)
+        where NodeType : NODE
     {
         TimeManager.NodeCnt++;
 
@@ -30,8 +31,9 @@ public static class Quiescense
         }
 
         ss->checkers = p.get_checkers();
-        bool inCheck =  ss->checkers != 0;
-        bool nonPV   =  alpha + 1 == beta;
+        bool inCheck = ss->checkers != 0;
+        bool nonPV   = typeof(NodeType) == typeof(NON_PV);
+        bool isPV    = typeof(NodeType) == typeof(PV_NODE);
 
         int bestScore = -SCORE_MATE;
         int score;
@@ -122,12 +124,12 @@ public static class Quiescense
             // The first move is assumed to be the best and shouldnt be pruned, reduced, etc.
             if (movesPlayed == 1)
             {
-                score = -QSearch(nextPos, -beta, -alpha, ply+1, ss+1);
+                score = -QSearch<NodeType>(nextPos, -beta, -alpha, ply+1, ss+1);
             }
             else
             {
                 // Reduced zero-window search
-                score = -QSearch(nextPos, -alpha-1, -alpha, ply+1, ss+1);
+                score = -QSearch<NON_PV>(nextPos, -alpha-1, -alpha, ply+1, ss+1);
 
 
                 // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
@@ -135,7 +137,7 @@ public static class Quiescense
                 // Searches using a null-window only return upper bounds.
                 if (!nonPV && score > alpha)
                 {
-                    score = -QSearch(nextPos, -beta, -alpha, ply+1, ss+1);
+                    score = -QSearch<NodeType>(nextPos, -beta, -alpha, ply+1, ss+1);
                 }
             }
 

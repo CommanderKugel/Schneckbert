@@ -165,3 +165,8 @@ public interface COL {}
 public struct COL_WHITE : COL {}
 public struct COL_BLACK : COL {}
 
+public interface NODE {}
+public struct PV_NODE : NODE {}
+public struct NON_PV : NODE {}
+public struct ROOT_NODE : NODE {}
+

@@ -38,12 +38,12 @@ public static class Search
             do
             {
                 ResetPV(iteration);
-                rootScore = Negamax(root, alpha, beta, iteration, 0, ss, false, info);
+                rootScore = Negamax<ROOT_NODE>(root, alpha, beta, iteration, 0, ss, false, info);
 
                 // ToDo: Gradual widening
                 if (rootScore <= alpha || rootScore >= beta)
                 {
-                    rootScore = Negamax(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
+                    rootScore = Negamax<ROOT_NODE>(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
                 }
 
                 // update the Windows
@@ -70,56 +70,38 @@ public static class Search
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe int Negamax(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
+    public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
+        where NodeType : NODE
     {
-        // #1 check for timeout, maybe stop searching
+
+        // #1 Quiescense Search
+        //    If we arrive at a leafe node, drop into QSearch.
+        //    It only makes sense to evaluate Quiet positions, because captures 
+        //    drastically change the positions evaluation.
+        //    To get a valid evaluation, play captures until no usefull capture remains.
+        if (depth <= 0)
+        {
+            return Quiescense.QSearch<NodeType>(p, alpha, beta, ply, ss);
+        }
+
+        // #2 Timeout Check
         //    Negamax will negate this big score into the worst mate-score possible
         if (iteration > 1 && !TimeManager.InHardTimeLimit())
         {
             return 30_000;
         }
 
-
-        // #2 Avoid stack-overflows or IndexOutOfBound Exceptions
+        // #3 Avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
             return p.accumulator.Evaluate(ref p);
         }
 
-        
-        // #3 Drop into QSearch if we found a leaf-node
-        //    It only makes sense to evaluate Quiet positions.
-        //    Quiescense Search plays all captures possible until a capture is no longer
-        //    the best move in a position - a quiet Position.
-        if (depth <= 0)
-        {
-            return Quiescense.QSearch(p, alpha, beta, ply, ss);
-        }
+        bool isRoot = typeof(NodeType) == typeof(ROOT_NODE);
 
-        // Only now count this node as visited, to not count double in QSearch
-        TimeManager.NodeCnt++;
-
-        // initialize some important variables to use later on
-        ss->checkers = p.get_checkers();
-
-        bool isRoot   =  ply == 0;
-        bool nonPV    =  alpha + 1 == beta;
-        bool inCheck  =  ss->checkers != 0;
-
-        int bestScore = -SCORE_MATE;
-        int score     = -SCORE_MATE;
-
-
-        // #4 Check Extensions
-        //    Lines that give check 
-        if (inCheck)
-        {
-            depth = Max(depth+1, 1);
-        }
-
-
-        // #5 Draw detection (excluding Stalemate)
-        //    Exclude RootNodes, otherwise we will return an illegal null-move in ID
+        // #4 Draw Detection
+        //    Excludes Stalemate, this is left to the move loop
+        //    Exclude RootNodes, to always return a valid move.
         if (!isRoot && (
             RepetitionTable.IsRepeatedPosition(p) ||
             p.IsFiftyMoveDraw ||
@@ -128,14 +110,37 @@ public static class Search
             return 0;
         }
 
+        // #5 Mate Distance Pruning
+        // *COMING SOON*
+        
 
-        // #6 fetch the Transpositiontables entry
-        //    also try for cutoffs if possible
+        // Count the Node as visited now
+        TimeManager.NodeCnt++;
+
+        // test if the side-to-move is in check
+        ss->checkers = p.get_checkers();
+        bool inCheck = ss->checkers != 0;
+
+        // together with isRoot, determine the NodeType
+        // nonPV = alpha+1==beta; erroneously becomes true in some rare occasions.
+        bool nonPV  = typeof(NodeType) == typeof(NON_PV);
+        bool isPV   = typeof(NodeType) == typeof(PV_NODE) || isRoot;
+
+        // bestScore will contain this nodes score, score is a tmp variable
+        int bestScore = -SCORE_MATE;
+        int score     = -SCORE_MATE;
+
+
+        // #6 Transposition Table Probing
+        //    A Transposition occurs, if one position is reached multiple times
+        //    in the Search Tree, most likely over multiple IIR iterations.
+        //    Test if there is a valid Transposition Table Entry for the current position.
         ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
         bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
         move ttMove = ttHit ? ttEntry.move : move.NullMove;
 
-        // TT Cutoff
+        // Transposition Table Cutoff
+        // If we found a valid TTEntry, we can return the saved score under some circumstances.
         if (nonPV && ttHit && ttEntry.depth >= depth && !score_is_terminal(ttEntry.score) && (
             ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
             ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
@@ -147,12 +152,16 @@ public static class Search
 
 
         // #7 Static Evaluation
-        //    We will not return this score, because we cant prove that this position is quiet,
-        //    but we can use it to make educated guesses about this branch of the game tree
+        //    We will not return this score, because we didn't prove that this position is quiet.
+        //    We can use this to make educated guesses about this position and this branch of the game tree.
         ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
 
 
-        // #8 Reverse Futility Pruning
+        // #8 Static Evaluation Correction History
+        // COMING SOON*
+
+
+        // #9 Reverse Futility Pruning
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
@@ -163,17 +172,21 @@ public static class Search
         }
 
 
-        // #9 Null Move Pruning
-        //    the Null-Move-Observation states, that in most positions, it is an advantage 
-        //    to be able to move first. So if we can give our opponent two moves in a row, and
-        //    still beat beta, this position is too good and we can cut off here.
-        //    Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
+        // #10 Razoring
+        // *COMING SOON*
+
+
+        // #11 Null Move Pruning
+        //     the Null-Move-Observation states, that in most positions, it is an advantage 
+        //     to be able to move first. So if we can give our opponent two moves in a row, and
+        //     still beat beta, this position is too good and we can cut off here.
+        //     Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
         if (doNull && nonPV && !inCheck && depth>2 && ss->StaticEval>=beta)
         {
             pos copy = p;
             copy.force_null_move(ss);
 
-            score = -Negamax(copy, -beta, -alpha, depth-3, ply+1, ss+1, false, false);
+            score = -Negamax<NON_PV>(copy, -beta, -alpha, depth-3, ply+1, ss+1, false, false);
             RepetitionTable.Pop();
 
             if (score >= beta)
@@ -182,8 +195,25 @@ public static class Search
             }
         }
 
+
+        // #12 Prob Cut
+        // *COMING SOON*
+
+
+        // #13 Check Extensions
+        //     Positions where we are in Check are highly tactical and only a few moves are legal.
+        //     Also, evasions are extremely important to the outcome of the game.
+        //     To ensure we find the correct tactic here, extend this node.
+        if (inCheck)
+        {
+            depth++;
+        }
+
+        // #14 IIR
+        // *COMING SOON*
+
         
-        // #10 Move Generating and Ordering
+        // #15 Move Generating and Ordering
         //     outsourced via the MovePicker class
         //     ToDo: Staged Move Generation
         Span<move> moves = stackalloc move[MAX_MOVE_CNT];
@@ -199,10 +229,6 @@ public static class Search
         move m;
         move locBestMove = move.NullMove;
         
-        // prepare futility pruning, this is not the optimal way of doing things
-        // but changing would require another SPRT for probably 0.5 elo or so
-        bool canFP = nonPV && !inCheck && depth<5 && (ss->StaticEval + 150*depth < alpha);
-
         // main move loop here
         while (!(m = picker.next(ref moves, ref scores)).IsNull)
         {
@@ -210,21 +236,28 @@ public static class Search
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
 
-            // #11 Futility Pruning
-            //     If static evaluation falls below alpha, even by a margin
-            //     we dont think that quiet moves will gain enough to beat alpha again
-            //     only applicable after proving a non-mate line exists (includes mvsplayed>0 implicitly)
+            // #16 Futility Pruning
+            //     If static evaluation falls below alpha, even by a margin,
+            //     we dont expect that quiet moves will gain enough to beat alpha again.
+            //     Only applicable after proving a non-mate line exists (includes mvsplayed>0 implicitly)
             if ( nonMatingLineExists &&
                 !isCapture && 
                 !m.IsPromo &&
-                 canFP)
+                 nonPV && 
+                !inCheck &&
+                 depth<5 && 
+                (ss->StaticEval + 150*depth < alpha))
             {
                 continue;
             }
 
-            // #12 Static Exchange Evaluation pruning
-            //     If the move hat a bad SEE score in the scoring phase
-            //     and we can safely prune the move, run another SEE with a wider margin.
+            // #17 Late Move Pruning
+            // *COMING SOON*
+
+            // #18 Static Exchange Evaluation Pruning
+            //     If the move hat a bad SEE score in move ordering,
+            //     and the move can possibly be pruned, 
+            //     run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
                  picker.try_see(ref scores))
@@ -238,42 +271,62 @@ public static class Search
                 }
             }
 
-            // Copy the position
-            // make the move, but only if it is legal
+            // #19 Copy Make
+            //     Copy the position, then make the move on the copied position.
+            //     Avoids complex undo_move() method.
             pos nextPos = p;
             if (!nextPos.make_move(m, ss))
             {
                 continue;
             }
 
+            // save the played move, maybe its history will be updated later
             playedAndLegal[movesPlayed++] = m;
 
+
+            // #20 Singular Extensions
+            // #21 Multi Cut
+            // #22 Negative Extensions
+            // *COMING SOON*
+
             
+            // #23 Late Move Reductions
+            //     Assuming our move-ordering is good, the later a move is picked, the worse it is.
+            //     For later moves, we only want to prove that it really is worse, using a shallower search.
             if (movesPlayed > 1 && depth > 2 && !isCapture)
             {
                 int R = ln[movesPlayed];
 
-                score = -Negamax(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
 
+                // if the shallower search failse high, we need to prove that the move really beats alpha
+                // by re-searching at full depth.
                 if (R > 1 && score > alpha)
                 {
-                    score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
+                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
                 }
             }
+
+            // if LMR conditions dont apply, do a full-depth Zero-Window Search.
             else if (nonPV || movesPlayed > 1)
             {
-                score = -Negamax(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
             }
 
-            if (!nonPV && (score > alpha || movesPlayed == 1))
+            // if we are at a PVNode and ply either the first move, or a later move has beaten alpha, re-search
+            // at full depth with a full window, to optain am exact score.
+            if (isPV && (score > alpha || movesPlayed == 1))
             {
-                score = -Negamax(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
+                score = isPV
+                    ? -Negamax<PV_NODE>(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info)
+                    : -Negamax<NON_PV >(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
             }
 
 
             // here would be the moment to undo the move but its just copy-make
             RepetitionTable.Pop();
 
+            // #24 Score Update
             if (score > bestScore)
             {
                 bestScore = score;
@@ -299,6 +352,8 @@ public static class Search
                     // so he will never allow us to get to a position with a better score and we can safely prune here.
                     if (score >= beta)
                     {   
+
+                        // #25 Update history Scores and Killer Moves
                         if (!isCapture)
                         {
                             // Update the Killer-move heuristic, if this move was a quiet-move.
@@ -318,20 +373,22 @@ public static class Search
             }
         }
 
-        // check-/stalemate detection
+        // #26 Check- & Stalemate detection
+        //     If no moves in a position are legal, the side to move is either chekmated or stalemated.
+        //     Dont save terminal nodes in the TT.
         if (movesPlayed == 0)
         {
             return inCheck ? ply - SCORE_MATE : 0;
         }
 
-        // If this is an all-node and the tt contains a move for this position,
-        // dont overwrite the ttMove if alphy was not beaten
-        locBestMove = ttHit && !ttMove.IsNull && bestScore < alpha ? ttMove : locBestMove;
+        // For all-nodes, if there is already a ttEntry, dont overwrite the ttMove if alpha was not beaten.
+        if (ttHit && !ttMove.IsNull && bestScore < alpha)
+        {
+            locBestMove = ttMove;
+        }
 
-        // set the flag
+        // #27 Save Node to TT
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
-
-        // enter data into the TT
         TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
 
         return bestScore;
