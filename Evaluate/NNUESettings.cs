@@ -1,16 +1,17 @@
 public static class NNUESettings
 {
     public const int INPUT_SIZE = 768;
-    public const int HIDDEN_SIZE = 48;
+    public const int HIDDEN_SIZE = 96;
     public const int OUTPUT_SIZE = 1;
 
     public const int IN_BUCKET_CNT = 1;
     
-    public const string net_name = main;
+    public const string net_name = simple96_hm;
 
     public const string simple16_hm = "simple16_hm";
     public const string simple32_hm = "simple32_hm";
-    public const string main        = "simple48_hm";
+    public const string simple48_hm = "simple48_hm";
+    public const string simple96_hm = "simple96_hm";
     
     public const string bucket = "simple16_hm_buckets";
 

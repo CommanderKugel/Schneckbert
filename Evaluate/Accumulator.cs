@@ -8,8 +8,8 @@ using System.Numerics;
 
 public unsafe partial struct Accumulator
 {
-    public Vector<short> AccWhite16, AccWhite32, AccWhite48;
-    public Vector<short> AccBlack16, AccBlack32, AccBlack48;
+    public Vector<short> AccWhite16, AccWhite32, AccWhite48, AccWhite64, AccWhite80, AccWhite96;
+    public Vector<short> AccBlack16, AccBlack32, AccBlack48, AccBlack64, AccBlack80, AccBlack96;
 
     int wflip;
     int bflip;
@@ -51,10 +51,16 @@ public unsafe partial struct Accumulator
         AccWhite16 += new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
         AccWhite32 += new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
         AccWhite48 += new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
+        AccWhite64 += new Vector<short>(HiddenWeights[wbuck][us_feat],   48);
+        AccWhite80 += new Vector<short>(HiddenWeights[wbuck][us_feat],   64);
+        AccWhite96 += new Vector<short>(HiddenWeights[wbuck][us_feat],   80);
 
         AccBlack16 += new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
         AccBlack32 += new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
         AccBlack48 += new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
+        AccBlack64 += new Vector<short>(HiddenWeights[bbuck][them_feat], 48);
+        AccBlack80 += new Vector<short>(HiddenWeights[bbuck][them_feat], 64);
+        AccBlack96 += new Vector<short>(HiddenWeights[bbuck][them_feat], 80);
     }
 
     public void deactivate(int color, int pt, int sq)
@@ -64,10 +70,16 @@ public unsafe partial struct Accumulator
         AccWhite16 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
         AccWhite32 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
         AccWhite48 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
+        AccWhite64 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   48);
+        AccWhite80 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   64);
+        AccWhite96 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   80);
 
         AccBlack16 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
         AccBlack32 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
         AccBlack48 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
+        AccBlack64 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 48);
+        AccBlack80 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 64);
+        AccBlack96 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 80);
     }
 
     /// <summary>
@@ -78,10 +90,16 @@ public unsafe partial struct Accumulator
         AccWhite16 = new Vector<short>(HiddenBias,  0);
         AccWhite32 = new Vector<short>(HiddenBias, 16);
         AccWhite48 = new Vector<short>(HiddenBias, 32);
+        AccWhite64 = new Vector<short>(HiddenBias, 48);
+        AccWhite80 = new Vector<short>(HiddenBias, 64);
+        AccWhite96 = new Vector<short>(HiddenBias, 80);
         
         AccBlack16 = new Vector<short>(HiddenBias,  0);
         AccBlack32 = new Vector<short>(HiddenBias, 16);
         AccBlack48 = new Vector<short>(HiddenBias, 32);
+        AccBlack64 = new Vector<short>(HiddenBias, 48);
+        AccBlack80 = new Vector<short>(HiddenBias, 64);
+        AccBlack96 = new Vector<short>(HiddenBias, 80);
 
         // set all Pieces
         for (int color=BLACK; color<=WHITE; color++)

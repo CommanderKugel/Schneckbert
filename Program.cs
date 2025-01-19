@@ -154,8 +154,8 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 10
             );
-            long bench = 4003548; 
-            int  nps   = 1269807; 
+            long bench = 3418651; 
+            int  nps   = 1199982; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
@@ -190,7 +190,7 @@ while (true)
         }
         case "selfplay":
         {   
-            string path = "C:\\Users\\nikol\\Desktop\\tuning data\\self_play_data\\selfplay_simple16_11-1-25\\";
+            string path = "C:\\Users\\nikol\\Desktop\\tuning data\\self_play_data\\simple48_17-1-25\\";
             if (tokens.Length == 2)
             {
                 path += tokens[1] + ".txt";
