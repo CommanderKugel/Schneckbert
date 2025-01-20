@@ -9,6 +9,8 @@ public struct SS
     public byte CapturedPiece;
     public move Move;
 
+    public move ExcludedMove;
+
     public ulong checkers;
 }
 

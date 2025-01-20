@@ -129,6 +129,7 @@ public static class Search
         // test if the side-to-move is in check
         ss->checkers = p.get_checkers();
         bool inCheck = ss->checkers != 0;
+        bool inSingularity = !ss->ExcludedMove.IsNull;
 
 
         // bestScore will contain this nodes score, score is a tmp variable
@@ -146,7 +147,8 @@ public static class Search
 
         // Transposition Table Cutoff
         // If we found a valid TTEntry, we can return the saved score under some circumstances.
-        if (nonPV && ttHit && ttEntry.depth >= depth && !score_is_terminal(ttEntry.score) && (
+        if ( nonPV && ttHit && ttEntry.depth >= depth && 
+            !score_is_terminal(ttEntry.score) && !inSingularity && (
             ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
             ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
             ttEntry.flag == BOUND_EXACT
@@ -170,7 +172,7 @@ public static class Search
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
-        if (nonPV && !inCheck && !isRoot && depth<=7 &&
+        if (nonPV && !inCheck && !isRoot && depth<=7 && !inSingularity &&
             ss->StaticEval - 75 * depth >= beta)
         {
             return ss->StaticEval;
@@ -186,7 +188,7 @@ public static class Search
         //     to be able to move first. So if we can give our opponent two moves in a row, and
         //     still beat beta, this position is too good and we can cut off here.
         //     Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
-        if (doNull && nonPV && !inCheck && depth>2 && ss->StaticEval>=beta)
+        if (doNull && nonPV && !inCheck && depth>2 && !inSingularity && ss->StaticEval>=beta)
         {
             pos copy = p;
             copy.force_null_move(ss);
@@ -238,6 +240,11 @@ public static class Search
         while (!(m = picker.next(ref moves, ref scores)).IsNull)
         {
 
+            if (m == ss->ExcludedMove)
+            {
+                continue;
+            }
+
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
 
@@ -288,11 +295,50 @@ public static class Search
             // save the played move, maybe its history will be updated later
             playedAndLegal[movesPlayed++] = m;
 
+            int extensions = 0;
 
             // #20 Singular Extensions
-            // #21 Multi Cut
-            // #22 Negative Extensions
-            // *COMING SOON*
+            //     If the TT suggests that we have a really strong move and we have sufficient depth
+            //     left in our search-iteration, we can test if the TTMove is the only strong move.
+            //     For that, search this node again, while excluding the candidate singular move.
+            //     If no other move fails high, the move is singular and we should extend it,
+            //     because it is a lot more important than the other moves.
+            if ( movesPlayed == 1 &&
+                !inSingularity &&
+                !isRoot &&
+                 depth >= 8 &&
+                 m == ttMove &&
+                 ttEntry.depth >= depth-3 &&
+                 ttEntry.flag != BOUND_UPPER)
+            {
+                int singularBeta = Max(-SCORE_MATE+1, ttEntry.score - depth * 2);
+                int singularDepth = (depth - 1) / 2;
+
+                ss->ExcludedMove = m;
+                int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss, false, false);
+                ss->ExcludedMove = move.NullMove;
+
+                // #21 Multi Cut
+                //     If the candidate-singular move is proven not singular and any other move would
+                //     fail high, even in the current window-bounds, this position is probably too good
+                //     to be true and our opponent wont allow this branch of the tree to be played out.
+                /*
+                if (singularScore >= singularBeta && singularScore >= beta && !score_is_terminal(singularScore))
+                {
+                    return singularBeta;
+                }
+                */
+
+                // #22 Negative Extensions
+                // *COMING SOON*
+                if (singularScore < singularBeta)
+                {
+                    extensions = 1;
+                }
+            }
+
+
+            int newDepth = depth + extensions - 1;
 
             
             // #23 Late Move Reductions
@@ -302,29 +348,27 @@ public static class Search
             {
                 int R = ln[movesPlayed];
 
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-R, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true, info);
 
                 // if the shallower search failse high, we need to prove that the move really beats alpha
                 // by re-searching at full depth.
                 if (R > 1 && score > alpha)
                 {
-                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
+                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, true, info);
                 }
             }
 
             // if LMR conditions dont apply, do a full-depth Zero-Window Search.
             else if (nonPV || movesPlayed > 1)
             {
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, depth-1, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, true, info);
             }
 
             // if we are at a PVNode and ply either the first move, or a later move has beaten alpha, re-search
             // at full depth with a full window, to optain am exact score.
             if (isPV && (score > alpha || movesPlayed == 1))
             {
-                score = isPV
-                    ? -Negamax<PV_NODE>(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info)
-                    : -Negamax<NON_PV >(nextPos, -beta, -alpha, depth-1, ply+1, ss+1, true, info);
+                score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1, true, info);
             }
 
 
@@ -386,15 +430,20 @@ public static class Search
             return inCheck ? ply - SCORE_MATE : 0;
         }
 
-        // For all-nodes, if there is already a ttEntry, dont overwrite the ttMove if alpha was not beaten.
-        if (ttHit && !ttMove.IsNull && bestScore < alpha)
-        {
-            locBestMove = ttMove;
-        }
-
+        
         // #27 Save Node to TT
-        int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
-        TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
+        //     Skip singular confirmation searches, because the best move was excluded there
+        if (!inSingularity)
+        {
+            // For all-nodes, if there is already a ttEntry, dont overwrite the ttMove if alpha was not beaten.
+            if (ttHit && !ttMove.IsNull && bestScore < alpha)
+            {
+                locBestMove = ttMove;
+            }
+
+            int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
+            TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
+        }
 
         return bestScore;
     }
