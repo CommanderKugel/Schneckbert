@@ -6,21 +6,16 @@ public static class NNUESettings
 
     public const int IN_BUCKET_CNT = 1;
     
-    public const string net_name = simple96_hm;
-
-    public const string simple16_hm = "simple16_hm";
-    public const string simple32_hm = "simple32_hm";
-    public const string simple48_hm = "simple48_hm";
-    public const string simple96_hm = "simple96_hm";
+    public const string net_name = "simple96_hm_screlu";
     
     public const string bucket = "simple16_hm_buckets";
 
-    public const int SCALE = 400;
-    public const short QA = 255;
+    public const int SCALE = 2;
+    public const short QA = 181;
     public const short QB = 64;
 
 
-    public static readonly int[] buckets = net_name != bucket ? [
+    public static readonly int[] buckets = [
         0, 0, 0, 0, 1, 1, 1, 1,
         0, 0, 0, 0, 1, 1, 1, 1,
         0, 0, 0, 0, 1, 1, 1, 1,
@@ -29,14 +24,5 @@ public static class NNUESettings
         0, 0, 0, 0, 1, 1, 1, 1,
         0, 0, 0, 0, 1, 1, 1, 1,
         0, 0, 0, 0, 1, 1, 1, 1,
-    ] : [ // scheme for simple16_hm_buckets3
-        0, 0, 1, 1, 4, 4, 3, 3,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
-        2, 2, 2, 2, 5, 5, 5, 5,
     ];
 }
