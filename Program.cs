@@ -7,6 +7,7 @@ History.init();
 Attacks.init();
 NNUEWeights.load();
 Utils.init();
+Search.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
@@ -154,7 +155,7 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 10
             );
-            long bench = 6331725; 
+            long bench = 4119962; 
             int  nps   = 1199982; 
             Console.WriteLine("Previous Bench: " + bench + " Previous nps: " + nps);
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");

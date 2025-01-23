@@ -5,7 +5,7 @@ using static System.Math;
 using System.Runtime.CompilerServices;
 
 
-public static class Search
+public static partial class Search
 {
     static int iteration;
 
@@ -15,59 +15,6 @@ public static class Search
     static move[][] PV;
 
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe move iterativeDeepen(
-        pos  root, 
-        bool info     = false,
-        int  maxDepth = 32, 
-        long maxNodes = long.MaxValue)
-    {
-        fixed (SS* ss = SearchStack.stack)
-        {
-
-            rootBestMove = move.NullMove;
-            iteration = 1;
-            Quiescense.seldepth = 1;
-
-            const int delta = 35;
-            int alpha = -SCORE_MATE;
-            int beta  =  SCORE_MATE;
-
-            TimeManager.NodeCnt = 0;
-
-            do
-            {
-                ResetPV(iteration);
-                rootScore = Negamax<ROOT_NODE>(root, alpha, beta, iteration, 0, ss, false, info);
-
-                // ToDo: Gradual widening
-                if (rootScore <= alpha || rootScore >= beta)
-                {
-                    rootScore = Negamax<ROOT_NODE>(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1, false, info);
-                }
-
-                // update the Windows
-                alpha = rootScore - delta;
-                beta  = rootScore + delta;
-
-
-                if (info)
-                {
-                    Console.WriteLine(
-                        $"info depth {iteration} seldepth {Quiescense.seldepth} time {TimeManager.ElapsedMilliseconds()} score cp {rootScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {getPV()}"
-                    );
-                }
-                else
-                    Console.WriteLine("info depth "+iteration+" score "+rootScore);
-
-                iteration++;
-            }
-            while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
-
-            return rootBestMove;
-
-        } // fixed SearchStack
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
@@ -228,10 +175,9 @@ public static class Search
         var picker = new MovePicker(p, false, ttMove, ss, ref moves, ref scores);
 
 
-        // keep track of moves that were played out, some will be pruned or illegal        
+        // preparing the main move-loop
         int movesPlayed = 0;
         Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
-
         int startAlpha = alpha;
         move m;
         move locBestMove = move.NullMove;
@@ -264,15 +210,22 @@ public static class Search
             }
 
             // #17 Late Move Pruning
-            // *COMING SOON*
+            if (!isCapture &&
+                !m.IsPromo &&
+                 nonMatingLineExists &&
+                 depth < 5 &&
+                 movesPlayed > lmpTable[depth])
+            {
+                continue;
+            }
 
             // #18 Static Exchange Evaluation Pruning
             //     If the move hat a bad SEE score in move ordering,
             //     and the move can possibly be pruned, 
             //     run another SEE with a wider margin.
-            if ( nonMatingLineExists &&
-                 nonPV &&
-                 picker.try_see(ref scores))
+            if (nonMatingLineExists &&
+                nonPV &&
+                picker.try_see(ref scores))
             {
                 int margin = 
                     isCapture ? -200 * depth 
@@ -346,7 +299,7 @@ public static class Search
             //     For later moves, we only want to prove that it really is worse, using a shallower search.
             if (movesPlayed > 1 && depth > 2 && !isCapture)
             {
-                int R = ln[movesPlayed];
+                int R = lmrTable[Min(movesPlayed, 63)];
 
                 score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true, info);
 
