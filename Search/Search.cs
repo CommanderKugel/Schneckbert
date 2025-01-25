@@ -164,7 +164,10 @@ public static partial class Search
         }
 
         // #14 IIR
-        // *COMING SOON*
+        if (!ttHit && depth > 4)
+        {
+            depth--;
+        }
 
         
         // #15 Move Generating and Ordering
