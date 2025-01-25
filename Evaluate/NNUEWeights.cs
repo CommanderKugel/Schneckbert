@@ -31,7 +31,7 @@ public static class NNUEWeights
     /// </summary>
     public static void load() 
     {
-        const string path = "C:/Users/nikol/Desktop/Schneckbert/Schneckbert_dev/Schneckbert/Evaluate/Nets/";
+        const string path = "C:/Users/nikol/Desktop/Schneckbert/Schneckbert/Evaluate/Nets/";
         using (var fs     = new FileStream(path+net_name+".bin", FileMode.Open, FileAccess.Read))
         using (var reader = new BinaryReader(fs))
         {

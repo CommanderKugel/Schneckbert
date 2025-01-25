@@ -163,7 +163,10 @@ public static partial class Search
             depth++;
         }
 
-        // #14 IIR
+        // #14 Internal Iterative Reductions
+        //     If we are at sufficient depth and we did not see this node before, search at a lower depth.
+        //     Assume that we will encouner this node again in the next ID-iteration and search at the 
+        //     intended depth, while also using a ttMove.
         if (!ttHit && depth > 4)
         {
             depth--;
