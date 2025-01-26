@@ -15,6 +15,7 @@ public static class Quiescense
         where NodeType : NODE
     {
         TimeManager.NodeCnt++;
+        TimeManager.QSNodeCnt++;
 
         // #1 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)

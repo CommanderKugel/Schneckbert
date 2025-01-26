@@ -1,5 +1,8 @@
 using static Constants;
 
+/// <summary>
+/// Contains data about a node in the search tree.
+/// </summary>
 public struct SS
 {
     public int StaticEval;

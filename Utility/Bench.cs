@@ -1,5 +1,13 @@
 using static System.Math;
 
+/// <summary>
+/// Benches are like a fingerprint o a Chess engine.
+/// They perform a low-depth-search on a given set of positions and 
+/// count the number of nodes visited.
+/// If a change in the engines code is non-functional, bench must not change.
+/// A change in bench does not indicate anything regarding playing-strength of an engine,
+/// to determine if a change was good or bad and running a SPRT is always required!
+/// </summary>
 public static class Bench
 {
     public static readonly string[] Positions = {
@@ -91,6 +99,8 @@ public static class Bench
         }
 
         double bf = Round(Exp(Log(TimeManager.TotalNodes / Positions.Length) / (depth-1)), 2);
-        Console.WriteLine($"nodes {TimeManager.TotalNodes} nps {(int)(TimeManager.TotalNodes * 1000 / ms)} bf {bf}");
+        Console.WriteLine($"total nodes {TimeManager.TotalNodes}");
+        Console.WriteLine($"   qs nodes {TimeManager.QSNodeCnt} -> {Round((double)TimeManager.QSNodeCnt / TimeManager.TotalNodes * 100, 1)}%");
+        Console.WriteLine($"nps {(int)(TimeManager.TotalNodes * 1000 / ms)} bf {bf}");
     }
 }
