@@ -94,7 +94,7 @@ public static class Quiescense
         move locBestMove = move.NullMove;
 
         // main move loop here
-        while (!(m = picker.next(ref moves, ref scores)).IsNull)
+        while (!(m = picker.next(ref p, ref moves, ref scores)).IsNull)
         {
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
@@ -104,7 +104,7 @@ public static class Quiescense
             //    and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                 picker.try_see(ref scores) &&
+                 picker.curr_score(ref scores) < 900_000 &&
                 !SEE.see_threshold(m, ref p, alpha - staticEval - 300))
             {
                 continue;

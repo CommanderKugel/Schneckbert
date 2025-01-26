@@ -9,3 +9,16 @@ Games: 6212, Wins: 1951, Losses: 1778, Draws: 2483, Points: 3192.5 (51.39 %)
 Ptnml(0-2): [186, 664, 1266, 771, 219], WL/DD Ratio: 1.42
 LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+
+Bugfix in SEE pruning
+check if the correct move already passed SEE to try and prune it again
+
+--------------------------------------------------
+Results of dev vs main (5+0.05, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 6.54 +/- 9.38, nElo: 9.71 +/- 13.92
+LOS: 91.42 %, DrawRatio: 40.89 %, PairsRatio: 1.12
+Games: 2392, Wins: 741, Losses: 696, Draws: 955, Points: 1218.5 (50.94 %)
+Ptnml(0-2): [60, 274, 489, 307, 66], WL/DD Ratio: 1.61
+LLR: 2.90 (-2.25, 2.89) [-10.00, 0.00]
+--------------------------------------------------

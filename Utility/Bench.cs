@@ -99,8 +99,9 @@ public static class Bench
         }
 
         double bf = Round(Exp(Log(TimeManager.TotalNodes / Positions.Length) / (depth-1)), 2);
-        Console.WriteLine($"total nodes {TimeManager.TotalNodes}");
-        Console.WriteLine($"   qs nodes {TimeManager.QSNodeCnt} -> {Round((double)TimeManager.QSNodeCnt / TimeManager.TotalNodes * 100, 1)}%");
         Console.WriteLine($"nps {(int)(TimeManager.TotalNodes * 1000 / ms)} bf {bf}");
+        Console.WriteLine($"total nodes {TimeManager.TotalNodes}");
+        //Console.WriteLine($"   qs nodes {TimeManager.QSNodeCnt} -> {Round((double)TimeManager.QSNodeCnt / TimeManager.TotalNodes * 100, 1)}%");
+        
     }
 }
