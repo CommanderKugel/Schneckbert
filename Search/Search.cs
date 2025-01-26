@@ -277,23 +277,33 @@ public static partial class Search
                 int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss, false, false);
                 ss->ExcludedMove = move.NullMove;
 
+                // extension
+                if (singularScore < singularBeta)
+                {
+                    extensions = 1;
+                }
+
                 // #21 Multi Cut
                 //     If the candidate-singular move is proven not singular and any other move would
                 //     fail high, even in the current window-bounds, this position is probably too good
                 //     to be true and our opponent wont allow this branch of the tree to be played out.
+                //
+                // *PROMISING AT STC, TRY AGAIN LATER AT LCT*
+                // Elo: 2.99 +/- 8.98
+                // Games: 2438, Wins: 671, Losses: 650, Draws: 1117, Points: 1229.5 (50.43 %)
+                // Ptnml(0-2): [54, 288, 516, 305, 56], WL/DD Ratio: 0.97
+                //
                 /*
-                if (singularScore >= singularBeta && singularScore >= beta && !score_is_terminal(singularScore))
+                else if (singularScore >= singularBeta && singularBeta >= beta && !score_is_terminal(singularScore))
                 {
+                    RepetitionTable.Pop();
                     return singularBeta;
                 }
                 */
 
                 // #22 Negative Extensions
                 // *COMING SOON*
-                if (singularScore < singularBeta)
-                {
-                    extensions = 1;
-                }
+
             }
 
 

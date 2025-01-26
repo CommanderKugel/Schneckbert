@@ -3,13 +3,14 @@ using System.Diagnostics;
 using static Constants;
 using static Utils;
 
-public static class Selfplay
+public static class SelfplayOld
 {
     private static Random rng = new Random();
 
-    public static unsafe void play_and_write(int games, int randomPly, string path)
+    public static unsafe void play_and_write(int games, int randomPly, string inPath, string outPath)
     {
-        using (StreamWriter file = new StreamWriter(path, true))
+        using (StreamReader UHOFile = new StreamReader(inPath))
+        using (StreamWriter file = new StreamWriter(outPath, true))
         {
             var watch = new Stopwatch();
             SS ss = new SS();
@@ -18,8 +19,17 @@ public static class Selfplay
             watch.Start();
             for (int cnt=1; cnt<=games; cnt++)
             {
+                // fetch the next fen
+                var uhoFen = UHOFile.ReadLine();
+                if (uhoFen == null)
+                {
+                    UHOFile.DiscardBufferedData();
+                    UHOFile.BaseStream.Seek(0, SeekOrigin.Begin);
+                    continue;
+                }
+
                 // play the game and receive all the necessary information
-                var (root, moves, scores, result) = play(randomPly);
+                var (root, moves, scores, result) = play(randomPly, uhoFen);
 
                 for (int i=0; i<moves.Count; i++)
                 {
@@ -47,15 +57,14 @@ public static class Selfplay
                     long pps = posCnt * 1000 / watch.ElapsedMilliseconds;
                     long spg = watch.ElapsedMilliseconds / cnt / 1000;
                     long eta = (games-cnt) * spg;
-                    Console.WriteLine($"total positions {posCnt} total games {cnt}");
-                    Console.WriteLine($"pps {pps} eta {eta}s");
+                    Console.WriteLine($"total: {posCnt} pps: {pps}");
                 }
             }
         }
         Console.WriteLine("Done playing "+games+" games!");
     }
 
-    public static unsafe (pos, List<move>, List<int>, string) play(int randomPly)
+    public static unsafe (pos, List<move>, List<int>, string) play(int randomPly, string fen)
     {
         SearchStack.Reset();
         RepetitionTable.Reset();
@@ -63,7 +72,7 @@ public static class Selfplay
         History.Reset();
         TimeManager.Reset(true);
 
-        pos root = RandAfterNPly(randomPly);
+        pos root = RandAfterNPly(randomPly, fen);
         pos randoStartCopy = root;
 
         List<move> mainLine = new List<move>();
@@ -156,9 +165,9 @@ public static class Selfplay
         return false;
     }
 
-    public static unsafe pos RandAfterNPly(int n)
+    public static unsafe pos RandAfterNPly(int n, string fen)
     {
-        pos root = new pos(startpos);
+        pos root = new pos(fen);
         int ply = 0;
         SS ss = new SS();
         SS* ps = &ss;
@@ -191,7 +200,7 @@ public static class Selfplay
 
             if (cnt == 0)
             {
-                return RandAfterNPly(n);
+                return RandAfterNPly(n, fen);
             }
         }
 

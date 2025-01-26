@@ -190,16 +190,14 @@ while (true)
             break;
         }
         case "selfplay":
-        {   
-            string path = "C:\\Users\\nikol\\Desktop\\tuning data\\self_play_data\\simple48_17-1-25\\";
-            if (tokens.Length == 2)
-            {
-                path += tokens[1] + ".txt";
-            }
+        {
+            // selfplay threadid <N> inpath <PATH>
+            int threadId = SkipPast("threadid").Select(int.Parse).FirstOrDefault();
+            var outPath  = $"C:/Users/nikol/Desktop/Schneckbert/selfplaydata/{threadId}.txt";
+            var inPath   = tokens[3] == "inpath" && tokens.Length > 5 ? tokens[4] 
+                         : "C:/Users/nikol/Desktop/Schneckbert/uho_2024/UHO_2024_+100_+109/UHO_2024_8mvs_+100_+109.epd";
 
-            int randomPly = 8;
-            int games = 1_000_000;
-            Selfplay.play_and_write(games, randomPly, path);
+            SelfplayOld.play_and_write(1_000_000, 3, inPath, outPath);
             break;
         }
         case "perft":
