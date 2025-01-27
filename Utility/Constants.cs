@@ -51,13 +51,14 @@ public static class Constants
     /// </summary>
     public const int MAX_MOVE_CNT = 213;
 
-    public const int SCORE_MATE = 2_000_000_000;
-    public const int EVAL_SCORE_MAX  = 1_000_000_000;
+    public const int SCORE_NONE     = short.MaxValue;
+    public const int SCORE_MATE     = 31_000;
+    public const int EVAL_SCORE_MAX = 30_000;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool score_is_terminal(int score) => Math.Abs(score) > EVAL_SCORE_MAX;
 
     public const int MAX_SEARCH_PLY = 128;
-    public const int MAX_GAME_PLY = 1024;
+    public const int MAX_GAME_PLY   = 1024;
 
     /// <summary>
     /// enumerates all squares to give them names
@@ -96,30 +97,13 @@ public static class Constants
     /// equal to sq / 8
     /// </summary>
     public static int rank_of(int sq) => sq >> 3;   // same as sq / 8
+
     /// <summary>
     /// provides the rank of the square-index
     /// equal to sq % 8
     /// </summary>
     public static int file_of(int sq) => sq  & 7;   // same as sq % 8
-    /// <summary>
-    /// provides the rank of the square-index but flips it for blacks POV
-    /// this is necessary for the distancy of passed pawns until promotion
-    /// e.g. the square a8 would return the relative rank 0
-    /// </summary>
-    public static int relative_rank_of(int sq, int c) 
-    {
-        int rank = rank_of(sq);
-        return c == WHITE ? rank : 7-rank;
-    } 
-    /// <summary>
-    /// provides the file of the square-index but flips it for pieces on the right flank
-    /// e.g. the square h1 would return the relative file 0
-    /// </summary>
-    public static int relative_file_of(int sq) 
-    {
-        int file = file_of(sq);
-        return file < 4 ? file : file ^ 7;
-    } 
+    
 
     public const string startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 

@@ -22,3 +22,17 @@ Games: 2392, Wins: 741, Losses: 696, Draws: 955, Points: 1218.5 (50.94 %)
 Ptnml(0-2): [60, 274, 489, 307, 66], WL/DD Ratio: 1.61
 LLR: 2.90 (-2.25, 2.89) [-10.00, 0.00]
 --------------------------------------------------
+
+
+Rewrite of ttEntry struct, now 8 bytes smaller
+24 -> 16 bytes in size
+additional space for ttEntry.eval added, not implemented yet
+
+--------------------------------------------------
+Results of dev vs main (5+0.05, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 22.33 +/- 9.67, nElo: 32.42 +/- 13.99
+LOS: 100.00 %, DrawRatio: 40.96 %, PairsRatio: 1.39
+Games: 2368, Wins: 768, Losses: 616, Draws: 984, Points: 1260.0 (53.21 %)
+Ptnml(0-2): [54, 239, 485, 313, 93], WL/DD Ratio: 1.25
+LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

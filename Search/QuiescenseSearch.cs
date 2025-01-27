@@ -42,12 +42,12 @@ public static class Quiescense
 
         // #3 fetch the Transpositiontables entry
         //    also try for cutoffs if possible
-        ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
-        bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
+        var ttEntry = TranspositionTable.get_entry(p.ZobristKey);
+        bool ttHit = ttEntry.key == p.ZobristKey;
         move ttMove = ttHit ? ttEntry.move : move.NullMove;
 
         // TT Cutoff
-        if (nonPV && ttHit && Abs(ttEntry.score) < SCORE_MATE/2 && (
+        if (nonPV && ttHit && !score_is_terminal(ttEntry.score) && (
             ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
             ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
             ttEntry.flag == BOUND_EXACT
@@ -189,7 +189,7 @@ public static class Quiescense
 
         // enter data into the TT
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
-        TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, 0, flag, locBestMove);
+        TranspositionTable.Push(p.ZobristKey, bestScore, 0, flag, locBestMove);
 
         return bestScore;
     }

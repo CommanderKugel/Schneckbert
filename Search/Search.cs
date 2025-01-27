@@ -88,8 +88,8 @@ public static partial class Search
         //    A Transposition occurs, if one position is reached multiple times
         //    in the Search Tree, most likely over multiple IIR iterations.
         //    Test if there is a valid Transposition Table Entry for the current position.
-        ref var ttEntry = ref TranspositionTable.Probe(p.ZobristKey);
-        bool ttHit = TranspositionTable.isTTHit(p.ZobristKey, ref ttEntry);
+        var ttEntry = TranspositionTable.get_entry(p.ZobristKey);
+        bool ttHit = p.ZobristKey == ttEntry.key;
         move ttMove = ttHit ? ttEntry.move : move.NullMove;
 
         // Transposition Table Cutoff
@@ -411,7 +411,7 @@ public static partial class Search
             }
 
             int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
-            TranspositionTable.Push(ref ttEntry, p.ZobristKey, bestScore, Max(depth, 0), flag, locBestMove);
+            TranspositionTable.Push(p.ZobristKey, bestScore, depth, flag, locBestMove);
         }
 
         return bestScore;
