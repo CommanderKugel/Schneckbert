@@ -191,13 +191,19 @@ while (true)
         }
         case "selfplay":
         {
-            // selfplay threadid <N> inpath <PATH>
-            int threadId = SkipPast("threadid").Select(int.Parse).FirstOrDefault();
-            var outPath  = $"C:/Users/nikol/Desktop/Schneckbert/selfplaydata/{threadId}.txt";
-            var inPath   = tokens[3] == "inpath" && tokens.Length > 5 ? tokens[4] 
-                         : "C:/Users/nikol/Desktop/Schneckbert/uho_2024/UHO_2024_+100_+109/UHO_2024_8mvs_+100_+109.epd";
+            if (tokens.Length < 3 || tokens[1] != "id")
+            {
+                Console.WriteLine("you forgot the <id>! try again");
+                Console.WriteLine("also accepts <randomply> (default=3) and <softnodes> (default=5000)");
+                break;
+            }
 
-            SelfplayOld.play_and_write(1_000_000, 3, inPath, outPath);
+            int threadId  = SkipPast("id").Select(int.Parse).FirstOrDefault();
+            var randomPly = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() : 3;
+            var softnodes = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() : 5_000;
+            Console.WriteLine($"started selfplay run!\nthreadId {threadId}\nrandomPly {randomPly}\nsooftnodes {softnodes}");
+
+            Selfplay.play_and_write(1_000_000, randomPly, softnodes, threadId);
             break;
         }
         case "perft":

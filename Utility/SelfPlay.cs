@@ -1,14 +1,42 @@
 
 using System.Diagnostics;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 using static Constants;
 using static Utils;
 
-public static class SelfplayOld
+public static class Selfplay
 {
+    private static readonly string[] UHO_paths = [
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+085_+094\UHO_2024_6mvs_+085_+094.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+085_+094\UHO_2024_8mvs_+085_+094.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+090_+099\UHO_2024_6mvs_+090_+099.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+090_+099\UHO_2024_8mvs_+090_+099.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+095_+104\UHO_2024_6mvs_+095_+104.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+095_+104\UHO_2024_8mvs_+095_+104.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+100_+109\UHO_2024_6mvs_+100_+109.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+100_+109\UHO_2024_8mvs_+100_+109.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+105_+114\UHO_2024_6mvs_+105_+114.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+105_+114\UHO_2024_8mvs_+105_+114.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+110_+119\UHO_2024_6mvs_+110_+119.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+110_+119\UHO_2024_8mvs_+110_+119.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+115_+124\UHO_2024_6mvs_+115_+124.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+115_+124\UHO_2024_8mvs_+115_+124.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+120_+129\UHO_2024_6mvs_+120_+129.epd",
+        @"c:\Users\nikol\Desktop\Schneckbert\uho_2024\UHO_2024_+120_+129\UHO_2024_8mvs_+120_+129.epd",
+    ];
+
+
+    private static Stopwatch gameWatch = new Stopwatch();
+    private static Stopwatch writeWatch = new Stopwatch();
+
     private static Random rng = new Random();
 
-    public static unsafe void play_and_write(int games, int randomPly, string inPath, string outPath)
+    public static unsafe void play_and_write(int games, int randomPly, int softnodes, int threadId)
     {
+        var outPath = $"C:/Users/nikol/Desktop/Schneckbert/selfplaydata/{threadId}.txt";
+        var inPath = UHO_paths[threadId % UHO_paths.Length];
+
         using (StreamReader UHOFile = new StreamReader(inPath))
         using (StreamWriter file = new StreamWriter(outPath, true))
         {
@@ -28,9 +56,14 @@ public static class SelfplayOld
                     continue;
                 }
 
+                gameWatch.Start();
                 // play the game and receive all the necessary information
-                var (root, moves, scores, result) = play(randomPly, uhoFen);
+                // alternate between white to move and balck to move
+                var (root, moves, scores, result) = play(softnodes, randomPly + (cnt & 1), uhoFen);
+                gameWatch.Stop();
 
+                writeWatch.Start();
+                StringBuilder builder = new StringBuilder();
                 for (int i=0; i<moves.Count; i++)
                 {
                     move m     = moves[i];
@@ -48,9 +81,16 @@ public static class SelfplayOld
                     {
                         posCnt++;
                         string fen = root.get_fen();
-                        file.WriteLine(fen + " | " + score + " | " + result);
+                        builder.Append(fen);
+                        builder.Append(" | ");
+                        builder.Append(score);
+                        builder.Append(" | ");
+                        builder.Append(result);
+                        builder.Append('\n');
                     }
                 }
+                file.Write(builder.ToString());
+                writeWatch.Stop();
 
                 if (cnt % 10 == 0 && cnt > 0)
                 {
@@ -62,9 +102,11 @@ public static class SelfplayOld
             }
         }
         Console.WriteLine("Done playing "+games+" games!");
+        Console.WriteLine($"game: {gameWatch.Elapsed}");
+        Console.WriteLine($"write: {writeWatch.Elapsed}");
     }
 
-    public static unsafe (pos, List<move>, List<int>, string) play(int randomPly, string fen)
+    public static unsafe (pos, List<move>, List<int>, string) play(int softnodes, int randomPly, string fen)
     {
         SearchStack.Reset();
         RepetitionTable.Reset();
@@ -80,7 +122,6 @@ public static class SelfplayOld
 
         string result = "ongoing";
         SS ss = new SS();
-        TimeManager.SetNewTimelimit(int.MaxValue);
 
         while (true)
         {
@@ -112,28 +153,17 @@ public static class SelfplayOld
             }
 
             // draw detection
-            if (!hasLegalMoves && !inCheck)
-            {
-                result = "0.5";
-                break;
-            }
-            if (root.IsFiftyMoveDraw)
-            {
-                result = "0.5";
-                break;
-            }
-            if (RepetitionTable.IsRepeatedPosition(root))
-            {
-                result = "0.5";
-                break;
-            }
-            if (root.IsInsufficientMaterial)
+            if (!hasLegalMoves && !inCheck ||
+                 RepetitionTable.IsRepeatedPosition(root) ||
+                 root.IsInsufficientMaterial ||
+                 root.IsFiftyMoveDraw)
             {
                 result = "0.5";
                 break;
             }
 
-            move m = Search.iterativeDeepen(root, info: false, maxNodes: 5000);
+            TimeManager.SetNewTimelimit(1000);
+            move m = Search.iterativeDeepen(root, info: false, maxNodes: softnodes);
 
             bool isLegal = root.make_move(m, &ss);
             if (!isLegal)
@@ -144,6 +174,22 @@ public static class SelfplayOld
 
             mainLine.Add(m);
             mainLineScores.Add(Search.rootScore);
+
+
+            // abort if on side has no pieces left and not everything will be traded off
+            if ((!more_than_one(root.colorBB[BLACK]) || !more_than_one(root.colorBB[WHITE])) &&
+                  Math.Abs(Search.rootScore) > 400)
+            {
+                result = Search.rootScore > 0 ? "1.0" : "0.0";
+                break;
+            }
+
+            // abort if the score becomes too high
+            if (Math.Abs(Search.rootScore) > 3000)
+            {
+                result = Search.rootScore > 0 ? "1.0" : "0.0";
+                break;
+            }
         }
 
         // Game is played out now

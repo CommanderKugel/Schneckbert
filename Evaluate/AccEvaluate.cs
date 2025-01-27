@@ -35,7 +35,7 @@ public unsafe partial struct Accumulator
                 // Squared Clipped Rectified Linear Unit
                 // y = Pow(Clamp(x, 0, 181), 2);
                 // Quantization targets QA=181 and QB=64 are choosen, because 
-                // 181 * 181 * 64 still fits into the short datatype
+                // Pow(181, 2) * 64 still fits into the short datatype
                 var activatedWhite = Max(VECTOR_ZERO, Min(VECTOR_QA, *(ptrWhite+i)));
                 var activatedBlack = Max(VECTOR_ZERO, Min(VECTOR_QA, *(prtBlack+i)));
                 activatedWhite = Multiply(activatedWhite, activatedWhite);
