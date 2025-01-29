@@ -3,26 +3,28 @@ using static NNUESettings;
 
 public static class NNUEWeights
 {
-    public static short[][][] HiddenWeights;
-    public static short[]     HiddenBias;
+    public static short[][][] ftWeights;
+    public static short[]     ftBias;
 
-    public static short[] OutputWeight;
-    public static short   OutputBias;
+    public static short[][] OutputWeight;
+    public static short     OutputBias;
 
     /// <summary>
     /// initialize all Arrays at first usage
     /// </summary>
     static NNUEWeights() 
     {
-        HiddenWeights = new short[IN_BUCKET_CNT][][];
-        HiddenBias = new short[HIDDEN_SIZE];
+        ftWeights = new short[IN_BUCKET_CNT][][];
+        ftBias = new short[FT_SIZE];
         for (int i=0; i<IN_BUCKET_CNT; i++)
         {
-            HiddenWeights[i] = new short[INPUT_SIZE][];
+            ftWeights[i] = new short[INPUT_SIZE][];
             for (int j=0; j<INPUT_SIZE; j++)
-                HiddenWeights[i][j] = new short[HIDDEN_SIZE];
+                ftWeights[i][j] = new short[FT_SIZE];
         }
-        OutputWeight = new short[HIDDEN_SIZE * 2];
+        OutputWeight = new short[OUT_BUCKET_CNT][];
+        for (int i=0; i<OUT_BUCKET_CNT; i++)
+            OutputWeight[i] = new short[FT_SIZE * 2];
     }
 
     /// <summary>
@@ -36,22 +38,30 @@ public static class NNUEWeights
         using (var reader = new BinaryReader(fs))
         {
 
-            // read hidden weights
+            // read feature-transformer weights and bias
             for (int buck=0; buck<IN_BUCKET_CNT; buck++)
                 for (int feat=0; feat<INPUT_SIZE; feat++)
-                    for (int h=0; h<HIDDEN_SIZE; h++)
-                        HiddenWeights[buck][feat][h] = reader.ReadInt16();
+                    for (int h=0; h<FT_SIZE; h++)
+                        ftWeights[buck][feat][h] = reader.ReadInt16();
+            for (int i=0; i<FT_SIZE; i++)
+                ftBias[i] = reader.ReadInt16();
 
-            // read hidden bias
-            for (int i=0; i<HIDDEN_SIZE; i++)
-                HiddenBias[i] = reader.ReadInt16();
-            
-            // read output weights
-            for (int i=0; i<HIDDEN_SIZE*2; i++)
-                OutputWeight[i] = reader.ReadInt16();
+            // read output weights and bias
+            // [[[T; layer input size]; layer output size]; buckets]
+            for (int buck=0; buck<OUT_BUCKET_CNT; buck++)
+                for (int feat=0; feat<FT_SIZE*2; feat++)
+                    OutputWeight[buck][feat] = reader.ReadInt16();
 
-            // read output bias
             OutputBias = reader.ReadInt16();
+
+            /*
+            // need for debug? bullet files print "bullet" in the buffer-bytes of the
+            // quantized file, try and read those out loud
+            try
+            {
+                while (true) Console.WriteLine(reader.ReadChar());
+            } catch {}
+            */
         }
     }
 }

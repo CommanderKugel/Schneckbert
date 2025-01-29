@@ -48,38 +48,38 @@ public unsafe partial struct Accumulator
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
-        AccWhite16 += new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
-        AccWhite32 += new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
-        AccWhite48 += new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
-        AccWhite64 += new Vector<short>(HiddenWeights[wbuck][us_feat],   48);
-        AccWhite80 += new Vector<short>(HiddenWeights[wbuck][us_feat],   64);
-        AccWhite96 += new Vector<short>(HiddenWeights[wbuck][us_feat],   80);
+        fixed (Accumulator* acc = &this)
+        {
+            Vector<short>* ptrWhite = &acc->AccWhite16;
+            Vector<short>* prtBlack = &acc->AccBlack16;
+            
+            int iters = FT_SIZE / VECTOR_SIZE;
 
-        AccBlack16 += new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
-        AccBlack32 += new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
-        AccBlack48 += new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
-        AccBlack64 += new Vector<short>(HiddenWeights[bbuck][them_feat], 48);
-        AccBlack80 += new Vector<short>(HiddenWeights[bbuck][them_feat], 64);
-        AccBlack96 += new Vector<short>(HiddenWeights[bbuck][them_feat], 80);
+            for (int i=0; i<iters; i++)
+            {
+                *(ptrWhite+i) += new Vector<short>(ftWeights[wbuck][us_feat  ], i * VECTOR_SIZE);
+                *(prtBlack+i) += new Vector<short>(ftWeights[bbuck][them_feat], i * VECTOR_SIZE);
+            }
+        }
     }
 
     public void deactivate(int color, int pt, int sq)
     {
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
-        AccWhite16 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   0);
-        AccWhite32 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   16);
-        AccWhite48 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   32);
-        AccWhite64 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   48);
-        AccWhite80 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   64);
-        AccWhite96 -= new Vector<short>(HiddenWeights[wbuck][us_feat],   80);
+        fixed (Accumulator* acc = &this)
+        {
+            Vector<short>* ptrWhite = &acc->AccWhite16;
+            Vector<short>* prtBlack = &acc->AccBlack16;
+            
+            int iters = FT_SIZE / VECTOR_SIZE;
 
-        AccBlack16 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 0);
-        AccBlack32 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 16);
-        AccBlack48 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 32);
-        AccBlack64 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 48);
-        AccBlack80 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 64);
-        AccBlack96 -= new Vector<short>(HiddenWeights[bbuck][them_feat], 80);
+            for (int i=0; i<iters; i++)
+            {
+                *(ptrWhite+i) -= new Vector<short>(ftWeights[wbuck][us_feat  ], i * VECTOR_SIZE);
+                *(prtBlack+i) -= new Vector<short>(ftWeights[bbuck][them_feat], i * VECTOR_SIZE);
+            }
+        }
     }
 
     /// <summary>
@@ -87,19 +87,19 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe void accumulate_from_zero(ref pos p)
     {
-        AccWhite16 = new Vector<short>(HiddenBias,  0);
-        AccWhite32 = new Vector<short>(HiddenBias, 16);
-        AccWhite48 = new Vector<short>(HiddenBias, 32);
-        AccWhite64 = new Vector<short>(HiddenBias, 48);
-        AccWhite80 = new Vector<short>(HiddenBias, 64);
-        AccWhite96 = new Vector<short>(HiddenBias, 80);
-        
-        AccBlack16 = new Vector<short>(HiddenBias,  0);
-        AccBlack32 = new Vector<short>(HiddenBias, 16);
-        AccBlack48 = new Vector<short>(HiddenBias, 32);
-        AccBlack64 = new Vector<short>(HiddenBias, 48);
-        AccBlack80 = new Vector<short>(HiddenBias, 64);
-        AccBlack96 = new Vector<short>(HiddenBias, 80);
+        fixed (Accumulator* acc = &this)
+        {
+            Vector<short>* ptrWhite = &acc->AccWhite16;
+            Vector<short>* prtBlack = &acc->AccBlack16;
+            
+            int iters = FT_SIZE / VECTOR_SIZE;
+
+            for (int i=0; i<iters; i++)
+            {
+                *(ptrWhite+i) = new Vector<short>(ftBias, i * VECTOR_SIZE);
+                *(prtBlack+i) = new Vector<short>(ftBias, i * VECTOR_SIZE);
+            }
+        }
 
         // set all Pieces
         for (int color=BLACK; color<=WHITE; color++)

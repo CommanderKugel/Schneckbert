@@ -122,7 +122,16 @@ while (true)
             else if (tokens[1] == "nodes")
             {
                 nodes = SkipPast("nodes").Select(int.Parse).FirstOrDefault();
-                TimeManager.SetNewTimelimit(int.MaxValue);
+                
+                if (tokens.Length >= 5 && tokens[3] == "movetime")
+                {
+                    var maxtime = SkipPast("movetime").Select(int.Parse).FirstOrDefault();
+                    TimeManager.SetMaxTimelimit(maxtime);
+                }
+                else
+                {
+                    TimeManager.SetMaxTimelimit(int.MaxValue);
+                }
             }
 
             else if (tokens[1] == "movetime")
@@ -155,7 +164,7 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 10
             );
-            long bench = 4072505; 
+            long bench = 5592169; 
             int  nps   = 1195685; 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");

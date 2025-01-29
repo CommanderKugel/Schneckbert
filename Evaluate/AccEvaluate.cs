@@ -5,6 +5,7 @@ using static NNUEWeights;
 using static System.Numerics.Vector;
 using System.Numerics;
 using static System.Math;
+using System.Runtime.CompilerServices;
 
 public unsafe partial struct Accumulator
 {
@@ -21,13 +22,14 @@ public unsafe partial struct Accumulator
         // evaluation here
         int sum = OutputBias;
 
+        int outBuck = get_output_bucket(ref p);
+
         fixed (Accumulator* accPtr = &this)
         {
             Vector<short>* ptrWhite = &accPtr->AccWhite16;
             Vector<short>* prtBlack = &accPtr->AccBlack16;
 
-            int vectorSize = Vector<short>.Count;
-            int iterations = HIDDEN_SIZE / vectorSize;
+            int iterations = FT_SIZE / VECTOR_SIZE;
 
             for (int i=0; i<iterations; i++)
             {
@@ -42,8 +44,8 @@ public unsafe partial struct Accumulator
                 activatedBlack = Multiply(activatedBlack, activatedBlack);
 
                 // load output weights
-                var weightsWhite = new Vector<short>(OutputWeight, p.us==WHITE ? i*vectorSize : HIDDEN_SIZE+i*vectorSize);
-                var weightsBlack = new Vector<short>(OutputWeight, p.us==BLACK ? i*vectorSize : HIDDEN_SIZE+i*vectorSize);
+                var weightsWhite = new Vector<short>(OutputWeight[outBuck], p.us==WHITE ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
+                var weightsBlack = new Vector<short>(OutputWeight[outBuck], p.us==BLACK ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
 
                 // widen the short Vectors
                 // then calculate dot-product from weights and activated accumulator
@@ -67,5 +69,16 @@ public unsafe partial struct Accumulator
         sum /= QA * QB;
 
         return Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
+    }
+
+    /// <summary>
+    /// Returns the output bucket for the given position.
+    /// Depends on the total Piececount, including Pawns, excluding kings.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe int get_output_bucket(ref pos p) {
+        var count = Utils.popCount(p.get_blocker()) - 2;
+        var bucket = count / OUT_BUCK_DIVISOR;
+        return bucket;
     }
 }
