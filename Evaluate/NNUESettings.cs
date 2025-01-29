@@ -1,7 +1,7 @@
 public static class NNUESettings
 {
     public const int INPUT_SIZE  = 768;
-    public const int FT_SIZE     = 96;
+    public const int FT_SIZE     = 192;
     public const int OUTPUT_SIZE = 1;
 
     public const int IN_BUCKET_CNT = 1;
@@ -9,7 +9,7 @@ public static class NNUESettings
     public const int OUT_BUCKET_CNT = 8;
     public static int OUT_BUCK_DIVISOR = (int)Math.Ceiling(32.0d / (double)OUT_BUCKET_CNT);
     
-    public const string net_name = "simple96_hm_matbuck";
+    public const string net_name = "simple192_hm_matbuck8";
     
     public const int SCALE = 2;
     public const short QA = 181;

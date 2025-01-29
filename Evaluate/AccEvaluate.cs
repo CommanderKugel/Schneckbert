@@ -19,10 +19,10 @@ public unsafe partial struct Accumulator
         var VECTOR_QA   = new Vector<short>(QA);
         var VECTOR_ZERO = Vector<short>.Zero;
 
+        int outBuck = get_material_bucket(ref p);
+
         // evaluation here
         int sum = OutputBias;
-
-        int outBuck = get_output_bucket(ref p);
 
         fixed (Accumulator* accPtr = &this)
         {
@@ -48,6 +48,7 @@ public unsafe partial struct Accumulator
                 var weightsBlack = new Vector<short>(OutputWeight[outBuck], p.us==BLACK ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
 
                 // widen the short Vectors
+                // the next step might overflow 16 bits
                 // then calculate dot-product from weights and activated accumulator
                 Vector<int> actLo, actHi, weightLo, weightHi;
 
@@ -68,6 +69,10 @@ public unsafe partial struct Accumulator
         // Remove Quantization
         sum /= QA * QB;
 
+        // SCALE should be 400 insead of 2
+        // and QA * QB should be QA * QA * QB
+        // *SPRT COMING SOON*
+
         return Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
     }
 
@@ -76,9 +81,7 @@ public unsafe partial struct Accumulator
     /// Depends on the total Piececount, including Pawns, excluding kings.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe int get_output_bucket(ref pos p) {
-        var count = Utils.popCount(p.get_blocker()) - 2;
-        var bucket = count / OUT_BUCK_DIVISOR;
-        return bucket;
-    }
+    private static unsafe int get_material_bucket(ref pos p)
+        => (Utils.popCount(p.get_blocker()) - 2) / OUT_BUCK_DIVISOR;
+
 }

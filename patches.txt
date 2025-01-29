@@ -10,7 +10,6 @@ Ptnml(0-2): [186, 664, 1266, 771, 219], WL/DD Ratio: 1.42
 LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
 
-
 Bugfix in SEE pruning
 check if the correct move already passed SEE to try and prune it again
 
@@ -22,7 +21,6 @@ Games: 2392, Wins: 741, Losses: 696, Draws: 955, Points: 1218.5 (50.94 %)
 Ptnml(0-2): [60, 274, 489, 307, 66], WL/DD Ratio: 1.61
 LLR: 2.90 (-2.25, 2.89) [-10.00, 0.00]
 --------------------------------------------------
-
 
 Rewrite of ttEntry struct, now 8 bytes smaller
 24 -> 16 bytes in size
@@ -37,7 +35,6 @@ Ptnml(0-2): [54, 239, 485, 313, 93], WL/DD Ratio: 1.25
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
 
-
 New Net using material-output-buckets
 
 --------------------------------------------------
@@ -47,4 +44,16 @@ LOS: 99.86 %, DrawRatio: 38.49 %, PairsRatio: 1.14
 Games: 7144, Wins: 2494, Losses: 2304, Draws: 2346, Points: 3667.0 (51.33 %)
 Ptnml(0-2): [281, 747, 1375, 839, 330], WL/DD Ratio: 2.62
 LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+
+Newer and bigger Net
+(678_hm -> 192)x2 -> 1x8
+
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 7.12 +/- 5.03, nElo: 9.97 +/- 7.04
+LOS: 99.73 %, DrawRatio: 41.65 %, PairsRatio: 1.11
+Games: 9364, Wins: 3148, Losses: 2956, Draws: 3260, Points: 4778.0 (51.03 %)
+Ptnml(0-2): [319, 975, 1950, 1071, 367], WL/DD Ratio: 2.21
+LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
