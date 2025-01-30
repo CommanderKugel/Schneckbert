@@ -1,6 +1,5 @@
 Added IIR, 25.1.25 
 all nodeTypes, depth > 4
-
 --------------------------------------------------
 Results of dev vs main (5+0.05, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 9.68 +/- 6.05, nElo: 13.82 +/- 8.64
@@ -12,7 +11,6 @@ LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
 
 Bugfix in SEE pruning
 check if the correct move already passed SEE to try and prune it again
-
 --------------------------------------------------
 Results of dev vs main (5+0.05, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 6.54 +/- 9.38, nElo: 9.71 +/- 13.92
@@ -25,7 +23,6 @@ LLR: 2.90 (-2.25, 2.89) [-10.00, 0.00]
 Rewrite of ttEntry struct, now 8 bytes smaller
 24 -> 16 bytes in size
 additional space for ttEntry.eval added, not implemented yet
-
 --------------------------------------------------
 Results of dev vs main (5+0.05, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 22.33 +/- 9.67, nElo: 32.42 +/- 13.99
@@ -36,7 +33,6 @@ LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
 
 New Net using material-output-buckets
-
 --------------------------------------------------
 Results of dev vs main (8+0.08, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 9.24 +/- 6.05, nElo: 12.32 +/- 8.06
@@ -48,7 +44,6 @@ LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
 
 Newer and bigger Net
 (678_hm -> 192)x2 -> 1x8
-
 --------------------------------------------------
 Results of dev vs main (8+0.08, NULL, NULL, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 7.12 +/- 5.03, nElo: 9.97 +/- 7.04
@@ -56,4 +51,14 @@ LOS: 99.73 %, DrawRatio: 41.65 %, PairsRatio: 1.11
 Games: 9364, Wins: 3148, Losses: 2956, Draws: 3260, Points: 4778.0 (51.03 %)
 Ptnml(0-2): [319, 975, 1950, 1071, 367], WL/DD Ratio: 2.21
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+
+updated NMP depth (- depth/6)
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 10.19 +/- 6.18, nElo: 14.96 +/- 9.08
+LOS: 99.94 %, DrawRatio: 40.71 %, PairsRatio: 1.17
+Games: 5630, Wins: 1761, Losses: 1596, Draws: 2273, Points: 2897.5 (51.47 %)
+Ptnml(0-2): [140, 630, 1146, 723, 176], WL/DD Ratio: 1.49
+LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------

@@ -143,7 +143,8 @@ public static partial class Search
             pos copy = p;
             copy.force_null_move(ss);
 
-            score = -Negamax<NON_PV>(copy, -beta, -alpha, depth-3, ply+1, ss+1);
+            int nmpDepth = depth - 3 - depth / 6;
+            score = -Negamax<NON_PV>(copy, -beta, -alpha, nmpDepth, ply+1, ss+1);
             RepetitionTable.Pop();
 
             if (score >= beta)
