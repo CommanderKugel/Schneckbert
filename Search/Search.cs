@@ -12,12 +12,9 @@ public static partial class Search
     static move rootBestMove;
     public static int rootScore;
 
-    static move[][] PV;
-
-
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool doNull, bool info)
+    public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss)
         where NodeType : NODE
     {
 
@@ -95,10 +92,11 @@ public static partial class Search
         // Transposition Table Cutoff
         // If we found a valid TTEntry, we can return the saved score under some circumstances.
         if ( nonPV && ttHit && ttEntry.depth >= depth && 
-            !score_is_terminal(ttEntry.score) && !inSingularity && (
-            ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
-            ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
-            ttEntry.flag == BOUND_EXACT
+            !score_is_terminal(ttEntry.score) && !inSingularity && 
+            (
+                ttEntry.flag == BOUND_UPPER && ttEntry.score <= alpha ||
+                ttEntry.flag == BOUND_LOWER && ttEntry.score >= beta  ||
+                ttEntry.flag == BOUND_EXACT
             )) 
         {
             return ttEntry.score;
@@ -135,12 +133,17 @@ public static partial class Search
         //     to be able to move first. So if we can give our opponent two moves in a row, and
         //     still beat beta, this position is too good and we can cut off here.
         //     Zugzwang Positions are the exception and arent accounted for yet, e.g. via p.hasNonPawnMaterial()
-        if (doNull && nonPV && !inCheck && depth>2 && !inSingularity && ss->StaticEval>=beta)
+        if ( nonPV && 
+            !(ss-1)->Move.IsNull &&
+            !inCheck && 
+             depth>2 && 
+            !inSingularity && 
+             ss->StaticEval>=beta)
         {
             pos copy = p;
             copy.force_null_move(ss);
 
-            score = -Negamax<NON_PV>(copy, -beta, -alpha, depth-3, ply+1, ss+1, false, false);
+            score = -Negamax<NON_PV>(copy, -beta, -alpha, depth-3, ply+1, ss+1);
             RepetitionTable.Pop();
 
             if (score >= beta)
@@ -274,7 +277,7 @@ public static partial class Search
                 int singularDepth = (depth - 1) / 2;
 
                 ss->ExcludedMove = m;
-                int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss, false, false);
+                int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss);
                 ss->ExcludedMove = move.NullMove;
 
                 // extension
@@ -317,27 +320,28 @@ public static partial class Search
             {
                 int R = lmrTable[Min(movesPlayed, 63)];
 
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1);
 
                 // if the shallower search failse high, we need to prove that the move really beats alpha
                 // by re-searching at full depth.
                 if (R > 1 && score > alpha)
                 {
-                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, true, info);
+                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1);
                 }
             }
 
             // if LMR conditions dont apply, do a full-depth Zero-Window Search.
             else if (nonPV || movesPlayed > 1)
             {
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, true, info);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1);
             }
 
             // if we are at a PVNode and ply either the first move, or a later move has beaten alpha, re-search
             // at full depth with a full window, to optain am exact score.
             if (isPV && (score > alpha || movesPlayed == 1))
             {
-                score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1, true, info);
+                
+                score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1);
             }
 
 
@@ -356,9 +360,9 @@ public static partial class Search
                     rootBestMove = m;
                 }
 
-                if (info && ply < iteration)
+                if (isPV && ply < iteration)
                 {
-                    UpdatePV(m, ply);
+                    update_pv(m, ply);
                 }
 
                 if (score > alpha)
@@ -415,37 +419,5 @@ public static partial class Search
         }
 
         return bestScore;
-    }
-
-
-    /// <summary>
-    /// copies the newest Principal Variation line onto the current ply
-    /// </summary>
-    private static void UpdatePV(move m, int ply)
-    {
-        PV[ply][ply] = m;
-        for (int i = ply + 1; i < iteration; i++)
-            PV[ply][i] = PV[ply + 1][i];
-    }
-    
-    /// <summary>
-    /// returns a uci-string-representation of the Principal Variation
-    /// </summary>
-    public static string getPV()
-    {
-        string s = "";
-        for (int i = 0; i < iteration; i++)
-            s += $"{PV[0][i]} ";
-        return s;
-    }
-
-    /// <summary>
-    /// clears the current PV-Arrays
-    /// </summary>
-    public static void ResetPV(int depth)
-    {
-        PV = new move[depth][];
-        for (int i = 0; i < depth; i++)
-            PV[i] = new move[depth];
     }
 }

@@ -22,8 +22,8 @@ public static class TranspositionTable
     private static TTEntry[] TT;
     private static ulong TTSize;
 
-    private const int MAX_SIZE = 4 * 1024; // max 4 GB
-    private const int MIN_SIZE = 1;        // min 1 MB
+    public const int MAX_SIZE = 4 * 1024; // max 4 GB
+    public const int MIN_SIZE = 1;        // min 1 MB
 
     /// <summary>
     /// Creates a new TranspositionTable for the given size.

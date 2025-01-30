@@ -25,6 +25,9 @@ while (true)
         {
             Console.WriteLine("id name Schneckbert");
             Console.WriteLine("id author CommanderKugel");
+
+            Console.WriteLine($"option name Hash type spin default 16 min {TranspositionTable.MIN_SIZE} max {TranspositionTable.MAX_SIZE}");
+
             Console.WriteLine("uciok");
             break;
         }
@@ -152,7 +155,10 @@ while (true)
             }
 
             move bestmove = Search.iterativeDeepen(
-                root, info: false, maxDepth: depth, maxNodes: nodes
+                root, 
+                info:     true, 
+                maxDepth: depth, 
+                maxNodes: nodes
             );
             Console.WriteLine($"bestmove {bestmove}");
                                 
