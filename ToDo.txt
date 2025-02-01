@@ -1,0 +1,35 @@
+functionality
+
+- Mailbox (faster lookups)
+- FRC (castling, fen parsing, DFRC)
+- Multithreading (big rewrite x.x)
+
+fury-pasta
+
+Search heuristics:
+- Improving heuristic
+    - RFP
+    - LMR
+    - LMP
+- Continuation history (CMH + FMH)
+- Capture history heuristic
+- History pruning
+- Multicut (using singular search result)
+- Double/Triple/Negative extensions
+- Cutnode (as apart of negative extensions, LMR, etc)
+- Static eval correction history
+- QS futility pruning
+
+Time management for soft-bound:
+- Node-based scaling
+- Best move stability
+- Eval stability
+
+viri-pasta
+
+NNUE progression:
+- Fused Updates
+- Direct accumulator calculation (accumulators[ply] = accumulators[ply - 1] + changes)
+- Lazy Updates (Queue of accumulator updates, calculate only before evaluation)
+- Finny Tables (For each bucket, store the state of the last time you were there, and when you re-enter the bucket, use a bitboard diff to compute updates)
+- multilayer (but first get to 1024 ft size)

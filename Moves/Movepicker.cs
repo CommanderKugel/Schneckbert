@@ -32,7 +32,7 @@ public unsafe class MovePicker
             }
 
             int attacker = p.piece_on(m.from);
-            int victim   = p.piece_on(m.to);
+            int victim   = p.get_captured_pt(m);
 
             // #1 TT Move
             // #2 Captures: passed SEE + Mvv-Lva

@@ -58,23 +58,23 @@ public static class Quiescense
 
 
         // #4 Static Evaluation
-        int staticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
+        ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
 
 
         // #5 Quiescense Search Stand Pat & Evaluate
         //    when a Quiet Position is reached, return the static evaluation score
         //    int a Quiet Position the best move is quiet (mostly: not a capture)
-        if (staticEval >= beta && !inCheck)
+        if (ss->StaticEval >= beta && !inCheck)
         {
-            return staticEval;
+            return ss->StaticEval;
         }
 
-        if (staticEval >= alpha && !inCheck)
+        if (ss->StaticEval >= alpha && !inCheck)
         {
-            alpha = staticEval;
+            alpha = ss->StaticEval;
         }
 
-        bestScore = !inCheck ? staticEval : -SCORE_MATE + ply ;
+        bestScore = !inCheck ? ss->StaticEval : -SCORE_MATE + ply ;
 
 
         // #6 Move Generating and Ordering
@@ -97,7 +97,7 @@ public static class Quiescense
         while (!(m = picker.next(ref p, ref moves, ref scores)).IsNull)
         {
             bool isCapture = p.is_capture(m);
-            bool nonMatingLineExists = Abs(bestScore) < SCORE_MATE/2;
+            bool nonMatingLineExists = !score_is_terminal(bestScore);
 
             // #7 Static Exchange Evaluation pruning
             //    If the move hat a bad SEE score in the scoring phase
@@ -105,7 +105,7 @@ public static class Quiescense
             if ( nonMatingLineExists &&
                  nonPV &&
                  picker.curr_score(ref scores) < 900_000 &&
-                !SEE.see_threshold(m, ref p, alpha - staticEval - 300))
+                !SEE.see_threshold(m, ref p, alpha - ss->StaticEval - 300))
             {
                 continue;
             }

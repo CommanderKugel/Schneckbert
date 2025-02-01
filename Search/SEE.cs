@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 public static class SEE
 {
-    private static int[] SEE_values = {
+    public static int[] SEE_values = {
         100, 450, 450, 650, 1250, 0, 0
     };
 
@@ -15,7 +15,7 @@ public static class SEE
         int from     = m.from;
         int to       = m.to;
         int attacker = p.piece_on(from);
-        int victim   = p.piece_on(to);
+        int victim   = p.get_captured_pt(m);
 
         // Best-case value: Value of the captured piece, as it simply hangs.
         // Ff we can't beat the threshhold in best-case, dont even try
