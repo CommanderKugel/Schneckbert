@@ -1,9 +1,16 @@
-
-using System.Diagnostics;
-using System.Runtime.Intrinsics.X86;
-using System.Text;
 using static Constants;
 using static Utils;
+
+using System.Diagnostics;
+
+
+public enum Gameresult
+{
+    WinBlack = 0,
+    Draw     = 1,
+    WinWhite = 2,
+    Ongoing  = 3,
+}
 
 public static class Selfplay
 {
@@ -27,12 +34,9 @@ public static class Selfplay
     ];
 
 
-    private static Stopwatch gameWatch = new Stopwatch();
-    private static Stopwatch writeWatch = new Stopwatch();
-
     private static Random rng = new Random();
 
-    public static unsafe void play_and_write(int games, int randomPly, int softnodes, int threadId)
+    public static unsafe void play_and_write(int games, int randomPly, int softnodes, int threadId, bool useUho)
     {
         var outPath = $"C:/Users/nikol/Desktop/Schneckbert/selfplaydata/{threadId}.txt";
         var inPath = UHO_paths[threadId % UHO_paths.Length];
@@ -47,66 +51,34 @@ public static class Selfplay
             watch.Start();
             for (int cnt=1; cnt<=games; cnt++)
             {
-                // fetch the next fen
-                var uhoFen = UHOFile.ReadLine();
-                if (uhoFen == null)
+                // read the next fen
+                var fen = useUho ? UHOFile.ReadLine() : startpos;
+                if (fen == null)
                 {
                     UHOFile.DiscardBufferedData();
                     UHOFile.BaseStream.Seek(0, SeekOrigin.Begin);
                     continue;
                 }
 
-                gameWatch.Start();
                 // play the game and receive all the necessary information
                 // alternate between white to move and balck to move
-                var (root, moves, scores, result) = play(softnodes, randomPly + (cnt & 1), uhoFen);
-                gameWatch.Stop();
+                var (root, moves, scores, result) = play(softnodes, randomPly + (cnt & 1), fen);
 
-                writeWatch.Start();
-                StringBuilder builder = new StringBuilder();
-                for (int i=0; i<moves.Count; i++)
-                {
-                    move m     = moves[i];
-                    int  score = root.us==WHITE ? scores[i] : -scores[i];
-
-                    // make the move and determine if its a quiet-position
-                    root.make_move(m, &ss);
-                    RepetitionTable.Pop();
-                    bool isQuiet = ss.CapturedPiece == PIECE_NONE   // no capture
-                                && Math.Abs(score) < 1_000_000      // no mating scores
-                                && root.get_checkers() == 0;        // no checks
-
-                    // always make the move, but filter out checks and captures
-                    if (isQuiet)
-                    {
-                        posCnt++;
-                        string fen = root.get_fen();
-                        builder.Append(fen);
-                        builder.Append(" | ");
-                        builder.Append(score);
-                        builder.Append(" | ");
-                        builder.Append(result);
-                        builder.Append('\n');
-                    }
-                }
-                file.Write(builder.ToString());
-                writeWatch.Stop();
+                // write the game to the file and count the newly added positions
+                posCnt += WriteGame.write_game_as_txt(file, root, moves, scores, result);
 
                 if (cnt % 10 == 0 && cnt > 0)
                 {
                     long pps = posCnt * 1000 / watch.ElapsedMilliseconds;
-                    long spg = watch.ElapsedMilliseconds / cnt / 1000;
-                    long eta = (games-cnt) * spg;
-                    Console.WriteLine($"total: {posCnt} pps: {pps}");
+                    Console.WriteLine($"time: {watch.Elapsed} total: {posCnt} pps: {pps}");
                 }
             }
         }
-        Console.WriteLine("Done playing "+games+" games!");
-        Console.WriteLine($"game: {gameWatch.Elapsed}");
-        Console.WriteLine($"write: {writeWatch.Elapsed}");
+        Console.WriteLine($"Done playing {games} games!");
     }
 
-    public static unsafe (pos, List<move>, List<int>, string) play(int softnodes, int randomPly, string fen)
+
+    public static unsafe (pos, List<move>, List<int>, Gameresult) play(int softnodes, int randomPly, string fen)
     {
         SearchStack.Reset();
         RepetitionTable.Reset();
@@ -114,41 +86,31 @@ public static class Selfplay
         History.Reset();
         TimeManager.Reset(true);
 
-        pos root = RandAfterNPly(randomPly, fen);
+        pos root = random_pos_after_n_ply(randomPly, fen);
         pos randoStartCopy = root;
 
         List<move> mainLine = new List<move>();
         List<int> mainLineScores = new List<int>();
 
-        string result = "ongoing";
+        var result = Gameresult.Ongoing;
         SS ss = new SS();
 
         while (true)
         {
-            Span<move> moves = new move[MAX_MOVE_CNT];
-            int mvCnt = MoveGen.GenerateMoves(ref moves, ref root, false, root.get_checkers());
-
-            bool hasLegalMoves = has_legal_moves(ref moves, mvCnt, root);
-            bool inCheck = root.get_checkers() != 0;
+            bool hasLegalMoves = has_legal_moves(root);
+            bool inCheck       = root.get_checkers() != 0;
 
             // check for illegal Positions
             if (!more_than_one(root.pieceBB[KING]))
             {
-                if (root.get_pieces(KING, WHITE) == 0)
-                {
-                    result = "0.0";
-                }
-                if (root.get_pieces(KING, BLACK) == 0)
-                {
-                    result = "1.0";
-                }
+                result = root.get_pieces(KING, WHITE) == 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
                 break;
             }
 
             // checkmate detection
             if (!hasLegalMoves && inCheck)
             {
-                result = root.us==WHITE ? "0.0" : "1.0";
+                result = root.us==WHITE ? Gameresult.WinBlack : Gameresult.WinWhite;
                 break;
             }
 
@@ -158,42 +120,51 @@ public static class Selfplay
                  root.IsInsufficientMaterial ||
                  root.IsFiftyMoveDraw)
             {
-                result = "0.5";
+                result = Gameresult.Draw;
                 break;
             }
 
+            // search
             TimeManager.SetNewTimelimit(1000);
             move m = Search.iterativeDeepen(root, info: false, maxNodes: softnodes);
 
+            // check move legality
             bool isLegal = root.make_move(m, &ss);
             if (!isLegal)
             {
-                result = root.us==WHITE ? "0.0" : "1.0";
+                result = root.us==WHITE ? Gameresult.WinBlack : Gameresult.WinWhite;
                 break;
             }
 
+            // save move and score
             mainLine.Add(m);
             mainLineScores.Add(Search.rootScore);
-
 
             // abort if on side has no pieces left and not everything will be traded off
             if ((!more_than_one(root.colorBB[BLACK]) || !more_than_one(root.colorBB[WHITE])) &&
                   Math.Abs(Search.rootScore) > 400)
             {
-                result = Search.rootScore > 0 ? "1.0" : "0.0";
+                result = Search.rootScore < 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
                 break;
             }
 
-            // abort if the score becomes too high
+            // abort if the score becomes too high/low (includes mate-scores)
             if (Math.Abs(Search.rootScore) > 3000)
             {
-                result = Search.rootScore > 0 ? "1.0" : "0.0";
+                result = Search.rootScore < 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
                 break;
             }
         }
 
-        // Game is played out now
         return (randoStartCopy, mainLine, mainLineScores, result);
+    }
+
+
+    public static unsafe bool has_legal_moves(pos p)
+    {
+        Span<move> moves = stackalloc move[MAX_MOVE_CNT];
+        int mvCnt = MoveGen.GenerateMoves(ref moves, ref p, false, p.get_checkers());
+        return has_legal_moves(ref moves, mvCnt, p);
     }
 
     public static unsafe bool has_legal_moves(ref Span<move> moves, int mvCnt, pos p)
@@ -211,7 +182,7 @@ public static class Selfplay
         return false;
     }
 
-    public static unsafe pos RandAfterNPly(int n, string fen)
+    public static unsafe pos random_pos_after_n_ply (int n, string fen=startpos)
     {
         pos root = new pos(fen);
         int ply = 0;
@@ -244,9 +215,11 @@ public static class Selfplay
                 }
             }
 
+            // catch positions with no legal moves
+            // mate after 4 plies can happen!
             if (cnt == 0)
             {
-                return RandAfterNPly(n, fen);
+                return random_pos_after_n_ply(n, fen);
             }
         }
 

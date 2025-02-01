@@ -214,11 +214,15 @@ while (true)
             }
 
             int threadId  = SkipPast("id").Select(int.Parse).FirstOrDefault();
-            var randomPly = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() : 3;
-            var softnodes = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() : 5_000;
-            Console.WriteLine($"started selfplay run!\nthreadId {threadId}\nrandomPly {randomPly}\nsooftnodes {softnodes}");
+            var uho       = tokens.Contains("uho") ? SkipPast("uho").Select(bool.Parse).FirstOrDefault() : true;
+            var randomPly = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() 
+                          : (uho ? 3 : 8);
+            var softnodes = tokens.Contains("nodes") ? SkipPast("nodes").Select(int.Parse).FirstOrDefault() : 5_000;
+            var games     = tokens.Contains("games") ? SkipPast("games").Select(int.Parse).FirstOrDefault() : 1_000_000;
 
-            Selfplay.play_and_write(1_000_000, randomPly, softnodes, threadId);
+            Console.WriteLine($"started selfplay run!");
+            Console.WriteLine($"- threadId {threadId}\n- randomPly {randomPly}\n- sooftnodes {softnodes}\n- uho {uho}\n- games {games}");
+            Selfplay.play_and_write(games, randomPly, softnodes, threadId, uho);
             break;
         }
         case "perft":
