@@ -33,32 +33,31 @@ public unsafe partial struct Accumulator
 
             for (int i=0; i<iterations; i++)
             {
-                // activate the accumulator
-                // Squared Clipped Rectified Linear Unit
-                // y = Pow(Clamp(x, 0, 181), 2);
-                // Quantization targets QA=181 and QB=64 are choosen, because 
-                // Pow(181, 2) * 64 still fits into the short datatype
+                // Clamp the accumulator to 0 and QA
                 var activatedWhite = Max(VECTOR_ZERO, Min(VECTOR_QA, *(ptrWhite+i)));
                 var activatedBlack = Max(VECTOR_ZERO, Min(VECTOR_QA, *(prtBlack+i)));
-                activatedWhite = Multiply(activatedWhite, activatedWhite);
-                activatedBlack = Multiply(activatedBlack, activatedBlack);
 
                 // load output weights
                 var weightsWhite = new Vector<short>(OutputWeight[outBuck], p.us==WHITE ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
                 var weightsBlack = new Vector<short>(OutputWeight[outBuck], p.us==BLACK ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
 
-                // widen the short Vectors
-                // the next step might overflow 16 bits
-                // then calculate dot-product from weights and activated accumulator
-                Vector<int> actLo, actHi, weightLo, weightHi;
+                // multiply activated accumulator and weights
+                var multAccWhite = Multiply(activatedWhite, weightsWhite);
+                var multAccBlack = Multiply(activatedBlack, weightsBlack);
+
+                // widen the short Vectors because the next step might overflow 16 bits
+                // multiply multAcc and actAcc for Lizard SCRELU
+                // Pow(acc, 2) * w = (acc * acc) * w = (acc * w) * acc
+                // then make the dot-product
+                Vector<int> actLo, actHi, mulLo, mulHi;
 
                 Widen(activatedWhite, out actLo, out actHi);
-                Widen(weightsWhite, out weightLo, out weightHi);
-                sum += Dot(actLo, weightLo) + Dot(actHi, weightHi);
+                Widen(multAccWhite, out mulLo, out mulHi);
+                sum += Dot(actLo, mulLo) + Dot(actHi, mulHi);
 
                 Widen(activatedBlack, out actLo, out actHi);
-                Widen(weightsBlack, out weightLo, out weightHi);
-                sum += Dot(actLo, weightLo) + Dot(actHi, weightHi);
+                Widen(multAccBlack, out mulLo, out mulHi);
+                sum += Dot(actLo, mulLo) + Dot(actHi, mulHi);
             }
         }
 
