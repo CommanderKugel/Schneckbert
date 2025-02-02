@@ -62,3 +62,14 @@ Games: 5630, Wins: 1761, Losses: 1596, Draws: 2273, Points: 2897.5 (51.47 %)
 Ptnml(0-2): [140, 630, 1146, 723, 176], WL/DD Ratio: 1.49
 LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+new lmr-formula including depth now
+lmrBase = 1 + log(depth) * log(moveCount) / 1.5
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 17.68 +/- 8.17, nElo: 28.04 +/- 12.93
+LOS: 100.00 %, DrawRatio: 45.13 %, PairsRatio: 1.34
+Games: 2774, Wins: 843, Losses: 702, Draws: 1229, Points: 1457.5 (52.54 %)
+Ptnml(0-2): [44, 281, 626, 362, 74], WL/DD Ratio: 1.14
+LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

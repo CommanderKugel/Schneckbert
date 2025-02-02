@@ -2,18 +2,20 @@ functionality
 
 - Mailbox (faster lookups)
 - FRC (castling, fen parsing, DFRC)
+- Staged Movegen (ttMove first, staged Capture & quiets)
+- move_gives_check()
 - Multithreading (big rewrite x.x)
 
 fury-pasta
 
 Search heuristics:
 - Improving heuristic
-    - RFP
-    - LMR
-    - LMP
-- Continuation history (CMH + FMH)
+    - RFP (doesnt gain)
+    - LMR (R+=!improving; doesnt gain, interaction with log-formula pending)
+    - LMP 
+- Continuation 
 - Capture history heuristic
-- History pruning
+- History pruning/reduction
 - Multicut (using singular search result)
 - Double/Triple/Negative extensions
 - Cutnode (as apart of negative extensions, LMR, etc)

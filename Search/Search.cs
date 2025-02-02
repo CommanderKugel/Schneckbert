@@ -109,6 +109,14 @@ public static partial class Search
         ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
 
 
+        // Improving
+        // Not a pruning technique in itself, but used to slightly tweak other heuristics.
+        // rfp (-10 elo): eval - 75 * (depth - improving) >= beta
+        // lmr: R -= improving
+        //bool improving = !inCheck && ply > 1 && (ss-2)->StaticEval != 0 && (ss-2)->StaticEval < ss->StaticEval;
+        //int  intImproving = improving ? 1 : 0;
+
+
         // #8 Static Evaluation Correction History
         // COMING SOON*
 
@@ -220,6 +228,10 @@ public static partial class Search
             }
 
             // #17 Late Move Pruning
+            //     Assuming our moveordering is good, later picked moves are 
+            //     assumed to be worse than earlier moves.
+            //     So skip later, worse scoring and non-tactical moves at low depths.
+            // *IMPROVING SPRT COMING SOON*
             if (!isCapture &&
                 !m.IsPromo &&
                  nonMatingLineExists &&
@@ -229,7 +241,14 @@ public static partial class Search
                 continue;
             }
 
-            // #18 Static Exchange Evaluation Pruning
+
+            // #18 History Pruning
+            //     If the History Score of a move is really bad and 
+            //     there are no tactical reasons to try the move, prune it.
+            // *COMING SOON*
+
+
+            // #19 Static Exchange Evaluation Pruning
             //     If the move hat a bad SEE score in move ordering,
             //     and the move can possibly be pruned, 
             //     run another SEE with a wider margin.
@@ -237,16 +256,16 @@ public static partial class Search
                 nonPV &&
                 picker.curr_score(ref scores) < 900_000)
             {
-                int margin = 
-                    isCapture ? -200 * depth 
-                              : -25 * depth * depth;
+                int margin = isCapture 
+                           ? -200 * depth 
+                           :  -25 * depth * depth;
                 if (!SEE.see_threshold(m, ref p, margin))
                 {
                     continue;
                 }
             }
 
-            // #19 Copy Make
+            // #20 Copy Make
             //     Copy the position, then make the move on the copied position.
             //     Avoids complex undo_move() method.
             pos nextPos = p;
@@ -260,7 +279,7 @@ public static partial class Search
 
             int extensions = 0;
 
-            // #20 Singular Extensions
+            // #21 Singular Extensions
             //     If the TT suggests that we have a really strong move and we have sufficient depth
             //     left in our search-iteration, we can test if the TTMove is the only strong move.
             //     For that, search this node again, while excluding the candidate singular move.
@@ -287,12 +306,13 @@ public static partial class Search
                     extensions = 1;
                 }
 
-                // #21 Multi Cut
+                // #22 Multi Cut
                 //     If the candidate-singular move is proven not singular and any other move would
                 //     fail high, even in the current window-bounds, this position is probably too good
                 //     to be true and our opponent wont allow this branch of the tree to be played out.
                 //
                 // *PROMISING AT STC, TRY AGAIN LATER AT LCT*
+                // *somehow doesnt gain by a bizillion elo*
                 // Elo: 2.99 +/- 8.98
                 // Games: 2438, Wins: 671, Losses: 650, Draws: 1117, Points: 1229.5 (50.43 %)
                 // Ptnml(0-2): [54, 288, 516, 305, 56], WL/DD Ratio: 0.97
@@ -305,21 +325,30 @@ public static partial class Search
                 }
                 */
 
-                // #22 Negative Extensions
+                // #23 Negative Extensions
                 // *COMING SOON*
 
             }
 
-
+            // apply extensions
             int newDepth = depth + extensions - 1;
 
             
-            // #23 Late Move Reductions
+            // #24 Late Move Reductions
             //     Assuming our move-ordering is good, the later a move is picked, the worse it is.
             //     For later moves, we only want to prove that it really is worse, using a shallower search.
             if (movesPlayed > 1 && depth > 2 && !isCapture)
             {
-                int R = lmrTable[Min(movesPlayed, 63)];
+                // log-formula = 1 + log(depth) * log(moveCount) / 1.5
+                int R = lmrTable[Min(depth, 63)][Min(movesPlayed, 63)];
+
+                // History Reduction 
+                // *COMING SOON*
+                //if (picker.curr_score(ref scores) < -500) R++;
+
+                //if (!improving) R++;          -> -10.13 +/-  7.68 @ 40+0.40 
+                //if (nonPV) R++;               -> -21.37 +/- 11.47 @  8+0.08
+                //if (!improving && nonPV) R++; ->  -7.65 +/-  7.32 @  8+0.08
 
                 score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1);
 
@@ -349,7 +378,7 @@ public static partial class Search
             // here would be the moment to undo the move but its just copy-make
             RepetitionTable.Pop();
 
-            // #24 Score Update
+            // #25 Score Update
             if (score > bestScore)
             {
                 bestScore = score;
@@ -376,7 +405,7 @@ public static partial class Search
                     if (score >= beta)
                     {   
 
-                        // #25 Update history Scores and Killer Moves
+                        // #26 Update history Scores and Killer Moves
                         if (!isCapture)
                         {
                             // Update the Killer-move heuristic, if this move was a quiet-move.
@@ -396,7 +425,7 @@ public static partial class Search
             }
         }
 
-        // #26 Check- & Stalemate detection
+        // #27 Check- & Stalemate detection
         //     If no moves in a position are legal, the side to move is either chekmated or stalemated.
         //     Dont save terminal nodes in the TT.
         if (movesPlayed == 0)
@@ -405,7 +434,7 @@ public static partial class Search
         }
 
         
-        // #27 Save Node to TT
+        // #28 Save Node to TT
         //     Skip singular confirmation searches, because the best move was excluded there
         if (!inSingularity)
         {
