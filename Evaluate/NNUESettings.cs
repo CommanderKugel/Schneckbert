@@ -9,10 +9,10 @@ public static class NNUESettings
     public const int OUT_BUCKET_CNT = 8;
     public static int OUT_BUCK_DIVISOR = (int)Math.Ceiling(32.0d / (double)OUT_BUCKET_CNT);
     
-    public const string net_name = "simple192_hm_matbuck8";
+    public const string net_name = "simple192_hm_matbuck_lizard";
     
     public const int SCALE = 2;
-    public const short QA = 181;
+    public const short QA = 255;
     public const short QB = 64;
 
 
