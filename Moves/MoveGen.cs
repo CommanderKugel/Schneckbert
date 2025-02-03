@@ -15,9 +15,8 @@ public static class MoveGen
         int them = 1 - us;
         bool wtm = us == WHITE;
 
-        int ksq = p.get_ksq(us);
-
         ulong block       = p.get_blocker();
+        int   ksq         = p.get_ksq(p.us);
         ulong captureMask = OnlyCaptures ? p.colorBB[them] : ~p.colorBB[us];
         ulong checkMask   = GenerateCheckmask(ksq, checker);
         ulong mask        = captureMask & checkMask;
@@ -33,7 +32,7 @@ public static class MoveGen
         if (!OnlyCaptures)
         {
             GeneratePawnPushes(ref moves, ref moveCnt, ref p, checkMask);
-            GenerateCastlingMoves(ref moves, ref moveCnt, ref p, ksq, checker);
+            GenerateCastlingMoves(ref moves, ref moveCnt, ref p, checker, ksq);
         }
 
         return moveCnt;
@@ -135,24 +134,24 @@ public static class MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe void GenerateCastlingMoves(ref Span<move> moves, ref int moveCnt, ref pos p, int ksq, ulong checker)
+    private static unsafe void GenerateCastlingMoves(ref Span<move> moves, ref int moveCnt, ref pos p, ulong checker, int ksq)
     {
         // check for in check
         if (checker != 0)
             return;
-        
+
         ulong block = p.get_blocker();
 
         // Kingside castlingrights
-        if (p.castlingRights[p.us + p.us] &&                               // kingside castling rights
+        if (p.castlingRights[p.us + p.us] &&                                // kingside castling rights
             (p.attackers_to(ksq + 1, block) & p.colorBB[1-p.us]) == 0 &&    // dont move through check
             (block & (1ul << ksq + 1 | 1ul << ksq + 2)) == 0)               // no piece in the way
-            moves[moveCnt++] = new(ksq, ksq + 2);
+            moves[moveCnt++] = new(ksq, ksq + 2, move.Castles);
 
         // Queenside castlingrights            
-        if (p.castlingRights[p.us + p.us + 1] &&                               // queenside castling rights
+        if (p.castlingRights[p.us + p.us + 1] &&                                // queenside castling rights
             (p.attackers_to(ksq - 1, block) & p.colorBB[1-p.us]) == 0 &&        // dont move through check
             (block & (1ul << ksq - 1 | 1ul << ksq - 2 | 1ul << ksq - 3)) == 0)  // no piece in the way
-            moves[moveCnt++] = new(ksq, ksq - 2);
+            moves[moveCnt++] = new(ksq, ksq - 2, move.Castles);
     }
 }

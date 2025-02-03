@@ -1,3 +1,4 @@
+using System.Text;
 using static Constants;
 using static Utils;
 
@@ -80,7 +81,7 @@ public unsafe partial struct pos
     /// </summary>
     public string get_fen()
     {
-        string fen = "";
+        var fen = new StringBuilder();
 
         // Piece Representation
         for (int rank=7; rank>=0; rank--)
@@ -97,9 +98,9 @@ public unsafe partial struct pos
                 {
                     if (cnt > 0)
                     {
-                        fen += (char)(cnt + '0');
+                        fen.Append((char)(cnt + '0'));
                     }
-                    fen += PieceChars[color_on(sq)][pt];
+                    fen.Append(PieceChars[color_on(sq)][pt]);
                     cnt = 0;
                 }
                 else
@@ -110,36 +111,36 @@ public unsafe partial struct pos
 
             if (cnt > 0)
             {
-                fen += (char)(cnt + '0');
+                fen.Append((char)(cnt + '0'));
             }
 
-            fen += rank == 0 ? ' ' : '/';
+            fen.Append(rank == 0 ? ' ' : '/');
         }
 
         // stm
-        fen += us==WHITE ? "w " : "b ";
+        fen.Append(us==WHITE ? "w " : "b ");
 
         // castling rights convention: kqKQ
-        if (castlingRights[2]) fen += 'K';
-        if (castlingRights[3]) fen += 'Q';
-        if (castlingRights[0]) fen += 'k';
-        if (castlingRights[1]) fen += 'q';
+        if (castlingRights[2]) fen.Append('K');
+        if (castlingRights[3]) fen.Append('Q');
+        if (castlingRights[0]) fen.Append('k');
+        if (castlingRights[1]) fen.Append('q');
         if (!(castlingRights[0] || castlingRights[1] || 
               castlingRights[2] || castlingRights[3]))
         {
-            fen += "-";
+            fen.Append("-");
         }
 
-        fen += " ";
+        fen.Append(" ");
 
         if (ep != SQ_NONE)
         {
             int epsq = ep + (us==WHITE ? 8 : -8);
-            fen += BoardNotation[epsq];
+            fen.Append(BoardNotation[epsq]);
         }
         else
         {
-            fen += '-';
+            fen.Append('-');
         }
 
         return fen + " 0 0";
