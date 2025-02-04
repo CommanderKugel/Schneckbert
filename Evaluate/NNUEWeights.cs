@@ -1,5 +1,7 @@
 using static NNUESettings;
 
+using System.Reflection;
+
 
 public static class NNUEWeights
 {
@@ -32,10 +34,20 @@ public static class NNUEWeights
     /// bullet-trainer (https://github.com/jw1912/bullet). Thanks jw!
     /// </summary>
     public static void load() 
-    {
-        const string path = "C:/Users/nikol/Desktop/Schneckbert/Schneckbert/Evaluate/Nets/";
-        using (var fs     = new FileStream(path+net_name+".bin", FileMode.Open, FileAccess.Read))
-        using (var reader = new BinaryReader(fs))
+    {   
+        //foreach (var name in Assembly.GetExecutingAssembly().GetManifestResourceNames())
+        //    Console.WriteLine($"embedded file: {name}");
+
+        // load the NNUE from an embedded file
+        Stream? stream;
+        if ((stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+            "Schneckbert.Evaluate.Nets.simple192_hm_matbuck_lizard.bin"
+        )) == null)
+        {
+            throw new Exception($"Could not find embedded {net_name}");
+        }
+
+        using (var reader = new BinaryReader(stream))
         {
 
             // read feature-transformer weights and bias
@@ -55,8 +67,8 @@ public static class NNUEWeights
             OutputBias = reader.ReadInt16();
 
             /*
-            // need for debug? bullet files print "bullet" in the buffer-bytes of the
-            // quantized file, try and read those out loud
+            // debug help: bullet files print "bullet" in the remaining buffer-bytes of the quantized file
+            // bullet-files are bufferd to multiples of 64 bytes
             try
             {
                 while (true) Console.WriteLine(reader.ReadChar());
