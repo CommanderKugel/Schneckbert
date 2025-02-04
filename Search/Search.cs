@@ -193,9 +193,14 @@ public static partial class Search
         var picker = new MovePicker(p, false, ttMove, ss, ref moves, ref scores);
 
 
-        // preparing the main move-loop
-        int movesPlayed = 0;
-        Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
+        // save the every played move and the number of played moves
+        // to update Histries accordingly
+        int movesPlayed    = 0;
+        int quietsPlayed   = 0;
+        int capturesPlayed = 0;
+        Span<move> quietsList   = stackalloc move[MAX_MOVE_CNT];
+        Span<move> capturesList = stackalloc move[MAX_MOVE_CNT];
+
         int startAlpha = alpha;
         move m;
         move locBestMove = move.NullMove;
@@ -275,7 +280,9 @@ public static partial class Search
             }
 
             // save the played move, maybe its history will be updated later
-            playedAndLegal[movesPlayed++] = m;
+            movesPlayed++;
+            if (isCapture) capturesList[capturesPlayed++] = m;
+            else           quietsList[quietsPlayed++]     = m;
 
             int extensions = 0;
 
@@ -399,33 +406,39 @@ public static partial class Search
                 {
                     alpha = score;
 
-                    // fail high
-                    // If we beat beta, our opponent has a move that guarantees a position that scores beta,
-                    // so he will never allow us to get to a position with a better score and we can safely prune here.
+                    // #26 Fail High
+                    //     If we beat beta, our opponent has a move that guarantees a position that scores beta,
+                    //     so he will never allow us to get to a position with a better score and we can safely prune here.
+                    //     This makes up about 95% of all pruning in common Chess-Engine Negamax implementations.
                     if (score >= beta)
                     {   
 
-                        // #26 Update history Scores and Killer Moves
+                        // #27 Update Killer Moves
                         if (!isCapture)
                         {
-                            // Update the Killer-move heuristic, if this move was a quiet-move.
-                            // we shouldnt add captures to killer moves, or they would never be filled with quiet moves.
                             ss->killerMove = m;
-
-                            // Update the history-scores of all played quiet moves.
-                            // History Scores are greater for generally good moves, and smaller for worse ones.
-                            // History Scores can be falsified in favor for weaker but more common vs. stronger but rarer moves.
-                            // Currently the Butterfly- and PieceTo histories are implemented.
-                            History.updateQuietHistValues(playedAndLegal, movesPlayed-1, depth, p);
                         }
-    
+
+                        // #28 Update History Values
+                        int delta = History.calcHistDelta(depth);
+                        
+                        if (isCapture) capturesPlayed--;
+                        else           quietsPlayed--;
+
+                        History.increaseSingleHistValue(m, delta, ref p, isCapture);
+                        History.decreaseCaptureHistValues(ref capturesList, capturesPlayed, delta, ref p);
+                        if (!isCapture)
+                        {
+                            History.decreaseQuietHistValues(ref quietsList, quietsPlayed, delta, ref p);
+                        }
+
                         break;
                     }
                 }
             }
         }
 
-        // #27 Check- & Stalemate detection
+        // #29 Check- & Stalemate detection
         //     If no moves in a position are legal, the side to move is either chekmated or stalemated.
         //     Dont save terminal nodes in the TT.
         if (movesPlayed == 0)
@@ -434,7 +447,7 @@ public static partial class Search
         }
 
         
-        // #28 Save Node to TT
+        // #30 Save Node to TT
         //     Skip singular confirmation searches, because the best move was excluded there
         if (!inSingularity)
         {

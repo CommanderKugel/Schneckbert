@@ -20,6 +20,10 @@ public static class History
     // color-PawnKey-PieceType-to
     private static short[][][] PawnHistory; // 2 * 256 * 6*64
 
+    // Primary Capture ButterflyHistory
+    // color-Victim-Attacker-from-to
+    private static short[][][] CaptureHistory; // 2 * 5*6 * 64*64
+
     public static void init()
     {
         ButterflyHistory = new short[2][];
@@ -38,6 +42,15 @@ public static class History
             PawnHistory[BLACK][p] = new short[6*64];
             PawnHistory[WHITE][p] = new short[6*64];
         }
+
+        CaptureHistory = new short[2][][];
+        CaptureHistory[BLACK] = new short[6*6][];
+        CaptureHistory[WHITE] = new short[6*6][];
+        for (int i=0; i<6*6; i++)
+        {
+            CaptureHistory[BLACK][i] = new short[64*64];
+            CaptureHistory[WHITE][i] = new short[64*64];
+        }
     }
 
     /// <summary>
@@ -55,6 +68,12 @@ public static class History
         {
             Array.Fill(PawnHistory[BLACK][p], (short)0);
             Array.Fill(PawnHistory[WHITE][p], (short)0);
+        }
+
+        for (int i=0; i<6*6; i++)
+        {
+            Array.Fill(CaptureHistory[BLACK][i], (short)0);
+            Array.Fill(CaptureHistory[WHITE][i], (short)0);
         }
     }
 
@@ -76,6 +95,11 @@ public static class History
     /// </summary>
     public static ref short getPawnHistVal(int stm, ulong key, int pt, int sq)
         => ref PawnHistory[stm][key % PAWN_HIST_SIZE][pt * 64 + sq];
+
+
+    public static ref short getCaptHistVal(int stm, int vict, int att, move m)
+        => ref CaptureHistory[stm][att * 6 + vict][m.FromTo];
+
 
     /// <summary>
     /// Calculates the delta value used to increase or decrease the History Scores of moves
@@ -108,26 +132,43 @@ public static class History
     /// Supported Histories: Butterfly, PieceTo, Pawn-PieceTo
     /// </summary> 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe void updateQuietHistValues(Span<move> moves, int lastMoveIdx, int depth, pos p)
+    public static unsafe void decreaseQuietHistValues(ref Span<move> quiets, int lastIdx, int delta, ref pos p)
     {
-        short delta = calcHistDelta(depth);
-
-        for (int i=0; i<lastMoveIdx; i++)
+        for (int i=0; i<lastIdx; i++)
         {
-            ref move m = ref moves[i];
-            if (p.is_capture(m) || m.IsNull)
-            {
-                continue;
-            }
-
+            ref move m = ref quiets[i];
             decreaseHistVal(delta, ref getButterflyHistVal(p.us, m));
             decreaseHistVal(delta, ref getPieceToHistVal(p.us, p.piece_on(m.from), m.to));
             decreaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, p.piece_on(m.from), m.to));
         }
+    }
 
-        ref move mv = ref moves[lastMoveIdx];
-        increaseHistVal(delta, ref getButterflyHistVal(p.us, mv));
-        increaseHistVal(delta, ref getPieceToHistVal(p.us, p.piece_on(mv.from), mv.to));
-        increaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, p.piece_on(mv.from), mv.to));
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static unsafe void decreaseCaptureHistValues(ref Span<move> capts, int lastIdx, int delta, ref pos p)
+    {
+        for (int i=0; i<lastIdx; i++)
+        {
+            ref move m = ref capts[i];
+            int attacker = p.piece_on(m.from);
+            int victim   = p.get_captured_pt(m);
+            decreaseHistVal(delta, ref getCaptHistVal(p.us, victim, attacker, m));
+        }
+    }
+
+    public static unsafe void increaseSingleHistValue(move m, int delta, ref pos p, bool isCapture)
+    {
+        if (isCapture)
+        {
+            int attacker = p.piece_on(m.from);
+            int victim   = p.get_captured_pt(m);
+            increaseHistVal(delta, ref getCaptHistVal(p.us, victim, attacker, m));
+        }
+        else
+        {
+            int pt = p.piece_on(m.from);
+            increaseHistVal(delta, ref getButterflyHistVal(p.us, m));
+            increaseHistVal(delta, ref getPieceToHistVal(p.us, pt, m.to));
+            increaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, pt, m.to));
+        }
     }
 }

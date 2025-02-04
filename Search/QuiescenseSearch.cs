@@ -86,8 +86,11 @@ public static class Quiescense
 
 
         // keep track of moves that were played out, some will be pruned or illegal        
-        int movesPlayed = 0;
-        Span<move> playedAndLegal = stackalloc move[picker.mvCnt];
+        int movesPlayed    = 0;
+        int quietsPlayed   = 0;
+        int capturesPlayed = 0;
+        Span<move> quietsList   = stackalloc move[MAX_MOVE_CNT];
+        Span<move> capturesList = stackalloc move[MAX_MOVE_CNT];
 
         int startAlpha = alpha;
         move m;
@@ -118,7 +121,9 @@ public static class Quiescense
                 continue;
             }
 
-            playedAndLegal[movesPlayed++] = m;
+            movesPlayed++;
+            if (isCapture) capturesList[capturesPlayed++] = m;
+            else           quietsList[quietsPlayed++]     = m;
 
             // Full window search in pv-nodes
             // if this node is a nonPV node, we still pass the zero window
@@ -163,17 +168,11 @@ public static class Quiescense
                     {   
                         if (!isCapture)
                         {
-                            // Update the Killer-move heuristic, if this move was a quiet-move.
-                            // we shouldnt add captures to killer moves, or they would never be filled with quiet moves.
-                            ss->killerMove = m;
-
-                            // Update the history-scores of all played quiet moves.
-                            // History Scores are greater for generally good moves, and smaller for worse ones.
-                            // History Scores can be falsified in favor for weaker but more common vs. stronger but rarer moves.
-                            // Currently the Butterfly- and PieceTo histories are implemented.
-                            History.updateQuietHistValues(playedAndLegal, movesPlayed-1, 1, p);
+                            int delta = History.calcHistDelta(1);
+                            History.increaseSingleHistValue(m, delta, ref p, isCapture);
+                            History.decreaseCaptureHistValues(ref capturesList, capturesPlayed-1, delta, ref p);
                         }
-    
+
                         break;
                     }
                 }

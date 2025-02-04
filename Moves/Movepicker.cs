@@ -42,6 +42,7 @@ public unsafe class MovePicker
             scores[i] = m == ttMove          ? 2_000_000
                       : victim != PIECE_NONE ? 
                             (SEE.see_threshold(m, ref p, 0) ? 1_000_000 : -2_000_000) 
+                            + History.getCaptHistVal(p.us, victim, attacker, m)
                             + victim * 100_000 - attacker
                       : m == ss->killerMove  ? 900_000
                       : History.getButterflyHistVal(p.us, m) 

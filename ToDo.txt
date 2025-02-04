@@ -12,7 +12,7 @@ Search heuristics:
 - Improving heuristic
     - RFP (doesnt gain)
     - LMR (R+=!improving; doesnt gain, interaction with log-formula pending)
-    - LMP 
+    - LMP (movesToGo /= 2, -bizillion elo :( )
 - Continuation 
 - Capture history heuristic
 - History pruning/reduction
