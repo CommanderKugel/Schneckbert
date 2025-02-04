@@ -1,7 +1,13 @@
---------------------------------------------------
-Results of dev vs Stash-32 (8+0.8, NULL - 1t, NULL - 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
-Elo: -28.20 +/- 16.94, nElo: -36.04 +/- 21.53
-LOS: 0.05 %, DrawRatio: 40.20 %, PairsRatio: 0.72
-Games: 1000, Wins: 327, Losses: 408, Draws: 265, Points: 459.5 (45.95 %)
-Ptnml(0-2): [70, 104, 201, 87, 38], WL/DD Ratio: 4.43
---------------------------------------------------
+Score of Schneckbert 1.0 vs stash-32_3206: 345 - 378 - 277 [0.483]
+...      Schneckbert 1.0 playing White: 259 - 117 - 124  [0.642] 500
+...      Schneckbert 1.0 playing Black: 86 - 261 - 153  [0.325] 500
+...      White vs Black: 520 - 203 - 277  [0.658] 1000
+Elo difference: -11.5 +/- 18.3, LOS: 11.0 %, DrawRatio: 27.7 %
+
+Score of Schneckbert 1.0 vs stash-32_3206: 337 - 407 - 256 [0.465]
+...      Schneckbert 1.0 playing White: 246 - 132 - 122  [0.614] 500
+...      Schneckbert 1.0 playing Black: 91 - 275 - 134  [0.316] 500
+...      White vs Black: 521 - 223 - 256  [0.649] 1000
+Elo difference: -24.4 +/- 18.6, LOS: 0.5 %, DrawRatio: 25.6 %
+
+book: UHO_2024_8mvs_+085_+094

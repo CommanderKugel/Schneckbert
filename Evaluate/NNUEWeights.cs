@@ -41,7 +41,7 @@ public static class NNUEWeights
         // load the NNUE from an embedded file
         Stream? stream;
         if ((stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-            "Schneckbert.Evaluate.Nets.simple192_hm_matbuck_lizard.bin"
+            $"Schneckbert.Evaluate.Nets.{net_name}.bin"
         )) == null)
         {
             throw new Exception($"Could not find embedded {net_name}");
