@@ -23,7 +23,7 @@ while (true)
     {
         case "uci":
         {
-            Console.WriteLine("id name Schneckbert");
+            Console.WriteLine("id name Schneckbert v1.0");
             Console.WriteLine("id author CommanderKugel");
 
             Console.WriteLine($"option name Hash type spin default 16 min {TranspositionTable.MIN_SIZE} max {TranspositionTable.MAX_SIZE}");
@@ -170,7 +170,7 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 10
             );
-            long bench = 3800111; 
+            long bench = 4165318; 
             int  nps   = 1195685; 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");

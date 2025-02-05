@@ -111,8 +111,8 @@ public static partial class Search
 
         // Improving
         // Not a pruning technique in itself, but used to slightly tweak other heuristics.
-        // rfp (-10 elo): eval - 75 * (depth - improving) >= beta
-        // lmr: R -= improving
+        // rfp (-11 elo) eval - 75 * (depth - improving) >= beta
+        // lmr (-10 elo) R -= improving
         //bool improving = !inCheck && ply > 1 && (ss-2)->StaticEval != 0 && (ss-2)->StaticEval < ss->StaticEval;
         //int  intImproving = improving ? 1 : 0;
 
@@ -189,7 +189,7 @@ public static partial class Search
         //     outsourced via the MovePicker class
         //     ToDo: Staged Move Generation
         Span<move> moves = stackalloc move[MAX_MOVE_CNT];
-        Span<int> scores = stackalloc int[MAX_MOVE_CNT];
+        Span<int> scores = stackalloc int [MAX_MOVE_CNT];
         var picker = new MovePicker(p, false, ttMove, ss, ref moves, ref scores);
 
 
@@ -303,9 +303,9 @@ public static partial class Search
                 int singularBeta = Max(-SCORE_MATE+1, ttEntry.score - depth * 2);
                 int singularDepth = (depth - 1) / 2;
 
-                ss->ExcludedMove = m;
+                ss->ExcludedMove  = m;
                 int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss);
-                ss->ExcludedMove = move.NullMove;
+                ss->ExcludedMove  = move.NullMove;
 
                 // extension
                 if (singularScore < singularBeta)
@@ -320,10 +320,7 @@ public static partial class Search
                 //
                 // *PROMISING AT STC, TRY AGAIN LATER AT LCT*
                 // *somehow doesnt gain by a bizillion elo*
-                // Elo: 2.99 +/- 8.98
-                // Games: 2438, Wins: 671, Losses: 650, Draws: 1117, Points: 1229.5 (50.43 %)
-                // Ptnml(0-2): [54, 288, 516, 305, 56], WL/DD Ratio: 0.97
-                //
+                // Elo: 2.99 +/- 8.98 (2438 games)
                 /*
                 else if (singularScore >= singularBeta && singularBeta >= beta && !score_is_terminal(singularScore))
                 {
