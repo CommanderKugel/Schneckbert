@@ -4,6 +4,14 @@ using System.Runtime.CompilerServices;
 
 public static partial class Search
 {
+    static int iteration;
+
+    static move rootBestMove;
+    public static int rootScore;
+
+    public static long rootPVNodes;
+
+
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe move iterativeDeepen(
         pos  root, 
@@ -18,6 +26,8 @@ public static partial class Search
             iteration = 1;
             Quiescense.seldepth = 1;
 
+            rootPVNodes = 0;
+
             const int delta = 35;
             int alpha = -SCORE_MATE;
             int beta  =  SCORE_MATE;
@@ -26,7 +36,7 @@ public static partial class Search
 
             do
             {
-                reset_pv(iteration);
+                //clear_whole_pv(iteration);
                 rootScore = Negamax<ROOT_NODE>(root, alpha, beta, iteration, 0, ss);
 
                 // ToDo: Gradual widening
@@ -53,7 +63,9 @@ public static partial class Search
 
                 iteration++;
             }
-            while (iteration <= maxDepth && TimeManager.InSoftTimeLimit() && TimeManager.NodeCnt < maxNodes);
+            while (iteration <= maxDepth && 
+                   TimeManager.InSoftTimeLimit(rootBestMove) && 
+                   TimeManager.NodeCnt < maxNodes);
 
             return rootBestMove;
 
@@ -66,11 +78,18 @@ public static partial class Search
     /// <summary>
     /// Copies the newest Principal Variation line onto the current ply
     /// </summary>
-    private static void update_pv(move m, int ply)
+    private static void push_to_pv(move m, int ply)
     {
         PV[ply][ply] = m;
         for (int i = ply + 1; i < iteration; i++)
+        {
             PV[ply][i] = PV[ply + 1][i];
+
+            if (PV[ply][i].IsNull) 
+            {
+                break;
+            }
+        }
     }
     
     /// <summary>
@@ -79,18 +98,22 @@ public static partial class Search
     public static string get_pv()
     {
         string s = "";
-        for (int i = 0; i < iteration; i++)
+        for (int i = 0; i < iteration && !PV[0][i].IsNull; i++)
+        {
             s += $"{PV[0][i]} ";
+        }
         return s;
     }
 
     /// <summary>
     /// Clears the current PV-Arrays
     /// </summary>
-    public static void reset_pv(int size)
+    public static void clear_whole_pv(int size)
     {
         PV = new move[size][];
         for (int i = 0; i < size; i++)
+        {
             PV[i] = new move[size];
+        }
     }
 }

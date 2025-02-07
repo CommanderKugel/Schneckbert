@@ -108,6 +108,11 @@ while (true)
         }
         case "go":
         {  
+            if (tokens.Length < 3)
+            {
+                Console.WriteLine("Ponder or 'go infinite' not available at the moment.");
+                continue;
+            }
 
             int depth = Constants.MAX_SEARCH_PLY;
             long nodes = long.MaxValue;

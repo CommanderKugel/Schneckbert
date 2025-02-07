@@ -2,13 +2,25 @@ using static Constants;
 using static NNUESettings;
 using static NNUEWeights;
 
-using static System.Numerics.Vector;
-using System.Numerics;
 using static System.Math;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 public unsafe partial struct Accumulator
 {
+
+    private static Vector256<short> VECTOR_QA;
+
+    static Accumulator()
+    {
+        var temp = new short[] { QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, };
+        fixed (short* ptr = temp)
+        {
+            VECTOR_QA = Avx.LoadVector256(ptr);
+        }
+    }
+
     /// <summary>
     /// Returns the static Evaluation of the position.
     /// Makes use of the positions Accumulators.
@@ -16,50 +28,53 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe int Evaluate(ref pos p)
     {
-        var VECTOR_QA   = new Vector<short>(QA);
-        var VECTOR_ZERO = Vector<short>.Zero;
 
         int outBuck = get_material_bucket(ref p);
+        var evalAccumulator = Vector256<int>.Zero;
 
-        // evaluation here
-        int sum = OutputBias;
-
-        fixed (Accumulator* accPtr = &this)
+        // fix the weights and accumulator arrays
+        // we can use pointer arithmetic afterwards
+        // necessary for loading Avx-Vectors.
+        fixed (short* outWeightPtr = OutputWeight[outBuck])
+        fixed (short* ptrAccWhite  = &AccWhite[0])
+        fixed (short* ptrAccBlack  = &AccBlack[0])
         {
-            Vector<short>* ptrWhite = &accPtr->AccWhite16;
-            Vector<short>* prtBlack = &accPtr->AccBlack16;
+            // find the weight pointers
+            short* ptrWhiteWeight = p.us==WHITE ? outWeightPtr : outWeightPtr + FT_SIZE;
+            short* ptrBlackWeight = p.us==BLACK ? outWeightPtr : outWeightPtr + FT_SIZE;
 
             int iterations = FT_SIZE / VECTOR_SIZE;
 
             for (int i=0; i<iterations; i++)
             {
                 // Clamp the accumulator to 0 and QA
-                var activatedWhite = Max(VECTOR_ZERO, Min(VECTOR_QA, *(ptrWhite+i)));
-                var activatedBlack = Max(VECTOR_ZERO, Min(VECTOR_QA, *(prtBlack+i)));
+                var activatedWhite = Avx2.Max(Vector256<short>.Zero, Avx2.Min(VECTOR_QA, Avx.LoadVector256(ptrAccWhite + i * 16)));
+                var activatedBlack = Avx2.Max(Vector256<short>.Zero, Avx2.Min(VECTOR_QA, Avx.LoadVector256(ptrAccBlack + i * 16)));
 
                 // load output weights
-                var weightsWhite = new Vector<short>(OutputWeight[outBuck], p.us==WHITE ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
-                var weightsBlack = new Vector<short>(OutputWeight[outBuck], p.us==BLACK ? i*VECTOR_SIZE : FT_SIZE+i*VECTOR_SIZE);
+                var weightsWhite = Avx.LoadVector256(ptrWhiteWeight + i * 16);
+                var weightsBlack = Avx.LoadVector256(ptrBlackWeight + i * 16);
 
                 // multiply activated accumulator and weights
-                var multAccWhite = Multiply(activatedWhite, weightsWhite);
-                var multAccBlack = Multiply(activatedBlack, weightsBlack);
+                var multAccWhite = Avx2.MultiplyLow(activatedWhite, weightsWhite);
+                var multAccBlack = Avx2.MultiplyLow(activatedBlack, weightsBlack);
 
-                // widen the short Vectors because the next step might overflow 16 bits
-                // multiply multAcc and actAcc for Lizard SCRELU
-                // Pow(acc, 2) * w = (acc * acc) * w = (acc * w) * acc
-                // then make the dot-product
-                Vector<int> actLo, actHi, mulLo, mulHi;
+                // Lizard SCReLU: (x * x) * y = (x * y) * x
+                // until now, 255 * 64 fits into a int16 value
+                // because we want to square the 255 as part of the activation function, we delayed that until now
+                // we use MultiplyAddAdjacent to transform into int32 to avoid overflows.
+                // The add does not hurt, because we want to sum this result anyways.
 
-                Widen(activatedWhite, out actLo, out actHi);
-                Widen(multAccWhite, out mulLo, out mulHi);
-                sum += Dot(actLo, mulLo) + Dot(actHi, mulHi);
+                var sqrMultWhite = Avx2.MultiplyAddAdjacent(activatedWhite, multAccWhite);
+                var sqrMultBlack = Avx2.MultiplyAddAdjacent(activatedBlack, multAccBlack);
 
-                Widen(activatedBlack, out actLo, out actHi);
-                Widen(multAccBlack, out mulLo, out mulHi);
-                sum += Dot(actLo, mulLo) + Dot(actHi, mulHi);
+                // add onto the output-accumulator 
+                evalAccumulator = Avx2.Add(sqrMultWhite, evalAccumulator);
+                evalAccumulator = Avx2.Add(sqrMultBlack, evalAccumulator);
             }
         }
+
+        int sum = Vector256.Sum(evalAccumulator) + OutputBias;
 
         // Scaling from small original floating point numbers
         // comparable to ~centipawns now

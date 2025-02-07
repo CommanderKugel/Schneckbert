@@ -3,21 +3,28 @@ using static Utils;
 using static NNUEWeights;
 using static NNUESettings;
 
-using System.Numerics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics;
+using System.Runtime.InteropServices;
 
 
+[StructLayout(LayoutKind.Explicit)]
 public unsafe partial struct Accumulator
 {
-    public Vector<short> AccWhite16,  AccWhite32,  AccWhite48,  AccWhite64,  AccWhite80,  AccWhite96,
-                         AccWhite112, AccWhite128, AccWhite144, AccWhite160, AccWhite176, AccWhite192;
-    public Vector<short> AccBlack16,  AccBlack32,  AccBlack48,  AccBlack64,  AccBlack80,  AccBlack96,
-                         AccBlack112, AccBlack128, AccBlack144, AccBlack160, AccBlack176, AccBlack192;
+    [FieldOffset(0)]
+    private fixed short AccWhite[192];
+    [FieldOffset(FT_SIZE * 2)]
+    private fixed short AccBlack[192];
 
-    int wflip;
-    int bflip;
+    [FieldOffset(FT_SIZE * 4)]
+    int wflip = 0;
+    [FieldOffset(FT_SIZE * 4 + 4)]
+    int bflip = 0;
     
-    int wbuck;
-    int bbuck;
+    [FieldOffset(FT_SIZE * 4 + 8)]
+    int wbuck = 0;
+    [FieldOffset(FT_SIZE * 4 + 12)]
+    int bbuck = 0;
 
 
     public Accumulator(pos p)
@@ -58,16 +65,33 @@ public unsafe partial struct Accumulator
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
         fixed (Accumulator* acc = &this)
+        fixed (short* wWeights = ftWeights[wbuck][us_feat  ])
+        fixed (short* bWeights = ftWeights[bbuck][them_feat])
         {
-            Vector<short>* ptrWhite = &acc->AccWhite16;
-            Vector<short>* prtBlack = &acc->AccBlack16;
+            short* ptrWhite = &acc->AccWhite[0];
+            short* prtBlack = &acc->AccBlack[0];
             
             int iters = FT_SIZE / VECTOR_SIZE;
 
             for (int i=0; i<iters; i++)
             {
-                *(ptrWhite+i) += new Vector<short>(ftWeights[wbuck][us_feat  ], i * VECTOR_SIZE);
-                *(prtBlack+i) += new Vector<short>(ftWeights[bbuck][them_feat], i * VECTOR_SIZE);
+                int offset = i*VECTOR_SIZE;
+
+                // load accumulator into vectors
+                var accWhite = Avx.LoadVector256(ptrWhite + offset);
+                var accBlack = Avx.LoadVector256(prtBlack + offset);
+
+                // load weights into vectors
+                var weightWhite = Avx.LoadVector256(wWeights + offset);
+                var weightBlack = Avx.LoadVector256(bWeights + offset);
+
+                // perform the addition
+                var sumWhite = Vector256.Add(accWhite, weightWhite);
+                var sumBlack = Vector256.Add(accBlack, weightBlack);
+
+                // dump weights back into the accumulator
+                Avx.Store(ptrWhite + offset, sumWhite);
+                Avx.Store(prtBlack + offset, sumBlack);
             }
         }
     }
@@ -81,16 +105,33 @@ public unsafe partial struct Accumulator
         var (us_feat, them_feat) = get_768_idx_hm(color, pt, sq);
 
         fixed (Accumulator* acc = &this)
+        fixed (short* wWeights = ftWeights[wbuck][us_feat  ])
+        fixed (short* bWeights = ftWeights[bbuck][them_feat])
         {
-            Vector<short>* ptrWhite = &acc->AccWhite16;
-            Vector<short>* prtBlack = &acc->AccBlack16;
+            short* ptrWhite = &acc->AccWhite[0];
+            short* prtBlack = &acc->AccBlack[0];
             
             int iters = FT_SIZE / VECTOR_SIZE;
 
             for (int i=0; i<iters; i++)
             {
-                *(ptrWhite+i) -= new Vector<short>(ftWeights[wbuck][us_feat  ], i * VECTOR_SIZE);
-                *(prtBlack+i) -= new Vector<short>(ftWeights[bbuck][them_feat], i * VECTOR_SIZE);
+                int offset = i*VECTOR_SIZE;
+
+                // load accumulator into vectors
+                var accWhite = Avx.LoadVector256(ptrWhite + offset);
+                var accBlack = Avx.LoadVector256(prtBlack + offset);
+
+                // load weights into vectors
+                var weightWhite = Avx.LoadVector256(wWeights + offset);
+                var weightBlack = Avx.LoadVector256(bWeights + offset);
+
+                // perform the addition
+                var subWhite = Vector256.Subtract(accWhite, weightWhite);
+                var subBlack = Vector256.Subtract(accBlack, weightBlack);
+
+                // dump weights back into the accumulator
+                Avx.Store(ptrWhite + offset, subWhite);
+                Avx.Store(prtBlack + offset, subBlack);
             }
         }
     }
@@ -100,19 +141,10 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe void accumulate_from_zero(ref pos p)
     {
-        // load the bias
-        fixed (Accumulator* acc = &this)
+        for (int i=0; i<FT_SIZE; i++)
         {
-            Vector<short>* ptrWhite = &acc->AccWhite16;
-            Vector<short>* prtBlack = &acc->AccBlack16;
-            
-            int iters = FT_SIZE / VECTOR_SIZE;
-
-            for (int i=0; i<iters; i++)
-            {
-                *(ptrWhite+i) = new Vector<short>(ftBias, i * VECTOR_SIZE);
-                *(prtBlack+i) = new Vector<short>(ftBias, i * VECTOR_SIZE);
-            }
+            AccWhite[i] = ftBias[i];
+            AccBlack[i] = ftBias[i];
         }
 
         // activate all active features
@@ -149,6 +181,7 @@ public unsafe partial struct Accumulator
     {
         int wfeat = (1-color) * 384 + pt * 64 + (sq ^ wflip);
         int bfeat =    color  * 384 + pt * 64 + (sq ^ bflip ^ 56);
+        if (wfeat < 0 || bfeat < 0) throw null;
         return (wfeat, bfeat);
     }
 

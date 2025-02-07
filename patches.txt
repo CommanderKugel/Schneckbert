@@ -94,3 +94,14 @@ Games: 14390, Wins: 4814, Losses: 4593, Draws: 4983, Points: 7305.5 (50.77 %)
 Ptnml(0-2): [491, 1592, 2911, 1607, 594], WL/DD Ratio: 2.26
 LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+1.2 replaced SSE simd (Vector<short>) with AVX simd (Vector256<short>)
++40% nps, nonfunctional
+--------------------------------------------------
+Results of dev vs main (5+0.05, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 48.82 +/- 14.29, nElo: 71.22 +/- 20.57
+LOS: 100.00 %, DrawRatio: 41.06 %, PairsRatio: 2.14
+Games: 1096, Wins: 419, Losses: 266, Draws: 411, Points: 624.5 (56.98 %)
+Ptnml(0-2): [20, 83, 225, 164, 56], WL/DD Ratio: 1.74
+LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

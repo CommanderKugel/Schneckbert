@@ -5,13 +5,28 @@ using static Constants;
 /// </summary>
 public struct SS
 {
+    /// <summary>
+    /// Corrected Static Evaluation of the current Node
+    /// </summary>
     public int StaticEval;
+    /// <summary>
+    /// Raw/uncorrected Static Evaluation of the current Node
+    /// </summary>
+    public int RawStaticEva;
+
+    /// <summary>
+    /// This move failed high in nodes at the same height
+    /// </summary>
     public move killerMove;
 
     public byte MovedPiece;
     public byte CapturedPiece;
     public move Move;
 
+    /// <summary>
+    /// Contains the SE-candidate move here for SE confirmation Search
+    /// Will be empty most of the time
+    /// </summary>
     public move ExcludedMove;
 
     public ulong checkers;

@@ -5,20 +5,17 @@ using static Utils;
 public static class WriteGame
 {
 
-    public static unsafe int write_game_as_txt(StreamWriter file, pos p, List<move> moves, List<int> scores, Gameresult result)
+    public static unsafe long write_game_as_txt(StreamWriter file, pos p, List<move> moves, List<int> scores, Gameresult result)
     {
         SS ss = new SS();
         var myStringbuilder = new StringBuilder(100 * moves.Count);
 
-        int posCnt = 0;
+        long posCnt = 0;
         
         for (int ply=0; ply<moves.Count; ply++)
         {
             move m = moves[ply];
             int score = scores[ply];
-
-            p.make_move(m, &ss);
-            RepetitionTable.Pop();
 
             if (!p.is_capture(m) && p.get_checkers() == 0 && !score_is_terminal(score))
             {
@@ -30,6 +27,9 @@ public static class WriteGame
                 myStringbuilder.Append(result);
                 myStringbuilder.Append('\n');
             }
+
+            p.make_move(m, &ss);
+            RepetitionTable.Pop();
         }
 
         file.Write(myStringbuilder.ToString());

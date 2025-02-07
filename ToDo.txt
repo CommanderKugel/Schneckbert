@@ -1,8 +1,14 @@
 functionality
 
+- Normalized Eval(!)
+- 3 ouput Heads -> WDL
+
 - Mailbox (faster lookups)
 - FRC (castling, fen parsing, DFRC)
-- Staged Movegen (ttMove first, staged Capture & quiets)
+- Staged Movegen 
+    - ttMove first & is_pseudolegal
+    - staged Capture & quiets
+    - noisy-picker including checks
 - move_gives_check()
 - Multithreading (big rewrite x.x)
 
@@ -12,15 +18,24 @@ Search heuristics:
 - Improving heuristic
     - RFP (doesnt gain)
     - LMR (R+=!improving; doesnt gain, interaction with log-formula pending)
-    - LMP (movesToGo /= 2, -bizillion elo :( )
+    - LMP (movesToGo /= 2 very bad)
 - Continuation 
+    - Continuation & Counter
 - Capture history heuristic
+    - Butterfly -> PieceTo
 - History pruning/reduction
-- Multicut (using singular search result)
-- Double/Triple/Negative extensions
+- Singular Confirmation Search
+    - Multicut
+    - Double/Triple
+    - Negative
 - Cutnode (as apart of negative extensions, LMR, etc)
-- Static eval correction history
+- Static eval correction history (HELP - its fucked)
+    - Pawn
+    - Minor/Major
+    - Material
+    - Continuation
 - QS futility pruning
+- Prob Cut (dont waste 93487623 hours like yukari plz)
 
 Time management for soft-bound:
 - Node-based scaling

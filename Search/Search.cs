@@ -7,11 +7,6 @@ using System.Runtime.CompilerServices;
 
 public static partial class Search
 {
-    static int iteration;
-
-    static move rootBestMove;
-    public static int rootScore;
-
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss)
@@ -125,7 +120,7 @@ public static partial class Search
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
-        if (nonPV && !inCheck && !isRoot && depth<=7 && !inSingularity &&
+        if (nonPV && !inCheck && !isRoot && depth <= 7 && !inSingularity &&
             ss->StaticEval - 75 * depth >= beta)
         {
             return ss->StaticEval;
@@ -146,18 +141,20 @@ public static partial class Search
             !inCheck && 
              depth>2 && 
             !inSingularity && 
-             ss->StaticEval>=beta)
+             ss->StaticEval >= beta)
         {
-            pos copy = p;
-            copy.force_null_move(ss);
+            pos posAfterNull = p;
+            posAfterNull.force_null_move(ss);
 
-            int nmpDepth = depth - 3 - depth / 6;
-            score = -Negamax<NON_PV>(copy, -beta, -alpha, nmpDepth, ply+1, ss+1);
+            int nmpDepth = depth - 3 
+                         - depth / 6;
+                         
+            int nmpScore = -Negamax<NON_PV>(posAfterNull, -beta, -alpha, nmpDepth, ply+1, ss+1);
             RepetitionTable.Pop();
 
-            if (score >= beta)
+            if (nmpScore >= beta)
             {
-                return score;
+                return nmpScore;
             }
         }
 
@@ -214,7 +211,7 @@ public static partial class Search
                 continue;
             }
 
-            bool isCapture = p.is_capture(m);
+            bool isCapture           = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
 
             // #16 Futility Pruning
@@ -396,7 +393,7 @@ public static partial class Search
 
                 if (isPV && ply < iteration)
                 {
-                    update_pv(m, ply);
+                    //push_to_pv(m, ply);
                 }
 
                 if (score > alpha)
@@ -443,6 +440,7 @@ public static partial class Search
             return inCheck ? ply - SCORE_MATE : 0;
         }
 
+        int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
         
         // #30 Save Node to TT
         //     Skip singular confirmation searches, because the best move was excluded there
@@ -454,7 +452,7 @@ public static partial class Search
                 locBestMove = ttMove;
             }
 
-            int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;
+            
             TranspositionTable.Push(p.ZobristKey, bestScore, depth, flag, locBestMove);
         }
 

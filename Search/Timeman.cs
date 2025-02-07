@@ -41,12 +41,27 @@ public static class TimeManager
         RestartTimer();
     }
 
+
+    private static move lastBestMove = move.NullMove;
+    private static int  pvStability  = 0;
+
     /// <summary>
     /// Returns true, if the softlimit was not exceeded.
     /// The Softlimit is generally lower than the Hardlimit and can be exceeded in between iterations.
     /// Should be used to abord search before starting the next iteration.
     /// </summary>
-    public static bool InSoftTimeLimit() => watch.ElapsedMilliseconds < SoftTimeLimit;
+    public static bool InSoftTimeLimit(move bestMove) 
+    {
+        // pv Stability: +3 @ 20+0.2
+        //pvStability = bestMove == lastBestMove ? Math.Min(10, pvStability+1) : 0;
+        //double pvStabilityFactor = 1.20d + 0.04d * pvStability;
+        
+        // node tm: -13 @ 8+0.08
+        //long nonPVNodes = NodeCnt - Search.rootPVNodes;
+        //double nodeFactor = Math.Clamp(2*nonPVNodes/NodeCnt + 0.5, 0.75, 1.5);
+        
+        return watch.ElapsedMilliseconds < SoftTimeLimit;
+    }
 
     /// <summary>
     /// Returns true, if the hardlimit was not exceeded.
@@ -56,12 +71,21 @@ public static class TimeManager
     public static bool InHardTimeLimit() => watch.ElapsedMilliseconds < HardTimeLimit;
 
     /// <summary>
-    /// Clears all Nodecounts and timelimits.
+    /// Returns true, if the softlimit is not very low.
+    /// </summary>
+    public static bool HasEnoughTime() => SoftTimeLimit >= 100;
+
+    /// <summary>
+    /// Clears all Node Counts and Timelimits.
     /// </summary>
     public static void Reset(bool resetTotalNodes=false)
     {
         TotalNodes = resetTotalNodes ? 0 : TotalNodes + NodeCnt;
         NodeCnt = 0;
+
+        lastBestMove = move.NullMove;
+        pvStability  = 0;
+
         SetNewTimelimit(int.MaxValue); // hotfix for benches
         watch.Reset();
     }
