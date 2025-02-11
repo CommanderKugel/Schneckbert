@@ -40,14 +40,16 @@ public unsafe class MovePicker
             // #4 Quiets: + Butterfly & PieceTo history
             // #5 Captures: !passed SEE + Mvv-Lva 
             scores[i] = m == ttMove          ? 2_000_000
+
                       : victim != PIECE_NONE ? 
                             (SEE.see_threshold(m, ref p, 0) ? 1_000_000 : -2_000_000) 
-                            + History.getCaptHistVal(p.us, victim, attacker, m)
                             + victim * 100_000 - attacker
+                            + History.get_capthist_val(p.us, victim, attacker, m)
+
                       : m == ss->killerMove  ? 900_000
-                      : History.getButterflyHistVal(p.us, m) 
-                            + History.getPieceToHistVal(p.us, attacker, m.to)
-                            + History.getPawnHistVal(p.us, p.PawnKey, attacker, m.to);
+                      : History.get_butterfly_histval(p.us, m) 
+                            + History.get_pieceTo_histval(p.us, attacker, m.to)
+                            + History.get_pawnhist_val(p.us, p.PawnKey, attacker, m.to);
         }
     }
 

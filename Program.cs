@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 SearchStack.init();
 Zobrist.init();
@@ -11,6 +11,9 @@ Search.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
+
+try
+{
 
 while (true)
 {
@@ -176,7 +179,7 @@ while (true)
                 : 10
             );
             long bench = 4165318; 
-            int  nps   = 1195685; 
+            int  nps   = 1372735; 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
@@ -219,7 +222,7 @@ while (true)
             }
 
             int threadId  = SkipPast("id").Select(int.Parse).FirstOrDefault();
-            var uho       = tokens.Contains("uho") ? SkipPast("uho").Select(bool.Parse).FirstOrDefault() : true;
+            var uho       = tokens.Contains("uho") ? SkipPast("uho").Select(bool.Parse).FirstOrDefault() : false;
             var randomPly = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() 
                           : (uho ? 3 : 8);
             var softnodes = tokens.Contains("nodes") ? SkipPast("nodes").Select(int.Parse).FirstOrDefault() : 5_000;
@@ -247,3 +250,10 @@ while (true)
     }
 }
 
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+    Console.WriteLine(e.StackTrace);
+    return 1;
+}

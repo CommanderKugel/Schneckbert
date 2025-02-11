@@ -42,6 +42,24 @@ public unsafe struct bullet
         }
     }
 
+    public bullet(BinaryReader file)
+    {
+        occ = file.ReadUInt64();
+        for (int i=0; i<16; i++) pieces[i] = file.ReadByte();
+        score = file.ReadInt16();
+        ksq = file.ReadByte();
+        opp_ksq = file.ReadByte();
+
+        if (ksq >= 64 || opp_ksq >= 64 ||
+            (occ & (1ul << ksq))     == 0 ||
+            (occ & (1ul << opp_ksq)) == 0) 
+        {
+            throw new Exception("invalid King-Square found!");
+        }
+
+        for (int i=0; i<3; i++) padding[i] = 0;
+    }
+
     /// <summary>
     /// Well... writes the Bulletfomat-struct to a file.
     /// Writes to binary file and is not meant for human readability!
@@ -50,13 +68,11 @@ public unsafe struct bullet
     public unsafe void write_to_file(BinaryWriter file)
     {
         file.Write(occ);
-        for (int i=0; i<16; i++)
-            file.Write(pieces[i]);
+        for (int i=0; i<16; i++) file.Write(pieces[i]);
         file.Write(score);
         file.Write(result);
         file.Write(ksq);
         file.Write(opp_ksq);
-        for (int i=0; i<3; i++)
-            file.Write(padding[i]);
+        for (int i=0; i<3; i++) file.Write(padding[i]);
     }
 }

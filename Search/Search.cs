@@ -24,7 +24,7 @@ public static partial class Search
         //    To get a valid evaluation, play captures until no usefull capture remains.
         if (depth <= 0)
         {
-            return Quiescense.QSearch<NodeType>(p, alpha, beta, ply, ss);
+            return QSearch<NodeType>(p, alpha, beta, ply, ss);
         }
 
         // #2 Timeout Check
@@ -101,8 +101,18 @@ public static partial class Search
         // #7 Static Evaluation
         //    We will not return this score, because we didn't prove that this position is quiet.
         //    We can use this to make educated guesses about this position and this branch of the game tree.
-        ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
+        if (inCheck)
+        {
+            ss->StaticEval = ss->RawStaticEval = 0;
+        }
+        else
+        {
+            ss->StaticEval = 
+                ss->RawStaticEval = p.accumulator.Evaluate(ref p);
 
+            // #8 Static Evaluation Correction History
+            //CorrHist.correct_static_eval(ref p, ss);
+        }
 
         // Improving
         // Not a pruning technique in itself, but used to slightly tweak other heuristics.
@@ -120,6 +130,7 @@ public static partial class Search
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
+        // depth -> depth + improving: -11 @ 8+0.08
         if (nonPV && !inCheck && !isRoot && depth <= 7 && !inSingularity &&
             ss->StaticEval - 75 * depth >= beta)
         {
@@ -238,6 +249,8 @@ public static partial class Search
                 !m.IsPromo &&
                  nonMatingLineExists &&
                  depth < 5 &&
+            // improving, movesToGo *= 1.5 -> -6.04 +/- 6.58 @ 8+0.08
+            //            movesToGo *= 2.0 -> ~0 @ 8+0.08 & 40+0.4
                  movesPlayed > lmpTable[depth])
             {
                 continue;
@@ -247,7 +260,20 @@ public static partial class Search
             // #18 History Pruning
             //     If the History Score of a move is really bad and 
             //     there are no tactical reasons to try the move, prune it.
-            // *COMING SOON*
+            // histVal < -1000 -> -21.69 +/- 11.42 @ 8+0.08
+            // histVal < -2000 -> -13.01 +/-  8.89 @ 8+0.08
+            // histVal < -3000 -> -17.74 +/- 10.23 @ 8+0.08
+            /*
+            if ( nonPV &&
+                !isCapture &&
+                !m.IsPromo &&
+                 nonMatingLineExists &&
+                 depth < 5 &&
+                 histVal < -3_000)
+            {
+                continue;
+            }
+            */
 
 
             // #19 Static Exchange Evaluation Pruning
@@ -314,10 +340,6 @@ public static partial class Search
                 //     If the candidate-singular move is proven not singular and any other move would
                 //     fail high, even in the current window-bounds, this position is probably too good
                 //     to be true and our opponent wont allow this branch of the tree to be played out.
-                //
-                // *PROMISING AT STC, TRY AGAIN LATER AT LCT*
-                // *somehow doesnt gain by a bizillion elo*
-                // Elo: 2.99 +/- 8.98 (2438 games)
                 /*
                 else if (singularScore >= singularBeta && singularBeta >= beta && !score_is_terminal(singularScore))
                 {
@@ -344,11 +366,11 @@ public static partial class Search
                 int R = lmrTable[Min(depth, 63)][Min(movesPlayed, 63)];
 
                 // History Reduction 
-                // *COMING SOON*
-                //if (picker.curr_score(ref scores) < -500) R++;
+                //if (histVal < -1000) R++;     -> -23.20 +/- 11.81 @  8+0.08
+                //if (histVal < -2000) R++;     -> -25.48 +/- 12.13 @  8+0.08
 
-                //if (!improving) R++;          -> -10.13 +/-  7.68 @ 40+0.40 
-                //if (nonPV) R++;               -> -21.37 +/- 11.47 @  8+0.08
+                //if (!improving         ) R++; -> -10.13 +/-  7.68 @ 40+0.40 
+                //if ( nonPV             ) R++; -> -21.37 +/- 11.47 @  8+0.08
                 //if (!improving && nonPV) R++; ->  -7.65 +/-  7.32 @  8+0.08
 
                 score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1);
@@ -371,7 +393,6 @@ public static partial class Search
             // at full depth with a full window, to optain am exact score.
             if (isPV && (score > alpha || movesPlayed == 1))
             {
-                
                 score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1);
             }
 

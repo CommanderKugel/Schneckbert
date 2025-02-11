@@ -80,24 +80,28 @@ public static class History
     /// <summary>
     /// returns a reference to the Butterly-History-Value of the given Move
     /// </summary>
-    public static ref short getButterflyHistVal(int stm, move m) 
+    public static ref short get_butterfly_histval(int stm, move m) 
         => ref ButterflyHistory[stm][m.FromTo];
 
     /// <summary>
     /// returns a reference to the Piece-To-History-Value of the given Piece-Movement
     /// </summary>
-    public static ref short getPieceToHistVal(int stm, int pt, int sq) 
+    public static ref short get_pieceTo_histval(int stm, int pt, int sq) 
         => ref ButterflyHistory[stm][pt * 64 + sq];
 
     /// <summary>
     /// returns a reference to the Pawn-History-Value of the given Piece-Movement
     /// depending on the current Pawn Structure
     /// </summary>
-    public static ref short getPawnHistVal(int stm, ulong key, int pt, int sq)
+    public static ref short get_pawnhist_val(int stm, ulong key, int pt, int sq)
         => ref PawnHistory[stm][key % PAWN_HIST_SIZE][pt * 64 + sq];
 
 
-    public static ref short getCaptHistVal(int stm, int vict, int att, move m)
+    /// <summary>
+    /// Returns a reference to the Capture-History-Value of the given capture
+    /// Depends on butterfly histories and the moving and captured pieceTypes
+    /// </summary>
+    public static ref short get_capthist_val(int stm, int vict, int att, move m)
         => ref CaptureHistory[stm][att * 6 + vict][m.FromTo];
 
 
@@ -137,9 +141,9 @@ public static class History
         for (int i=0; i<lastIdx; i++)
         {
             ref move m = ref quiets[i];
-            decreaseHistVal(delta, ref getButterflyHistVal(p.us, m));
-            decreaseHistVal(delta, ref getPieceToHistVal(p.us, p.piece_on(m.from), m.to));
-            decreaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, p.piece_on(m.from), m.to));
+            decreaseHistVal(delta, ref get_butterfly_histval(p.us, m));
+            decreaseHistVal(delta, ref get_pieceTo_histval(p.us, p.piece_on(m.from), m.to));
+            decreaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, p.piece_on(m.from), m.to));
         }
     }
 
@@ -151,7 +155,7 @@ public static class History
             ref move m = ref capts[i];
             int attacker = p.piece_on(m.from);
             int victim   = p.get_captured_pt(m);
-            decreaseHistVal(delta, ref getCaptHistVal(p.us, victim, attacker, m));
+            decreaseHistVal(delta, ref get_capthist_val(p.us, victim, attacker, m));
         }
     }
 
@@ -161,14 +165,14 @@ public static class History
         {
             int attacker = p.piece_on(m.from);
             int victim   = p.get_captured_pt(m);
-            increaseHistVal(delta, ref getCaptHistVal(p.us, victim, attacker, m));
+            increaseHistVal(delta, ref get_capthist_val(p.us, victim, attacker, m));
         }
         else
         {
             int pt = p.piece_on(m.from);
-            increaseHistVal(delta, ref getButterflyHistVal(p.us, m));
-            increaseHistVal(delta, ref getPieceToHistVal(p.us, pt, m.to));
-            increaseHistVal(delta, ref getPawnHistVal(p.us, p.PawnKey, pt, m.to));
+            increaseHistVal(delta, ref get_butterfly_histval(p.us, m));
+            increaseHistVal(delta, ref get_pieceTo_histval(p.us, pt, m.to));
+            increaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, pt, m.to));
         }
     }
 }

@@ -125,6 +125,7 @@ public static class Utils
             Console.WriteLine(str);
         }
         Console.WriteLine("--+-----------------+");
+        Console.WriteLine(p.get_fen());
     }
 
     public static void print (ulong bb) {

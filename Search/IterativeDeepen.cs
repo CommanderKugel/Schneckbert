@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 public static partial class Search
 {
     static int iteration;
+    public static int seldepth;
+
 
     static move rootBestMove;
     public static int rootScore;
@@ -24,9 +26,10 @@ public static partial class Search
 
             rootBestMove = move.NullMove;
             iteration = 1;
-            Quiescense.seldepth = 1;
+            seldepth  = 1;
 
             rootPVNodes = 0;
+            info_ = info;
 
             const int delta = 35;
             int alpha = -SCORE_MATE;
@@ -36,7 +39,6 @@ public static partial class Search
 
             do
             {
-                //clear_whole_pv(iteration);
                 rootScore = Negamax<ROOT_NODE>(root, alpha, beta, iteration, 0, ss);
 
                 // ToDo: Gradual widening
@@ -49,16 +51,9 @@ public static partial class Search
                 alpha = rootScore - delta;
                 beta  = rootScore + delta;
 
-                if (info)
+                if (info_ && iteration >= 4)
                 {
-                    string myScore = score_is_terminal(rootScore) 
-                        ? $"mate {(rootScore - SCORE_MATE) / 2}" : $"cp {rootScore}";
-                    
-                    // PV-tracking is broken rn :(
-
-                    Console.WriteLine(
-                        $"info depth {iteration} seldepth {Quiescense.seldepth} time {TimeManager.ElapsedMilliseconds()} score {myScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {rootBestMove}"
-                    );
+                    report_to_uci(root);
                 }
 
                 iteration++;
@@ -73,8 +68,17 @@ public static partial class Search
     }
 
 
-    private static move[][] PV;
+    private static void report_to_uci(pos root)
+    {
+        string myScore = score_is_terminal(rootScore) 
+            ? $"mate {(Math.Abs(rootScore) - SCORE_MATE) / 2}" : $"cp {rootScore}";
+                    
+            Console.WriteLine(
+                $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score {myScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {rootBestMove}"
+            );
+    }
 
+    
     /// <summary>
     /// Copies the newest Principal Variation line onto the current ply
     /// </summary>

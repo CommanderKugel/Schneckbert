@@ -11,6 +11,13 @@ public static class WriteGame
         var myStringbuilder = new StringBuilder(100 * moves.Count);
 
         long posCnt = 0;
+
+        string res = result switch {
+            Gameresult.Draw     => "0.5",
+            Gameresult.WinWhite => "1.0",
+            Gameresult.WinBlack => "0.0",
+            _                   => "?.?"
+        };
         
         for (int ply=0; ply<moves.Count; ply++)
         {
@@ -24,7 +31,7 @@ public static class WriteGame
                 myStringbuilder.Append(" | ");
                 myStringbuilder.Append(score);
                 myStringbuilder.Append(" | ");
-                myStringbuilder.Append(result);
+                myStringbuilder.Append(res);
                 myStringbuilder.Append('\n');
             }
 
@@ -57,7 +64,6 @@ public static class WriteGame
                 myBullet.write_to_file(file);
             }
         }
-
         return posCnt;
     }
 

@@ -5,17 +5,18 @@ using static System.Math;
 using System.Runtime.CompilerServices;
 
 
-public static class Quiescense
+public static partial class Search
 {
-    public static int seldepth;
-
-
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int QSearch<NodeType>(pos p, int alpha, int beta, int ply, SS* ss)
         where NodeType : NODE
     {
+        seldepth = Max(seldepth, ply);
         TimeManager.NodeCnt++;
         TimeManager.QSNodeCnt++;
+
+        bool nonPV   = typeof(NodeType) == typeof(NON_PV);
+        bool isPV    = typeof(NodeType) == typeof(PV_NODE);
 
         // #1 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
@@ -33,8 +34,6 @@ public static class Quiescense
 
         ss->checkers = p.get_checkers();
         bool inCheck = ss->checkers != 0;
-        bool nonPV   = typeof(NodeType) == typeof(NON_PV);
-        bool isPV    = typeof(NodeType) == typeof(PV_NODE);
 
         int bestScore = -SCORE_MATE;
         int score;
@@ -58,7 +57,16 @@ public static class Quiescense
 
 
         // #4 Static Evaluation
-        ss->StaticEval = !inCheck ? p.accumulator.Evaluate(ref p) : 0;
+        if (inCheck)
+        {
+            ss->StaticEval = ss->RawStaticEval = 0;
+        }
+        else
+        {
+            ss->StaticEval = 
+                ss->RawStaticEval = p.accumulator.Evaluate(ref p);
+            //CorrHist.correct_static_eval(ref p, ss);
+        }
 
 
         // #5 Quiescense Search Stand Pat & Evaluate
@@ -141,7 +149,7 @@ public static class Quiescense
                 // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
                 // and with a full window, to confirm we really beat alpha and get an exact score. 
                 // Searches using a null-window only return upper bounds.
-                if (!nonPV && score > alpha)
+                if (isPV && score > alpha)
                 {
                     score = -QSearch<NodeType>(nextPos, -beta, -alpha, ply+1, ss+1);
                 }
@@ -154,8 +162,6 @@ public static class Quiescense
             {
                 bestScore = score;
                 locBestMove = m;
-
-                seldepth = Max(seldepth, ply);
 
                 if (score > alpha)
                 {

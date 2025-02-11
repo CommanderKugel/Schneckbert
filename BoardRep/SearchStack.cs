@@ -12,7 +12,7 @@ public struct SS
     /// <summary>
     /// Raw/uncorrected Static Evaluation of the current Node
     /// </summary>
-    public int RawStaticEva;
+    public int RawStaticEval;
 
     /// <summary>
     /// This move failed high in nodes at the same height
