@@ -88,6 +88,7 @@ public static class Bench
             pos p = new(fen);
             
             History.Reset();
+            //CorrHist.Reset();
             TranspositionTable.Reset();
             TimeManager.Reset();
 

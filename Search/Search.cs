@@ -115,15 +115,14 @@ public static partial class Search
         }
 
         // Improving
+        // A bool representing if our current static evaluation improved over the last full-move.
         // Not a pruning technique in itself, but used to slightly tweak other heuristics.
-        // rfp (-11 elo) eval - 75 * (depth - improving) >= beta
-        // lmr (-10 elo) R -= improving
-        //bool improving = !inCheck && ply > 1 && (ss-2)->StaticEval != 0 && (ss-2)->StaticEval < ss->StaticEval;
-        //int  intImproving = improving ? 1 : 0;
-
-
-        // #8 Static Evaluation Correction History
-        // COMING SOON*
+        /*
+        bool improving = !inCheck && ply > 1 &&                 // currently not in Check
+                         (ss-2)->StaticEval != 0 &&             // past was not in Check
+                         (ss-2)->StaticEval < ss->StaticEval;   // compare valid Evaluations
+        int  intImproving = improving ? 1 : 0;
+        */
 
 
         // #9 Reverse Futility Pruning
@@ -244,7 +243,6 @@ public static partial class Search
             //     Assuming our moveordering is good, later picked moves are 
             //     assumed to be worse than earlier moves.
             //     So skip later, worse scoring and non-tactical moves at low depths.
-            // *IMPROVING SPRT COMING SOON*
             if (!isCapture &&
                 !m.IsPromo &&
                  nonMatingLineExists &&
@@ -412,11 +410,6 @@ public static partial class Search
                     rootBestMove = m;
                 }
 
-                if (isPV && ply < iteration)
-                {
-                    //push_to_pv(m, ply);
-                }
-
                 if (score > alpha)
                 {
                     alpha = score;
@@ -476,6 +469,18 @@ public static partial class Search
             
             TranspositionTable.Push(p.ZobristKey, bestScore, depth, flag, locBestMove);
         }
+
+        /*
+        if (!(
+            inSingularity ||
+            inCheck ||
+            locBestMove.IsNull ||
+            flag==BOUND_LOWER && bestScore <= ss->StaticEval ||
+            flag==BOUND_UPPER && bestScore >= ss->StaticEval))
+        {
+            CorrHist.update_corrhist(ref p, ss, depth, bestScore - ss->StaticEval);
+        }
+        */
 
         return bestScore;
     }

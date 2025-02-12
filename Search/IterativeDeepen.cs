@@ -12,6 +12,7 @@ public static partial class Search
     public static int rootScore;
 
     public static long rootPVNodes;
+    static bool info_;
 
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -80,44 +81,53 @@ public static partial class Search
 
     
     /// <summary>
-    /// Copies the newest Principal Variation line onto the current ply
+    /// Returns a string of the Principal Variation in uci-format.
     /// </summary>
-    private static void push_to_pv(move m, int ply)
+    public static unsafe string get_pv(pos p)
     {
-        PV[ply][ply] = m;
-        for (int i = ply + 1; i < iteration; i++)
-        {
-            PV[ply][i] = PV[ply + 1][i];
+        string pv = "";
 
-            if (PV[ply][i].IsNull) 
+        SS ss = new SS();
+        Span<move> moves = stackalloc move[MAX_MOVE_CNT];
+        int ply = 0;
+
+        bool moveFound = true;
+        while (moveFound)
+        {
+            moveFound = false;
+            var entry = TranspositionTable.get_entry(p.ZobristKey);
+            
+            // no ttHit or no move saved
+            if (entry.key != p.ZobristKey || entry.move.IsNull)
             {
                 break;
             }
-        }
-    }
-    
-    /// <summary>
-    /// Returns a uci-string-representation of the Principal Variation
-    /// </summary>
-    public static string get_pv()
-    {
-        string s = "";
-        for (int i = 0; i < iteration && !PV[0][i].IsNull; i++)
-        {
-            s += $"{PV[0][i]} ";
-        }
-        return s;
-    }
 
-    /// <summary>
-    /// Clears the current PV-Arrays
-    /// </summary>
-    public static void clear_whole_pv(int size)
-    {
-        PV = new move[size][];
-        for (int i = 0; i < size; i++)
-        {
-            PV[i] = new move[size];
+            // move is in movelist && is legal
+            int moveCount = MoveGen.GenerateMoves(ref moves, ref p, false, p.get_checkers());
+            for (int i=0; i<moveCount; i++)
+            {
+                if (moves[i] == entry.move && p.make_move(moves[i], &ss))
+                {
+                    ply++;
+                    pv += moves[i].ToString() + " ";
+                    moveFound = true;
+                    break;
+                }
+            }
+
+            if (moveFound && (
+                RepetitionTable.IsRepeatedPosition(p) || p.IsFiftyMoveDraw))
+            {
+                moveFound = false;
+            }
         }
+
+        for (int i=0; i<ply; i++)
+        {
+            RepetitionTable.Pop();
+        }
+
+        return pv;
     }
 }
