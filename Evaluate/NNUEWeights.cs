@@ -9,7 +9,7 @@ public static class NNUEWeights
     public static short[]     ftBias;
 
     public static short[][] OutputWeight;
-    public static short     OutputBias;
+    public static short[]   OutputBias;
 
     /// <summary>
     /// initialize all Arrays at first usage
@@ -25,6 +25,7 @@ public static class NNUEWeights
                 ftWeights[i][j] = new short[FT_SIZE];
         }
         OutputWeight = new short[OUT_BUCKET_CNT][];
+        OutputBias   = new short[OUT_BUCKET_CNT];
         for (int i=0; i<OUT_BUCKET_CNT; i++)
             OutputWeight[i] = new short[FT_SIZE * 2];
     }
@@ -64,7 +65,8 @@ public static class NNUEWeights
                 for (int feat=0; feat<FT_SIZE*2; feat++)
                     OutputWeight[buck][feat] = reader.ReadInt16();
 
-            OutputBias = reader.ReadInt16();
+            for (int buck=0; buck<OUT_BUCKET_CNT; buck++)
+                OutputBias[buck] = reader.ReadInt16();
 
             /*
             // debug help: bullet files print "bullet" in the remaining buffer-bytes of the quantized file

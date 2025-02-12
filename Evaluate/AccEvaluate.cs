@@ -74,7 +74,7 @@ public unsafe partial struct Accumulator
             }
         }
 
-        int sum = Vector256.Sum(evalAccumulator) + OutputBias;
+        int sum = Vector256.Sum(evalAccumulator) + OutputBias[outBuck];
 
         // Scaling from small original floating point numbers
         // comparable to ~centipawns now
