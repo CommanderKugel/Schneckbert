@@ -227,14 +227,15 @@ public static partial class Search
             // #16 Futility Pruning
             //     If static evaluation falls below alpha, even by a margin,
             //     we dont expect that quiet moves will gain enough to beat alpha again.
-            //     Only applicable after proving a non-mate line exists (includes mvsplayed>0 implicitly)
+            //     Only applicable after proving a non-mate line exists (includes mvsplayed > 0 implicitly)
+            // depth + intImproving -> +1.77 @ 8+0.08
             if ( nonMatingLineExists &&
                 !isCapture && 
                 !m.IsPromo &&
                  nonPV && 
                 !inCheck &&
                  depth<5 && 
-                (ss->StaticEval + 150*depth < alpha))
+                (ss->StaticEval + 150 * (depth + intImproving) < alpha))
             {
                 continue;
             }

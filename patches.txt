@@ -116,7 +116,7 @@ Ptnml(0-2): [307, 1205, 2210, 1258, 324], WL/DD Ratio: 1.46
 LLR: 2.92 (-2.25, 2.89) [-5.00, 0.00]
 --------------------------------------------------
 
-1.4 Added RFP-improving
+1.4 Added improving condition to RFP
 --------------------------------------------------
 Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 13.94 +/- 7.42, nElo: 20.49 +/- 10.88
@@ -124,4 +124,14 @@ LOS: 99.99 %, DrawRatio: 40.88 %, PairsRatio: 1.29
 Games: 3914, Wins: 1217, Losses: 1060, Draws: 1637, Points: 2035.5 (52.01 %)
 Ptnml(0-2): [105, 401, 800, 534, 117], WL/DD Ratio: 1.28
 LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+
+1.5 Added improving condition to FutilityPruning
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 4.92 +/- 4.18, nElo: 7.84 +/- 6.66
+LOS: 98.95 %, DrawRatio: 44.33 %, PairsRatio: 1.09
+Games: 10448, Wins: 2965, Losses: 2817, Draws: 4666, Points: 5298.0 (50.71 %)
+Ptnml(0-2): [192, 1198, 2316, 1306, 212], WL/DD Ratio: 1.14
+LLR: 2.31 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
