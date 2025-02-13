@@ -117,12 +117,12 @@ public static partial class Search
         // Improving
         // A bool representing if our current static evaluation improved over the last full-move.
         // Not a pruning technique in itself, but used to slightly tweak other heuristics.
-        /*
+
         bool improving = !inCheck && ply > 1 &&                 // currently not in Check
                          (ss-2)->StaticEval != 0 &&             // past was not in Check
                          (ss-2)->StaticEval < ss->StaticEval;   // compare valid Evaluations
         int  intImproving = improving ? 1 : 0;
-        */
+        
 
 
         // #9 Reverse Futility Pruning
@@ -131,7 +131,7 @@ public static partial class Search
         //    Thus, we can safely cut here
         // depth -> depth + improving: -11 @ 8+0.08
         if (nonPV && !inCheck && !isRoot && depth <= 7 && !inSingularity &&
-            ss->StaticEval - 75 * depth >= beta)
+            ss->StaticEval - 75 * (depth - intImproving) >= beta)
         {
             return ss->StaticEval;
         }
