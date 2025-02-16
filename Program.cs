@@ -62,6 +62,7 @@ while (true)
         {
             TranspositionTable.Reset();
             History.Reset();
+            //CorrHist.Reset();
             SearchStack.Reset();
             TimeManager.Reset(resetTotalNodes: true);
             break;

@@ -11,12 +11,12 @@ using System.Runtime.InteropServices;
 [StructLayout(LayoutKind.Explicit)]
 public unsafe partial struct Accumulator
 {
-    [FieldOffset(0)]
-    private fixed short AccWhite[192];
+    [FieldOffset(FT_SIZE * 0)]
+    private fixed short AccWhite[FT_SIZE];
     [FieldOffset(FT_SIZE * 2)]
-    private fixed short AccBlack[192];
+    private fixed short AccBlack[FT_SIZE];
 
-    [FieldOffset(FT_SIZE * 4)]
+    [FieldOffset(FT_SIZE * 4 + 0)]
     int wflip = 0;
     [FieldOffset(FT_SIZE * 4 + 4)]
     int bflip = 0;

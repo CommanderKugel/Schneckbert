@@ -1,6 +1,3 @@
-
-using System.Drawing;
-
 public struct TTEntry
 {
     public ulong key  = 0ul;

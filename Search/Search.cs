@@ -248,8 +248,8 @@ public static partial class Search
                 !m.IsPromo &&
                  nonMatingLineExists &&
                  depth < 5 &&
-            // improving, movesToGo *= 1.5 -> -6.04 +/- 6.58 @ 8+0.08
-            //            movesToGo *= 2.0 -> ~0 @ 8+0.08 & 40+0.4
+            // improving: movesToGo *= 1.5 -> -6.04 +/- 6.58 @ 8+0.08
+            //            movesToGo *= 2.0 -> ~0             @ 8+0.08 & 40+0.4
                  movesPlayed > lmpTable[depth])
             {
                 continue;
@@ -476,10 +476,11 @@ public static partial class Search
             inSingularity ||
             inCheck ||
             locBestMove.IsNull ||
+            flag==BOUND_EXACT ||
             flag==BOUND_LOWER && bestScore <= ss->StaticEval ||
             flag==BOUND_UPPER && bestScore >= ss->StaticEval))
         {
-            CorrHist.update_corrhist(ref p, ss, depth, bestScore - ss->StaticEval);
+            CorrHist.update_corrhist(ref p, ss, depth, bestScore);
         }
         */
 

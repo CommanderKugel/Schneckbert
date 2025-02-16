@@ -1,11 +1,12 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 public static class Constants
 {
 
-    public static readonly int VECTOR_SIZE = Vector<short>.Count;
+    public static readonly int VECTOR_SIZE = Vector256<short>.Count;
 
     public const int    // Piece Types
         PAWN   = 0,     // 0b000

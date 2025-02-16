@@ -16,18 +16,20 @@ fury-pasta
 
 Search heuristics:
 - Improving heuristic
-    - RFP (doesnt gain)
-    - LMR (R+=!improving; doesnt gain, interaction with log-formula pending)
-    - LMP (movesToGo /= 2 very bad)
+    - LMR 
+    - LMP 
 - Continuation 
-    - Continuation & Counter
+    - ContinuationHistory
+    - CounterHistory
 - Capture history heuristic
     - Butterfly -> PieceTo
-- History pruning/reduction
+- miscellaneous History related stuff
+    - pruning
+    - reduction
 - Singular Confirmation Search
     - Multicut
-    - Double/Triple
-    - Negative
+    - Double/Triple extensions
+    - Negative extensions
 - Cutnode (as apart of negative extensions, LMR, etc)
 - Static eval correction history (HELP - its fucked)
     - Pawn
