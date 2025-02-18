@@ -51,7 +51,7 @@ public static class SearchStack
     /// Updates the current plies' SearchStack entry
     /// also sets the CounterHistory for the next Ply
     /// </summary>
-    public static unsafe void Push(SS* ss, move m, pos p, int movingPieceType, int capturedPieceType)
+    public static unsafe void Push(SS* ss, move m, ref pos p, int movingPieceType, int capturedPieceType)
     {
         ss->Move = m;
         ss->MovedPiece    = (byte)movingPieceType;

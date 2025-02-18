@@ -1,10 +1,22 @@
-functionality
+ORIGINAL IDEAS:
+- score becomes i32 struckt packing: cp/mate-score (i16), win% (i8), loss% (i8)
+    -> win/loss scaled from % to 255, draw = 255 - win - loss
+    -> requires wdl-output from NNUE instead of plain cp-score
+    -> different score conditions based on wdl instead of score alone    
+    -> to CentiPawns, use elo formula or something similar (win + draw/2) / 255
 
-- Normalized Eval(!)
+- prob-tt-Cut
+    - based on margin*depth or margin*depht*depth, also for 'too shallow' entries
+    - test for all-nodes
+
+COMMON FUNCTIONALITY:
+- Add Assertions for all kinds of stuff
+
+- Normalized Eval
 - 3 ouput Heads -> WDL
 
 - Mailbox (faster lookups)
-- FRC (castling, fen parsing, DFRC)
+- FRC (castling, fen parsing, pos from Number, DFRC)
 - Staged Movegen 
     - ttMove first & is_pseudolegal
     - staged Capture & quiets

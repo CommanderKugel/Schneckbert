@@ -17,6 +17,12 @@ public static partial class Search
         bool nonPV  = typeof(NodeType) == typeof(NON_PV);
         bool isPV   = typeof(NodeType) == typeof(PV_NODE) || isRoot;
 
+        // pv tracking, but we dont have a pv yet
+        if (isPV)
+        {
+            PV[ply][ply] = move.NullMove;
+        }
+
         // #1 Quiescense Search
         //    If we arrive at a leafe node, drop into QSearch.
         //    It only makes sense to evaluate Quiet positions, because captures 
@@ -69,7 +75,6 @@ public static partial class Search
         ss->checkers = p.get_checkers();
         bool inCheck = ss->checkers != 0;
         bool inSingularity = !ss->ExcludedMove.IsNull;
-
 
         // bestScore will contain this nodes score, score is a tmp variable
         int bestScore = -SCORE_MATE;
@@ -409,6 +414,11 @@ public static partial class Search
                 if (isRoot)
                 {
                     rootBestMove = m;
+                }
+
+                if (isPV)
+                {
+                    push_to_pv(m, ply);
                 }
 
                 if (score > alpha)

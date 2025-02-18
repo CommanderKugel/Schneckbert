@@ -52,9 +52,9 @@ public static partial class Search
                 alpha = rootScore - delta;
                 beta  = rootScore + delta;
 
-                if (info_ && iteration >= 4)
+                if (info_ && iteration >= 4 && Math.Abs(rootScore) != 30_000)
                 {
-                    report_to_uci(root);
+                    report_to_uci();
                 }
 
                 iteration++;
@@ -69,65 +69,51 @@ public static partial class Search
     }
 
 
-    private static void report_to_uci(pos root)
+    private static void report_to_uci()
     {
         string myScore = score_is_terminal(rootScore) 
             ? $"mate {(Math.Abs(rootScore) - SCORE_MATE) / 2}" : $"cp {rootScore}";
+
+        string pv = get_pv();
                     
-            Console.WriteLine(
-                $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score {myScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {rootBestMove}"
-            );
+        Console.WriteLine(
+            $"info depth {iteration} seldepth {seldepth} time {TimeManager.ElapsedMilliseconds()} score {myScore} nodes {TimeManager.NodeCnt} nps {TimeManager.NPS()} pv {pv}"
+        );
     }
 
     
-    /// <summary>
-    /// Returns a string of the Principal Variation in uci-format.
-    /// </summary>
-    public static unsafe string get_pv(pos p)
+    private static move[][] PV;
+
+    static Search()
+    {
+        PV = new move[MAX_SEARCH_PLY][];
+        for (int i=0; i<PV.Length; i++)
+        {
+            PV[i] = new move[MAX_SEARCH_PLY];
+        }
+    }
+
+
+    private static void push_to_pv(move m, int ply)
+    {
+        PV[ply][ply] = m;
+
+        for (int i=ply+1; i<MAX_SEARCH_PLY; i++)
+        {
+            ref move next = ref PV[ply+1][i];
+            PV[ply][i] = next;
+        }
+    }
+    
+
+    private static string get_pv()
     {
         string pv = "";
-
-        SS ss = new SS();
-        Span<move> moves = stackalloc move[MAX_MOVE_CNT];
-        int ply = 0;
-
-        bool moveFound = true;
-        while (moveFound)
+        for (int i=0; i<MAX_SEARCH_PLY && !PV[0][i].IsNull; i++)
         {
-            moveFound = false;
-            var entry = TranspositionTable.get_entry(p.ZobristKey);
-            
-            // no ttHit or no move saved
-            if (entry.key != p.ZobristKey || entry.move.IsNull)
-            {
-                break;
-            }
-
-            // move is in movelist && is legal
-            int moveCount = MoveGen.GenerateMoves(ref moves, ref p, false, p.get_checkers());
-            for (int i=0; i<moveCount; i++)
-            {
-                if (moves[i] == entry.move && p.make_move(moves[i], &ss))
-                {
-                    ply++;
-                    pv += moves[i].ToString() + " ";
-                    moveFound = true;
-                    break;
-                }
-            }
-
-            if (moveFound && (
-                RepetitionTable.IsRepeatedPosition(p) || p.IsFiftyMoveDraw))
-            {
-                moveFound = false;
-            }
+            pv += PV[0][i].ToString() + " ";            
         }
-
-        for (int i=0; i<ply; i++)
-        {
-            RepetitionTable.Pop();
-        }
-
         return pv;
     }
+    
 }

@@ -12,7 +12,7 @@ Search.init();
 pos root = new pos(Constants.startpos);
 string moves = "";
 
-try
+//try
 {
 
 while (true)
@@ -252,9 +252,11 @@ while (true)
 }
 
 }
+/*
 catch (Exception e)
 {
     Console.WriteLine(e.Message);
     Console.WriteLine(e.StackTrace);
     return 1;
 }
+*/

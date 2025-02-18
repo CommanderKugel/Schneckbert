@@ -246,7 +246,7 @@ public unsafe partial struct pos
             }
 
             // update Search Stack and Repetition Table
-            SearchStack.Push(ss, m, this, movingPieceType, capturedPieceType);
+            SearchStack.Push(ss, m, ref this, movingPieceType, capturedPieceType);
             RepetitionTable.Push(ZobristKey);
         }
         return IsLegal;
@@ -267,7 +267,7 @@ public unsafe partial struct pos
         FiftyMoveCnt++;
         ZobristKey = Zobrist.calc_zobrist_key(ref this);
         RepetitionTable.Push(ZobristKey);
-        SearchStack.Push(ss, move.NullMove, this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
+        SearchStack.Push(ss, move.NullMove, ref this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
     }
 
     public static bool operator ==(pos p1, pos p2) => p1.ZobristKey == p2.ZobristKey;

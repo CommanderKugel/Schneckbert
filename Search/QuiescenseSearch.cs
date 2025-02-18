@@ -18,6 +18,11 @@ public static partial class Search
         bool nonPV   = typeof(NodeType) == typeof(NON_PV);
         bool isPV    = typeof(NodeType) == typeof(PV_NODE);
 
+        if (isPV)
+        {
+            PV[ply][ply] = move.NullMove;
+        }
+
         // #1 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
@@ -162,6 +167,11 @@ public static partial class Search
             {
                 bestScore = score;
                 locBestMove = m;
+
+                if (isPV)
+                {
+                    push_to_pv(m, ply);
+                }
 
                 if (score > alpha)
                 {
