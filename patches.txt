@@ -147,3 +147,14 @@ Games: 13296, Wins: 3949, Losses: 3900, Draws: 5447, Points: 6672.5 (50.18 %)
 Ptnml(0-2): [230, 1185, 3757, 1258, 218], WL/DD Ratio: 1.50
 LLR: 2.63 (-2.25, 2.89) [-5.00, 0.00]
 --------------------------------------------------
+
+1.7 Fixed Dequantization & bug in NNUE output
+eval = (sum / QA + bias) * scaling / QAB
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 32.32 +/- 11.51, nElo: 48.50 +/- 17.16
+LOS: 100.00 %, DrawRatio: 41.04 %, PairsRatio: 1.76
+Games: 1574, Wins: 529, Losses: 383, Draws: 662, Points: 860.0 (54.64 %)
+Ptnml(0-2): [34, 134, 323, 244, 52], WL/DD Ratio: 1.27
+LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

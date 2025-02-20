@@ -14,7 +14,8 @@ public unsafe partial struct Accumulator
 
     static Accumulator()
     {
-        var temp = new short[] { QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, QA, };
+        var temp = new short[VECTOR_SIZE];
+        Array.Fill(temp, QA);
         fixed (short* ptr = temp)
         {
             VECTOR_QA = Avx.LoadVector256(ptr);
@@ -28,14 +29,13 @@ public unsafe partial struct Accumulator
     /// </summary>
     public unsafe int Evaluate(ref pos p)
     {
-
         int outBuck = get_material_bucket(ref p);
         var evalAccumulator = Vector256<int>.Zero;
 
         // fix the weights and accumulator arrays
         // we can use pointer arithmetic afterwards
         // necessary for loading Avx-Vectors.
-        fixed (short* outWeightPtr = OutputWeight[outBuck])
+        fixed (short* outWeightPtr = OutputWeight[outBuck][0])
         fixed (short* ptrAccWhite  = &AccWhite[0])
         fixed (short* ptrAccBlack  = &AccBlack[0])
         {
@@ -74,20 +74,71 @@ public unsafe partial struct Accumulator
             }
         }
 
-        int sum = Vector256.Sum(evalAccumulator) + OutputBias[outBuck];
+        int eval = (Vector256.Sum(evalAccumulator) / QA + OutputBias[outBuck][0]) * SCALE / QAB;
+        
+        return Clamp(eval, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
+    }
 
-        // Scaling from small original floating point numbers
-        // comparable to ~centipawns now
-        sum *= SCALE;
 
-        // Remove Quantization
-        sum /= QA * QB;
+    public unsafe int Evaluate_wdl(ref pos p)
+    {
+        int outBuck = get_material_bucket(ref p);
 
-        // SCALE should be 400 insead of 2
-        // and QA * QB should be QA * QA * QB
-        // *SPRT COMING SOON*
+        // output accumulator for WDL ouput nodes
+        Vector256<int>[] outWdl = [Vector256<int>.Zero, Vector256<int>.Zero, Vector256<int>.Zero];
+        
+        fixed (Accumulator* accPtr = &this)
+        fixed (short* winPtr  = OutputWeight[outBuck][2])
+        fixed (short* drawPtr = OutputWeight[outBuck][1])
+        fixed (short* lossPtr = OutputWeight[outBuck][0])
+        {
+            short* stmAccPtr = p.us==WHITE ? &accPtr->AccWhite[0] : &accPtr->AccBlack[0];
+            short* ntmAccPtr = p.us==BLACK ? &accPtr->AccWhite[0] : &accPtr->AccBlack[0];
 
-        return Clamp(sum, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
+            short*[] weightPtrs = [winPtr, drawPtr, lossPtr];
+
+            int iters = FT_SIZE / VECTOR_SIZE;
+
+            for (int i=0; i<iters; i++)
+            {
+                int offset = i * VECTOR_SIZE;
+
+                var clampedStm = Avx2.Max(Vector256<short>.Zero, Avx2.Min(VECTOR_QA, Avx.LoadVector256(stmAccPtr + offset)));
+                var clampedNtm = Avx2.Max(Vector256<short>.Zero, Avx2.Min(VECTOR_QA, Avx.LoadVector256(ntmAccPtr + offset)));
+
+                for (int wdl=0; wdl<3; wdl++)
+                {
+                    var weightsStm = Avx.LoadVector256(weightPtrs[wdl] + offset);
+                    var weightsNtm = Avx.LoadVector256(weightPtrs[wdl] + offset + FT_SIZE);
+
+                    var weightedStm = Avx2.MultiplyLow(weightsStm, clampedStm);
+                    var weightedNtm = Avx2.MultiplyLow(weightsNtm, clampedNtm);
+
+                    var sqrStm = Avx2.MultiplyAddAdjacent(clampedStm, weightedStm);
+                    var sqrNtm = Avx2.MultiplyAddAdjacent(clampedNtm, weightedNtm);
+
+                    outWdl[wdl] = Avx2.Add(sqrStm, outWdl[wdl]);
+                    outWdl[wdl] = Avx2.Add(sqrNtm, outWdl[wdl]);
+                }
+            }
+        }
+
+        double win  = (double)(Vector256.Sum(outWdl[0]) / QA + OutputBias[outBuck][0]) / QAB;
+        double draw = (double)(Vector256.Sum(outWdl[1]) / QA + OutputBias[outBuck][1]) / QAB;
+        double loss = (double)(Vector256.Sum(outWdl[2]) / QA + OutputBias[outBuck][2]) / QAB;
+
+        var max = Max(win, Max(draw, loss));
+        win  = Exp(win  - max);
+        draw = Exp(draw - max);
+        loss = Exp(loss - max);
+
+        var one_over_naive = (win + draw + loss) / (win + draw/2);
+        var scoreCp = -(400/3) * Log2(one_over_naive - 1);
+
+        //Console.WriteLine($"WDL% {win/total} : {draw/total} : {loss/total}");
+        //Console.WriteLine($"bayes elo cp: {scoreCp}");
+
+        return Clamp((int)scoreCp, -EVAL_SCORE_MAX, EVAL_SCORE_MAX);
     }
 
     /// <summary>

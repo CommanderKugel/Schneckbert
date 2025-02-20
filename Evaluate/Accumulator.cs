@@ -13,6 +13,7 @@ public unsafe partial struct Accumulator
 {
     [FieldOffset(FT_SIZE * 0)]
     private fixed short AccWhite[FT_SIZE];
+    
     [FieldOffset(FT_SIZE * 2)]
     private fixed short AccBlack[FT_SIZE];
 

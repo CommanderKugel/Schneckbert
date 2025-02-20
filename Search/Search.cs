@@ -134,7 +134,6 @@ public static partial class Search
         //    if the static Evaluation beats beta by a margin, we are probably a piece up
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
-        // depth -> depth + improving: -11 @ 8+0.08
         if (nonPV && !inCheck && !isRoot && depth <= 7 && !inSingularity &&
             ss->StaticEval - 75 * (depth - intImproving) >= beta)
         {
@@ -477,7 +476,6 @@ public static partial class Search
                 locBestMove = ttMove;
             }
 
-            
             TranspositionTable.Push(p.ZobristKey, bestScore, depth, flag, locBestMove);
         }
 
@@ -486,6 +484,7 @@ public static partial class Search
             inSingularity ||
             inCheck ||
             locBestMove.IsNull ||
+            score_is_terminal(bestScore) ||
             flag==BOUND_EXACT ||
             flag==BOUND_LOWER && bestScore <= ss->StaticEval ||
             flag==BOUND_UPPER && bestScore >= ss->StaticEval))

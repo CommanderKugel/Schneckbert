@@ -5,29 +5,51 @@ using System.Reflection;
 
 public static class NNUEWeights
 {
+    /// <summary>
+    /// [king bucket][feature][node]
+    /// </summary>
     public static short[][][] ftWeights;
-    public static short[]     ftBias;
-
-    public static short[][] OutputWeight;
-    public static short[]   OutputBias;
 
     /// <summary>
-    /// initialize all Arrays at first usage
+    /// [feature]
     /// </summary>
+    public static short[] ftBias;
+
+    /// <summary>
+    /// [material buket][output node][ft node]
+    /// </summary>
+    public static short[][][] OutputWeight;
+
+    /// <summary>
+    /// [maerial bucket][output node]
+    /// </summary>
+    public static short[][] OutputBias;
+
+
     static NNUEWeights() 
     {
         ftWeights = new short[IN_BUCKET_CNT][][];
         ftBias = new short[FT_SIZE];
-        for (int i=0; i<IN_BUCKET_CNT; i++)
+
+        for (int buck=0; buck<IN_BUCKET_CNT; buck++)
         {
-            ftWeights[i] = new short[INPUT_SIZE][];
-            for (int j=0; j<INPUT_SIZE; j++)
-                ftWeights[i][j] = new short[FT_SIZE];
+            ftWeights[buck] = new short[INPUT_SIZE][];
+
+            for (int feat=0; feat<INPUT_SIZE; feat++)
+                ftWeights[buck][feat] = new short[FT_SIZE];
         }
-        OutputWeight = new short[OUT_BUCKET_CNT][];
-        OutputBias   = new short[OUT_BUCKET_CNT];
-        for (int i=0; i<OUT_BUCKET_CNT; i++)
-            OutputWeight[i] = new short[FT_SIZE * 2];
+
+        OutputWeight = new short[OUT_BUCKET_CNT][][];
+        OutputBias   = new short[OUT_BUCKET_CNT][];
+
+        for (int buck=0; buck<OUT_BUCKET_CNT; buck++)
+        {
+            OutputBias[buck] = new short[OUTPUT_SIZE];
+            OutputWeight[buck] = new short[OUTPUT_SIZE][];
+
+            for (int node=0; node<OUTPUT_SIZE; node++)
+                OutputWeight[buck][node] = new short[FT_SIZE * 2];
+        }
     }
 
     /// <summary>
@@ -36,10 +58,8 @@ public static class NNUEWeights
     /// </summary>
     public static void load() 
     {   
-        //foreach (var name in Assembly.GetExecutingAssembly().GetManifestResourceNames())
-        //    Console.WriteLine($"embedded file: {name}");
 
-        // load the NNUE from an embedded file
+        // read the embedded file
         Stream? stream;
         if ((stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
             $"Schneckbert.Evaluate.Nets.{net_name}.bin"
@@ -51,22 +71,35 @@ public static class NNUEWeights
         using (var reader = new BinaryReader(stream))
         {
 
-            // read feature-transformer weights and bias
+            // Feature Transformer weights
             for (int buck=0; buck<IN_BUCKET_CNT; buck++)
                 for (int feat=0; feat<INPUT_SIZE; feat++)
-                    for (int h=0; h<FT_SIZE; h++)
-                        ftWeights[buck][feat][h] = reader.ReadInt16();
-            for (int i=0; i<FT_SIZE; i++)
-                ftBias[i] = reader.ReadInt16();
+                    for (int node=0; node<FT_SIZE; node++)
+                        ftWeights[buck][feat][node] = reader.ReadInt16();
 
-            // read output weights and bias
-            // [[[T; layer input size]; layer output size]; buckets]
-            for (int buck=0; buck<OUT_BUCKET_CNT; buck++)
-                for (int feat=0; feat<FT_SIZE*2; feat++)
-                    OutputWeight[buck][feat] = reader.ReadInt16();
+            // Feature Transformer bias
+            for (int node=0; node<FT_SIZE; node++)
+                ftBias[node] = reader.ReadInt16();
 
+            // Output (hidden layer 1) weights
+            if (net_name == "simple192_wdl50")
+            {
+                for (int buck=0; buck<OUT_BUCKET_CNT; buck++) 
+                    for (int feat=0; feat<FT_SIZE*2; feat++)
+                            OutputWeight[buck][0][feat] = reader.ReadInt16();
+            }
+            else
+            {
+                for (int node=0; node<OUTPUT_SIZE; node++)
+                    for (int feat=0; feat<FT_SIZE*2; feat++)
+                        for (int buck=0; buck<OUT_BUCKET_CNT; buck++)    
+                            OutputWeight[buck][node][feat] = reader.ReadInt16();
+            }
+
+            // Output (hidden layer 1) bias
             for (int buck=0; buck<OUT_BUCKET_CNT; buck++)
-                OutputBias[buck] = reader.ReadInt16();
+                for (int node=0; node<OUTPUT_SIZE; node++)
+                    OutputBias[buck][node] = reader.ReadInt16();
 
             /*
             // debug help: bullet files print "bullet" in the remaining buffer-bytes of the quantized file
@@ -76,6 +109,7 @@ public static class NNUEWeights
                 while (true) Console.WriteLine(reader.ReadChar());
             } catch {}
             */
+            
         }
     }
 }

@@ -11,9 +11,10 @@ public static class NNUESettings
     
     public const string net_name = "simple192_wdl50";
     
-    public const int SCALE = 2;
+    public const int SCALE = 400;
     public const short QA = 255;
     public const short QB = 64;
+    public const short QAB = QA * QB;
 
 
     public static readonly int[] buckets = [
