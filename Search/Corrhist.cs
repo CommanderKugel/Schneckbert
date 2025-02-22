@@ -6,51 +6,20 @@ using static System.Math;
 
 public static class CorrHist
 {
+   
+    /*
+    CORR_DIV=256, BONUS_DIV=512, MAX~32 -> -5
+    CORR_DIV=256, BONUS_DIV=256, MAX~32 -> -3.82
+    CORR_DIV=256, BONUS_DIV=128, MAX~32 -> -0.69 & -2 @ 20+0.2
+    CORR_DIV=256, BONUS_DIV= 64, MAX~32 -> -2.08
+
+    CORR_DIV=128, BONUS_DIV=128, MAX~32 -> -13.69
+    CORR_DIV=512, BONUS_DIV=128, MAX~32 ->  -3.40
+    */
+
     /*
     private const int SIZE  = 16384;
-    
-    private const short GRAIN = 256;
-    private const int   BONUS_DIVISOR = 128;
 
-    private const short MAX = 32 * GRAIN;
-    private const short MIN = -MAX;
-    */
-    
-    /*
-    bugifx 
-    GRAIN=1024, SCALE=1024, MAX=128*GRAIN
-    newWeight = Min(depth * depth + depth + 1, 128)
-    --------------------------------------------------
-    Elo:  1.39 +/- 5.36, LLR: -0.03 (-2.25, 2.89) [0.00, 5.00] @  8+0.08
-    Elo: -2.66 +/- 4.19, LLR: -2.26 (-2.25, 2.89) [0.00, 5.00] @ 20+0.20
-    --------------------------------------------------
-
-    GRAIN=256, MAX=32*GRAIN
-    bonus = (score-eval) * depth/64
-    classical Gravity formula
-    --------------------------------------------------
-    Elo:  1.05 +/- 7.69, LLR: -0.12 (-2.25, 2.89) [0.00, 5.00] @  8+0.08
-    Elo: -1.60 +/- 4.71, LLR: -1.69 (-2.25, 2.89) [0.00, 5.00] @ 20+0.20 
-    --------------------------------------------------
-
-    GRAIN=256, MAX=32*GRAIN
-    bonus = (score-eval) * depth/128
-    classical Gravity formula
-    --------------------------------------------------
-    Elo: -4.50 +/- 5.88, LLR: -2.26 (-2.25, 2.89) [0.00, 5.00] @  8+0.08
-    --------------------------------------------------
-
-    GRAIN=256, MAX=32*GRAIN
-    bonus = (score-eval) * depth/128
-    classical Gravity formula
-    dont correct on mate-scores
-    --------------------------------------------------
-    Elo:  2.75 +/- 10.49, LLR: 0.13 (-2.25, 2.89) [0.00, 5.00] @  8+0.08
-    Elo: -3.29 +/- 5.11, LLR: -2.26 (-2.25, 2.89) [0.00, 5.00] @ 20+0.20
-    --------------------------------------------------
-    */
-
-    /*
     private static short[][] PawnCorrHist;
 
 
@@ -63,34 +32,37 @@ public static class CorrHist
 
     public static void Reset()
     {
-        return;
-
         Array.Clear(PawnCorrHist[BLACK]);
         Array.Clear(PawnCorrHist[WHITE]);
     }
 
-    public static unsafe void correct_static_eval(ref pos p, SS* ss)
-    {
-        return;
-        
-        int pawnCorrVal = PawnCorrHist[p.us][p.PawnKey % SIZE];
+    const int PAWN_CORRHIST_WEIGHT   = 1;
+    const int FINAL_CORRHIST_DIVISOR = 512;
 
-        ss->StaticEval = ss->RawStaticEval + pawnCorrVal / GRAIN;
+    const short MAX =  32 * FINAL_CORRHIST_DIVISOR;
+    const short MIN = -32 * FINAL_CORRHIST_DIVISOR;
+
+    const int BONUS_DIVISOR = 256;
+
+
+    public static unsafe void correct_static_eval(ref pos p, SS* ss)
+    {      
+        int pawnCorrVal = PAWN_CORRHIST_WEIGHT * PawnCorrHist[p.us][p.PawnKey % SIZE];
+
+        ss->StaticEval = ss->RawStaticEval + (pawnCorrVal) / FINAL_CORRHIST_DIVISOR;
     }
+
 
     public static unsafe void update_corrhist(ref pos p, SS* ss, int depth, int score)
     {
-        return;
-
         int bonus = (score - ss->StaticEval) * depth / BONUS_DIVISOR;
 
-        ref short pawnCorrEntry = ref PawnCorrHist[p.us][p.PawnKey % SIZE];
-        update_single_corrhist(ref pawnCorrEntry, bonus);
+        update_single_corrhist(ref PawnCorrHist[p.us][p.PawnKey % SIZE], bonus);
     }
 
     private static void update_single_corrhist(ref short entry, int bonus)
     {
-        entry += (short)(bonus - Abs(bonus) * entry / GRAIN);
+        entry += (short)(bonus - Abs(bonus) * entry / 512);
         entry = Clamp(entry, MIN, MAX);
     }
     */
