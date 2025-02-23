@@ -58,10 +58,10 @@ public static class Attacks
     /// <summary>
     /// returns a bitboard containing reachable squares by PieceType
     /// </summary>
-    public static ulong PieceAttacks(pos p, int pt, int sq) 
+    public static ulong PieceAttacks(ref pos p, int pt, int sq) 
     {
         return pt switch {
-            PAWN   => PseudoPawnMoves(p, sq),
+            PAWN   => PseudoPawnAttacks(ref p, sq),
             KNIGHT => KnightAttacks(sq),
             BISHOP => BishopAttacks(sq, p.get_blocker()),
             ROOK   => RookAttacks(sq, p.get_blocker()),
@@ -72,23 +72,21 @@ public static class Attacks
     }
 
 
-    private unsafe static ulong PseudoPawnMoves(pos p, int sq) 
+    private unsafe static ulong PseudoPawnAttacks(ref pos p, int sq) 
     {
         // simple push
         ulong empty = ~p.get_blocker();
         ulong push = up(1ul << sq, p.us) & empty;
         
         // double push
-        if ((push & (p.us==WHITE ? Rank3 : Rank6)) != 0) {
+        if ((push & (p.us==WHITE ? Rank3 : Rank6)) != 0) 
+        {
             push |= up(push, p.us) & empty;
         }
 
-        // normal captures
-        ulong enemies = p.colorBB[1-p.us];
-        if (p.ep != SQ_NONE)
-        {
-            enemies |= 1ul << p.ep;
-        }
+        // normal and ep-captures
+        ulong enemies = p.ep == SQ_NONE ? p.colorBB[1-p.us]
+                                        : p.colorBB[1-p.us] | (1ul << (p.ep + (p.us==WHITE ? 8 : -8)));
 
         ulong captures = PawnAttacks[p.us][sq] & enemies;
         
