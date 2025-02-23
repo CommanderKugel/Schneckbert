@@ -22,7 +22,7 @@ public static class WriteGame
         for (int ply=0; ply<moves.Count; ply++)
         {
             move m = moves[ply];
-            int score = scores[ply];
+            int score = p.us == WHITE ? scores[ply] : -scores[ply];
 
             if (!p.is_capture(m) && p.get_checkers() == 0 && !score_is_terminal(score))
             {

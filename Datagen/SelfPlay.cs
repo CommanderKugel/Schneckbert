@@ -151,7 +151,8 @@ public static class Selfplay
             // abort if the score becomes too high/low (includes mate-scores)
             if (Math.Abs(Search.rootScore) > 3000)
             {
-                result = Search.rootScore < 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
+                result = Search.rootScore > 0 ? (root.us == WHITE ? Gameresult.WinWhite : Gameresult.WinBlack)
+                                              : (root.us == WHITE ? Gameresult.WinBlack : Gameresult.WinWhite);
                 break;
             }
         }
