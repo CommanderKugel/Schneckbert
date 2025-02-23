@@ -82,7 +82,7 @@ public static class NNUEWeights
                 ftBias[node] = reader.ReadInt16();
 
             // Output (hidden layer 1) weights
-            if (net_name == "simple192_wdl50")
+            if (net_name.Contains("simple"))
             {
                 for (int buck=0; buck<OUT_BUCKET_CNT; buck++) 
                     for (int feat=0; feat<FT_SIZE*2; feat++)
