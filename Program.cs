@@ -12,8 +12,6 @@ Search.init();
 pos root = new pos(Constants.startpos);
 string moves = "";
 
-//try
-{
 
 while (true)
 {
@@ -179,8 +177,8 @@ while (true)
                 ? int.Parse(tokens[1])
                 : 10
             );
-            long bench = 2993734; 
-            int  nps   = 1221932; 
+            long bench = 3663223; 
+            int  nps   = 1270188; 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
             break;
@@ -251,12 +249,3 @@ while (true)
     }
 }
 
-}
-/*
-catch (Exception e)
-{
-    Console.WriteLine(e.Message);
-    Console.WriteLine(e.StackTrace);
-    return 1;
-}
-*/

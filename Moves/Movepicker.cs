@@ -2,8 +2,18 @@ using static Constants;
 
 public unsafe class MovePicker
 {
+    private enum Stage {
+        ttMove,
+        generateMoves,
+        pickMoves,
+        done,
+    }
+
     public byte mvCnt;
-    private byte mvIdx;
+    public byte mvIdx;
+    public bool onlyCaptures;
+
+    private Stage stage;
 
     /// <summary>
     /// Generates and Scores all pseudolegal moves int the given position.
@@ -11,10 +21,11 @@ public unsafe class MovePicker
     /// </summary>
     public unsafe MovePicker(pos p, bool inQS, move ttMove, SS* ss, ref Span<move> moves, ref Span<int> scores)
     {
-        mvCnt = (byte)MoveGen.GenerateMoves(ref moves, ref p, inQS, ss->checkers);
-        mvIdx = 0;
+        stage = Stage.ttMove;
+        onlyCaptures = inQS;
 
-        ScoreMoves(p, ttMove, ss, ref moves, ref scores);
+        mvCnt = 0;
+        mvIdx = 0;
     }
 
     /// <summary>
@@ -53,38 +64,66 @@ public unsafe class MovePicker
         }
     }
 
-    /// <summary>
-    /// Returns the score of the last move that was picked.
-    /// Does not equal the Hostory score for quiet moves, 
-    /// because TT & Killer moves are scored separately.
-    /// </summary>
-    public int curr_score(ref Span<int> scores) => scores[mvIdx-1];
+
+    public bool try_see(ref Span<int> scores)
+        => stage == Stage.pickMoves && scores[mvIdx-1] < 900_000;
 
     /// <summary>
     /// Returns the next best scored move using partial insertion sort.
     /// </summary>
-    public move next(ref pos p, ref Span<move> moves, ref Span<int> scores)
+    public move next(ref pos p, SS* ss, ref Span<move> moves, ref Span<int> scores, move ttMove)
     {
-        if (mvIdx >= mvCnt)
+        if (stage > Stage.generateMoves && mvIdx >= mvCnt)
             return move.NullMove;
 
         while (true)
         {
-            int idx = get_best_idx(ref scores);
-
-            /*
-            if ( false &&
-                 scores[idx] != 2_000_000 &&
-                 scores[idx] >  1_000_000 &&
-                !SEE.see_threshold(moves[idx], ref p, 0))
+            switch (stage)
             {
-                scores[idx] -= 2_000_000;
-                continue;
-            }
-            */
+                case Stage.ttMove:
+                {
+                    stage++;
+                    if (MoveGen.is_pseudo_legal(ttMove, ref p) && (!onlyCaptures || p.is_capture(ttMove)))
+                    {
+                        return ttMove;
+                    }
 
-            swap(idx, ref moves, ref scores);
-            return moves[mvIdx++];
+                    goto case Stage.generateMoves;
+                }
+                case Stage.generateMoves:
+                {
+                    stage++;
+
+                    mvCnt = (byte)MoveGen.GenerateMoves(ref moves, ref p, onlyCaptures, ss->checkers);
+                    ScoreMoves(p, ttMove, ss, ref moves, ref scores);
+                    goto case Stage.pickMoves;
+                }
+                case Stage.pickMoves:
+                {
+                    if (mvIdx >= mvCnt)
+                    {
+                        stage = Stage.done;
+                        return move.NullMove;
+                    }
+
+                    int idx = get_best_idx(ref scores);
+                    move m = moves[idx];
+                    swap(idx, ref moves, ref scores);
+                    mvIdx++;
+
+                    if (m == ttMove)
+                    {
+                        continue;
+                    }
+
+                    return m;
+                }
+                default:
+                case Stage.done:
+                {
+                    return move.NullMove;
+                }
+            }
         }
     }
 

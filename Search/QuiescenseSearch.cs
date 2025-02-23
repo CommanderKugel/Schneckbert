@@ -110,7 +110,7 @@ public static partial class Search
         move locBestMove = move.NullMove;
 
         // main move loop here
-        while (!(m = picker.next(ref p, ref moves, ref scores)).IsNull)
+        while (!(m = picker.next(ref p, ss, ref moves, ref scores, ttMove)).IsNull)
         {
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
@@ -120,7 +120,7 @@ public static partial class Search
             //    and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                 picker.curr_score(ref scores) < 900_000 &&
+                 picker.try_see(ref scores) &&
                 !SEE.see_threshold(m, ref p, alpha - ss->StaticEval - 300))
             {
                 continue;

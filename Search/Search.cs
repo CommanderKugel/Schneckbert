@@ -217,7 +217,7 @@ public static partial class Search
         move locBestMove = move.NullMove;
         
         // main move loop here
-        while (!(m = picker.next(ref p, ref moves, ref scores)).IsNull)
+        while (!(m = picker.next(ref p, ss, ref moves, ref scores, ttMove)).IsNull)
         {
 
             if (m == ss->ExcludedMove)
@@ -285,7 +285,7 @@ public static partial class Search
             //     run another SEE with a wider margin.
             if (nonMatingLineExists &&
                 nonPV &&
-                picker.curr_score(ref scores) < 900_000)
+                picker.try_see(ref scores))
             {
                 int margin = isCapture 
                            ? -200 * depth 
