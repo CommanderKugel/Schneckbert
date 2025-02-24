@@ -45,7 +45,7 @@ public static partial class Search
                 // ToDo: Gradual widening
                 if (rootScore <= alpha || rootScore >= beta)
                 {
-                    rootScore = Negamax<ROOT_NODE>(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss+1);
+                    rootScore = Negamax<ROOT_NODE>(root, -SCORE_MATE, SCORE_MATE, iteration, 0, ss);
                 }
 
                 // update the Windows
