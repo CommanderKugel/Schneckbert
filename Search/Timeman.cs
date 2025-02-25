@@ -52,15 +52,13 @@ public static class TimeManager
     /// </summary>
     public static bool InSoftTimeLimit(move bestMove) 
     {
-        // pv Stability: +3 @ 20+0.2
-        //pvStability = bestMove == lastBestMove ? Math.Min(10, pvStability+1) : 0;
-        //double pvStabilityFactor = 1.20d + 0.04d * pvStability;
+        pvStability = bestMove == lastBestMove ? Math.Min(10, pvStability+1) : 0;
+        double pvStabilityFactor = 1.20d - 0.04d * pvStability;
         
-        // node tm: -13 @ 8+0.08
         //long nonPVNodes = NodeCnt - Search.rootPVNodes;
         //double nodeFactor = Math.Clamp(2*nonPVNodes/NodeCnt + 0.5, 0.75, 1.5);
         
-        return watch.ElapsedMilliseconds < SoftTimeLimit;
+        return watch.ElapsedMilliseconds < SoftTimeLimit * pvStabilityFactor;
     }
 
     /// <summary>

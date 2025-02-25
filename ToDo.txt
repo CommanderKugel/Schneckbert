@@ -12,16 +12,12 @@ ORIGINAL IDEAS:
 COMMON FUNCTIONALITY:
 - Add Assertions for all kinds of stuff
 
-- Normalized Eval
-- 3 ouput Heads -> WDL
-
 - Mailbox (faster lookups)
 - FRC (castling, fen parsing, pos from Number, DFRC)
 - Staged Movegen 
-    - ttMove first & is_pseudolegal
     - staged Capture & quiets
     - noisy-picker including checks
-- move_gives_check()
+        - move_gives_check()
 - Multithreading (big rewrite x.x)
 
 fury-pasta

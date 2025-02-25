@@ -126,7 +126,7 @@ public static class Selfplay
 
             // search
             TimeManager.SetNewTimelimit(1000);
-            move m = Search.iterativeDeepen(root, info: false, maxNodes: softnodes);
+            move m = Search.iterativeDeepen(root, info: false, maxDepth: 32, maxNodes: softnodes);
 
             // check move legality
             bool isLegal = root.make_move(m, &ss);

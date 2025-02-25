@@ -19,7 +19,7 @@ public static partial class Search
     public static unsafe move iterativeDeepen(
         pos  root, 
         bool info,
-        int  maxDepth = 32, 
+        int  maxDepth, 
         long maxNodes = long.MaxValue)
     {
         fixed (SS* ss = SearchStack.stack)
