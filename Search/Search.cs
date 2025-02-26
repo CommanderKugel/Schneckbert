@@ -136,7 +136,7 @@ public static partial class Search
         //    and the opponent needs to recapture somewhere earlier in the search-tree.
         //    Thus, we can safely cut here
         if (nonPV && !inCheck && !isRoot && depth <= 7 && !inSingularity &&
-            ss->StaticEval - 75 * (depth - intImproving) >= beta)
+            ss->StaticEval - (cutnode ? 60 : 75) * (depth - intImproving) >= beta)
         {
             return ss->StaticEval;
         }
