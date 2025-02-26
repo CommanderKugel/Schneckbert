@@ -9,13 +9,14 @@ public static partial class Search
 {
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss)
+    public static unsafe int Negamax<NodeType>(pos p, int alpha, int beta, int depth, int ply, SS* ss, bool cutnode)
         where NodeType : NODE
     {
 
         bool isRoot = typeof(NodeType) == typeof(ROOT_NODE);
         bool nonPV  = typeof(NodeType) == typeof(NON_PV);
         bool isPV   = typeof(NodeType) == typeof(PV_NODE) || isRoot;
+        bool allNode = !(isPV || cutnode);
 
         // pv tracking, but we dont have a pv yet
         if (isPV)
@@ -163,7 +164,7 @@ public static partial class Search
             int nmpDepth = depth - 3 
                          - depth / 6;
                          
-            int nmpScore = -Negamax<NON_PV>(posAfterNull, -beta, -alpha, nmpDepth, ply+1, ss+1);
+            int nmpScore = -Negamax<NON_PV>(posAfterNull, -beta, -alpha, nmpDepth, ply+1, ss+1, false);
             RepetitionTable.Pop();
 
             if (nmpScore >= beta)
@@ -330,7 +331,7 @@ public static partial class Search
                 int singularDepth = (depth - 1) / 2;
 
                 ss->ExcludedMove  = m;
-                int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss);
+                int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss, cutnode);
                 ss->ExcludedMove  = move.NullMove;
 
                 // extension
@@ -376,27 +377,27 @@ public static partial class Search
                 //if ( nonPV             ) R++; -> -21.37 +/- 11.47 @  8+0.08
                 //if (!improving && nonPV) R++; ->  -7.65 +/-  7.32 @  8+0.08
 
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true);
 
                 // if the shallower search failse high, we need to prove that the move really beats alpha
                 // by re-searching at full depth.
                 if (R > 1 && score > alpha)
                 {
-                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1);
+                    score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, !cutnode);
                 }
             }
 
             // if LMR conditions dont apply, do a full-depth Zero-Window Search.
             else if (nonPV || movesPlayed > 1)
             {
-                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1);
+                score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth, ply+1, ss+1, !cutnode);
             }
 
             // if we are at a PVNode and ply either the first move, or a later move has beaten alpha, re-search
             // at full depth with a full window, to optain am exact score.
             if (isPV && (score > alpha || movesPlayed == 1))
             {
-                score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1);
+                score = -Negamax<PV_NODE>(nextPos, -beta, -alpha, newDepth, ply+1, ss+1, false);
             }
 
 
