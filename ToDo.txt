@@ -5,9 +5,19 @@ ORIGINAL IDEAS:
     -> different score conditions based on wdl instead of score alone    
     -> to CentiPawns, use elo formula or something similar (win + draw/2) / 255
 
-- prob-tt-Cut
-    - based on margin*depth or margin*depht*depth, also for 'too shallow' entries
-    - test for all-nodes
+- HCE-like input features
+    - PassedPawns plane (2 * 7 PieceTypes * 64 squares => 896 features)
+    - KingAttacker plane (King Zone is under Attack) (2 * (2 * 6) = 1.536 features)
+
+- prob-tt-Cut for ttDepth - 1 >= depth
+    - allnode && upperBound && score + margin < alpha; or respectively cutnode && lowerBound && score - margin > beta
+        -> TT-Cutoff
+
+- NNUE Output Buckets based on Material imbalances (e.g. no queens, knight vs bishop)
+- NNUE Output Buckets based on phase values instead of blocker_count [1, 2, 2, 4, 8, 0] or [0, 1, 1, 2, 4, 0]
+
+- 'Complexity' = PESTO vs NNUE difference for tweaks like improving (or even NNUE psqt)
+
 
 COMMON FUNCTIONALITY:
 - Add Assertions for all kinds of stuff
@@ -20,24 +30,22 @@ COMMON FUNCTIONALITY:
         - move_gives_check()
 - Multithreading (big rewrite x.x)
 
-fury-pasta
+
+=== fury-pasta ===
 
 Search heuristics:
 - Improving heuristic
     - LMR 
     - LMP 
-- Continuation 
-    - ContinuationHistory
-    - CounterHistory
-- Capture history heuristic
-    - Butterfly -> PieceTo
-- miscellaneous History related stuff
-    - pruning
-    - reduction
-- Singular Confirmation Search
+- History Related Stuff 
+    - Continuation-&CounterHistory
+    - Capthist: Butterfly -> PieceTo
+    - Hist-pruning
+    - Hist-reductions
+- Singular Confirmation Search Related
     - Multicut
     - Double/Triple extensions
-    - Negative extensions
+    - Negative extensions (score<alpha, score<beta, cutnode)
 - Cutnode (as apart of negative extensions, LMR, etc)
 - Static eval correction history (HELP - its fucked)
     - Pawn
@@ -49,12 +57,13 @@ Search heuristics:
 
 Time management for soft-bound:
 - Node-based scaling
-- Best move stability
 - Eval stability
 
-viri-pasta
+
+=== viri-pasta ===
 
 NNUE progression:
+- (Accumulator Stack)
 - Fused Updates
 - Direct accumulator calculation (accumulators[ply] = accumulators[ply - 1] + changes)
 - Lazy Updates (Queue of accumulator updates, calculate only before evaluation)

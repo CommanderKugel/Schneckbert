@@ -143,7 +143,25 @@ public static partial class Search
 
 
         // #10 Razoring
-        // *COMING SOON*
+        //     If the static evaluation is far below alpha, even by a big margine, we are probably down
+        //     a lot of material and probably have to recapture somewhere.
+        //     If the Quiescense Score of this position still does not exceed alpha, we lost the piece 
+        //     and must have made a tactical mistake to get to this node.
+        //     We can prune this node in hopes to get back the material in another branch.
+        if ( nonPV &&
+            !inCheck &&
+            !inSingularity &&
+             depth <= 4 &&
+            !score_is_terminal(alpha) &&
+             ss->StaticEval + depth * 300 <= alpha)
+        {
+            int rfpScore = QSearch<NON_PV>(p, alpha, beta, ply, ss);
+
+            if (rfpScore <= alpha)
+            {
+                return rfpScore;
+            }
+        }
 
 
         // #11 Null Move Pruning
