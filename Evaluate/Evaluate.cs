@@ -43,9 +43,7 @@ public unsafe partial struct Accumulator
             short* ptrWhiteWeight = p.us==WHITE ? outWeightPtr : outWeightPtr + FT_SIZE;
             short* ptrBlackWeight = p.us==BLACK ? outWeightPtr : outWeightPtr + FT_SIZE;
 
-            int iterations = FT_SIZE / VECTOR_SIZE;
-
-            for (int i=0; i<iterations; i++)
+            for (int i=0; i<ITERATIONS; i++)
             {
                 // Clamp the accumulator to 0 and QA
                 var activatedWhite = Avx2.Max(Vector256<short>.Zero, Avx2.Min(VECTOR_QA, Avx.LoadVector256(ptrAccWhite + i * 16)));
@@ -97,9 +95,7 @@ public unsafe partial struct Accumulator
 
             short*[] weightPtrs = [winPtr, drawPtr, lossPtr];
 
-            int iters = FT_SIZE / VECTOR_SIZE;
-
-            for (int i=0; i<iters; i++)
+            for (int i=0; i<ITERATIONS; i++)
             {
                 int offset = i * VECTOR_SIZE;
 

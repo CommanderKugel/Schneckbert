@@ -1,5 +1,10 @@
+using System.Numerics;
+
 public static class NNUESettings
 {
+    public static readonly int VECTOR_SIZE = Vector<short>.Count;
+    public static readonly int ITERATIONS  = FT_SIZE / VECTOR_SIZE;
+
     public const int INPUT_SIZE  = 768;
     public const int FT_SIZE     = 304;
     public const int OUTPUT_SIZE = 1;

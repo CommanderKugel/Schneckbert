@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
 using static Constants;
 
@@ -84,29 +84,35 @@ public static class Utils
 
     public static bool more_than_one (ulong bb) => (bb & (bb-1)) != 0;
 
+    public static int get_ep_victim(int epSq, int color)
+        => color == WHITE ? epSq-8 : epSq+8;
+
 
     // String manipulation
 
-    public static int StringToSquare (string str) {
-        if (str.Length != 2) 
-            throw new Exception($"String has wrong Length, expected 2 but got {str.Length}");
+    public static int StringToSquare (string str) 
+    {
+        Debug.Assert(str.Length == 2, $"String has wrong Length, expected 2 but got {str.Length}");
         return CharsToSquare(str[0], str[1]);
     }
-    public static int CharsToSquare (char letter, char number) {
-        if ((byte)letter > (byte)'h' || (byte)letter < (byte)'a') 
-            throw new Exception($"letter {letter} cant be converted into file");
-        if (number > '8' || number < '1') 
-            throw new Exception($"number {number} cant be converted into rank");
+
+    public static int CharsToSquare (char letter, char number) 
+    {
+        Debug.Assert(letter <= 'h' || letter >= 'a', $"letter {letter} can not be converted into file");
+        Debug.Assert(number <= '8' || number >= '1', $"number {number} can not be converted into rank");
         return ((byte)letter - 'a') + 8 * ((byte)number - (byte)'1');
     }
-    public static string SquareToString (int sq) {
-        if (sq < 0 || sq >= 64) throw new Exception($"invalid square {sq}");
+    
+    public static string SquareToString (int sq) 
+    {
+        Debug.Assert(sq >= 0 || sq < 64, $"invalid square {sq}");
         return $"{(char)(byte)(sq % 8 + 'a')}{(char)(byte)(sq / 8 + '1')}";
     }
 
 
-    // Printer Methods
-
+    /// <summary>
+    /// prints the board in the console
+    /// </summary>
     public static void print (pos p) {
         string[,] pieces = {
             {"p", "n", "b", "r", "q", "k", "-"}, 
@@ -128,6 +134,9 @@ public static class Utils
         Console.WriteLine(p.get_fen());
     }
 
+    /// <summary>
+    /// prints the bitboard in the console
+    /// </summary>
     public static void print (ulong bb) {
         Console.WriteLine("  | a b c d e f g h |\n--+-----------------+");
         for (int r=7; r>=0; r--) {

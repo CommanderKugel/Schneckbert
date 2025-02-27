@@ -103,7 +103,6 @@ public unsafe partial struct pos
         colorBB[color] ^= 1ul << sq;
 
         ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
-        accumulator.activate(color, pt, sq);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -113,7 +112,6 @@ public unsafe partial struct pos
         colorBB[color] ^= 1ul << sq;
 
         ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
-        accumulator.deactivate(color, pt, sq);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,8 +122,6 @@ public unsafe partial struct pos
 
         ZobristKey ^= Zobrist.get_piece_key(color, pt, from)
                    ^  Zobrist.get_piece_key(color, pt, to);
-        accumulator.activate(color, pt, to);
-        accumulator.deactivate(color, pt, from);
     }
 
     /// <summary>
@@ -144,6 +140,8 @@ public unsafe partial struct pos
         int movingPieceType   = piece_on(from);
         int capturedPieceType = piece_on(to);
 
+        UpdateType type = UpdateType.AddSub;
+
         // make quiet move
         move_piece(us, movingPieceType, from, to);
         FiftyMoveCnt++;
@@ -151,6 +149,7 @@ public unsafe partial struct pos
         // make capture
         if (capturedPieceType != PIECE_TYPE_NONE) 
         {
+            type = UpdateType.AddSubSub;
             pop_piece(to, capturedPieceType, 1-us);
 
             // captures reset the fifty move rule
@@ -192,6 +191,7 @@ public unsafe partial struct pos
             // en passant capture
             else if (m.IsEp) 
             {
+                type = UpdateType.AddSubSub;
                 capturedPieceType = PAWN;
                 int sq = wtm ? to-8 : to+8;
                 pop_piece(sq, PAWN, 1-us);
@@ -207,6 +207,7 @@ public unsafe partial struct pos
             // Kingside Castling
             if (dist == 2) 
             {
+                type = UpdateType.AddAddSubSub;
                 int rookFrom = wtm ? H1 : H8;
                 int rookTo   = wtm ? F1 : F8;
                 move_piece(us, ROOK, rookFrom, rookTo);
@@ -215,6 +216,7 @@ public unsafe partial struct pos
             // Queenside Castling
             if (dist == -2) 
             {
+                type = UpdateType.AddAddSubSub;
                 int rookFrom = wtm ? A1 : A8;
                 int rookTo   = wtm ? D1 : D8;
                 move_piece(us, ROOK, rookFrom, rookTo);
@@ -227,7 +229,8 @@ public unsafe partial struct pos
 
         if (IsLegal) 
         {
-            accumulator.update_hm(movingPieceType, from, to, ref this);
+
+            accumulator.Update(type, ref this, m, movingPieceType, capturedPieceType);
 
             us = (byte)(1-us);
             ZobristKey ^= Zobrist.get_stm_key();
