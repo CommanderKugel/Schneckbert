@@ -356,21 +356,27 @@ public static partial class Search
                 if (singularScore < singularBeta)
                 {
                     extensions = 1;
+
+                    // TO DO Double-/Triple Extensions
                 }
 
                 // #22 Multi Cut
                 //     If the candidate-singular move is proven not singular and any other move would
                 //     fail high, even in the current window-bounds, this position is probably too good
                 //     to be true and our opponent wont allow this branch of the tree to be played out.
-                /*
-                else if (singularScore >= singularBeta && singularBeta >= beta && !score_is_terminal(singularScore))
+                else if ( singularScore >= singularBeta && 
+                          singularBeta >= beta && 
+                         !score_is_terminal(singularScore) && 
+                         !score_is_loss(beta))
                 {
                     RepetitionTable.Pop();
                     return singularBeta;
                 }
-                */
 
                 // #23 Negative Extensions
+                // score >= beta  -> why no cutoff?
+                // score <= alpha -> why so bad?
+                // cutnode        -> should have snipped, no?
                 // *COMING SOON*
 
             }
