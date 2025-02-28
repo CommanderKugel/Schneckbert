@@ -34,7 +34,7 @@ public static partial class Search
             p.IsFiftyMoveDraw ||
             p.IsInsufficientMaterial)
         {
-            return 0;
+            return SCORE_DRAW;
         }
 
         ss->checkers = p.get_checkers();

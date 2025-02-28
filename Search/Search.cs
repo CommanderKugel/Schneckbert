@@ -38,7 +38,7 @@ public static partial class Search
         //    Negamax will negate this big score into the worst mate-score possible
         if (iteration > 1 && !TimeManager.InHardTimeLimit())
         {
-            return 30_000;
+            return SCORE_TIMEOUT;
         }
 
         // #3 Avoid stack-overflows or IndexOutOfBound Exceptions
@@ -55,7 +55,7 @@ public static partial class Search
             p.IsFiftyMoveDraw ||
             p.IsInsufficientMaterial))
         {
-            return 0;
+            return SCORE_DRAW;
         }
 
         // #5 Mate Distance Pruning
@@ -480,7 +480,7 @@ public static partial class Search
         //     Dont save terminal nodes in the TT.
         if (movesPlayed == 0)
         {
-            return inCheck ? ply - SCORE_MATE : 0;
+            return inCheck ? ply - SCORE_MATE : SCORE_DRAW;
         }
 
         int flag = bestScore >= beta ? BOUND_LOWER : alpha > startAlpha ? BOUND_EXACT : BOUND_UPPER;

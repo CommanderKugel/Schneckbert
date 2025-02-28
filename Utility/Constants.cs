@@ -49,11 +49,15 @@ public static class Constants
     /// </summary>
     public const int MAX_MOVE_CNT = 213;
 
-    public const int SCORE_NONE     = short.MaxValue;
+    public const int SCORE_NONE     = 32_767;
+    public const int SCORE_TIMEOUT  = 30_001;
+
     public const int SCORE_MATE     = 31_000;
+    public const int SCORE_DRAW     = 0;
     public const int EVAL_SCORE_MAX = 30_000;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool score_is_terminal(int score) => Math.Abs(score) > EVAL_SCORE_MAX;
+    public static bool score_is_loss(int score) => score < -EVAL_SCORE_MAX;
 
     public const int MAX_SEARCH_PLY = 128;
     public const int MAX_GAME_PLY   = 1024;
