@@ -110,7 +110,7 @@ public static partial class Search
         move locBestMove = move.NullMove;
 
         // main move loop here
-        while (!(m = picker.next(ref p, ss, ref moves, ref scores, ttMove)).IsNull)
+        while (!(m = picker.next(ref p, ss, ply, ref moves, ref scores, ttMove)).IsNull)
         {
             bool isCapture = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
@@ -185,7 +185,7 @@ public static partial class Search
                         if (!isCapture)
                         {
                             int delta = History.calcHistDelta(1);
-                            History.increaseSingleHistValue(m, delta, ref p, isCapture);
+                            History.increaseSingleHistValue(m, delta, ref p, ss, ply, isCapture);
                             History.decreaseCaptureHistValues(ref capturesList, capturesPlayed-1, delta, ref p);
                         }
 

@@ -9,7 +9,7 @@ public static class History
 
     // Main Piece-To-History
     // color-PieceType-to
-    private static short[][] PieceToHistory; // 2 * 6 * 64
+    private static short[][][] ContinuationHistory; // 2 * 6 * 64
 
     /// <summary>
     /// determines the size fot the Pawn-History-Table
@@ -30,9 +30,14 @@ public static class History
         ButterflyHistory[BLACK] = new short[64 * 64];
         ButterflyHistory[WHITE] = new short[64 * 64];
 
-        PieceToHistory = new short[2][];
-        PieceToHistory[BLACK] = new short[6 * 64];
-        PieceToHistory[WHITE] = new short[6 * 64];
+        ContinuationHistory = new short[2][][];
+        ContinuationHistory[BLACK] = new short[6 * 64][];
+        ContinuationHistory[WHITE] = new short[6 * 64][];
+        for (int i=0; i<6*64; i++)
+        {
+            ContinuationHistory[BLACK][i] = new short[6*64];
+            ContinuationHistory[WHITE][i] = new short[6*64];
+        }
 
         PawnHistory = new short[2][][];
         PawnHistory[BLACK] = new short[PAWN_HIST_SIZE][];
@@ -61,8 +66,11 @@ public static class History
         Array.Fill(ButterflyHistory[BLACK], (short)0);
         Array.Fill(ButterflyHistory[WHITE], (short)0);
 
-        Array.Fill(PieceToHistory[BLACK], (short)0);
-        Array.Fill(PieceToHistory[WHITE], (short)0);
+        for (int i=0; i<6*64; i++)
+        {
+            Array.Fill(ContinuationHistory[BLACK][i], (short)0);
+            Array.Fill(ContinuationHistory[WHITE][i], (short)0);
+        }
 
         for (int p=0; p<PAWN_HIST_SIZE; p++)
         {
@@ -86,8 +94,9 @@ public static class History
     /// <summary>
     /// returns a reference to the Piece-To-History-Value of the given Piece-Movement
     /// </summary>
-    public static ref short get_pieceTo_histval(int stm, int pt, int sq) 
-        => ref ButterflyHistory[stm][pt * 64 + sq];
+    public static unsafe ref short get_conthist_val(SS* ss, int stm, int pt, move m) 
+        => ref ss->Move.IsNull ? ref ContinuationHistory[stm][0][0]
+                        : ref ContinuationHistory[stm][ss->MovedPiece * 64 + ss->Move.to][pt * 64 + m.to];
 
     /// <summary>
     /// returns a reference to the Pawn-History-Value of the given Piece-Movement
@@ -136,14 +145,20 @@ public static class History
     /// Supported Histories: Butterfly, PieceTo, Pawn-PieceTo
     /// </summary> 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static unsafe void decreaseQuietHistValues(ref Span<move> quiets, int lastIdx, int delta, ref pos p)
+    public static unsafe void decreaseQuietHistValues(ref Span<move> quiets, int lastIdx, int delta, ref pos p, SS* ss, int ply)
     {
         for (int i=0; i<lastIdx; i++)
         {
             ref move m = ref quiets[i];
+            int pt = p.piece_on(m.from);
+
             decreaseHistVal(delta, ref get_butterfly_histval(p.us, m));
-            decreaseHistVal(delta, ref get_pieceTo_histval(p.us, p.piece_on(m.from), m.to));
-            decreaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, p.piece_on(m.from), m.to));
+            decreaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, pt, m.to));
+
+            if (ply > 0)
+            {
+                decreaseHistVal(delta, ref get_conthist_val(ss-1, p.us, pt, m));
+            }
         }
     }
 
@@ -159,7 +174,7 @@ public static class History
         }
     }
 
-    public static unsafe void increaseSingleHistValue(move m, int delta, ref pos p, bool isCapture)
+    public static unsafe void increaseSingleHistValue(move m, int delta, ref pos p, SS* ss, int ply, bool isCapture)
     {
         if (isCapture)
         {
@@ -171,8 +186,12 @@ public static class History
         {
             int pt = p.piece_on(m.from);
             increaseHistVal(delta, ref get_butterfly_histval(p.us, m));
-            increaseHistVal(delta, ref get_pieceTo_histval(p.us, pt, m.to));
             increaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, pt, m.to));
+
+            if (ply > 0)
+            {
+                increaseHistVal(delta, ref get_conthist_val(ss-1, p.us, pt, m));
+            }
         }
     }
 }

@@ -38,7 +38,7 @@ Search heuristics:
     - LMR 
     - LMP 
 - History Related Stuff 
-    - Continuation-&CounterHistory
+    - Continuation- & CounterHistory
     - Capthist: Butterfly -> PieceTo
     - Hist-pruning
     - Hist-reductions

@@ -257,3 +257,28 @@ Games: 7318, Wins: 1952, Losses: 1803, Draws: 3563, Points: 3733.5 (51.02 %)
 Ptnml(0-2): [93, 811, 1706, 952, 97], WL/DD Ratio: 0.90
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+1.16 Simplifying PieceToHist for 1-ply ContHist
+includes Bug-removal of get_pieceTo_hist() which called Butterfly hist by accident
+----- BUGFIX -------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: -1.22 +/- 6.14, nElo: -2.08 +/- 10.43
+LOS: 34.81 %, DrawRatio: 45.85 %, PairsRatio: 0.98
+Games: 4262, Wins: 1096, Losses: 1111, Draws: 2055, Points: 2123.5 (49.82 %)
+Ptnml(0-2): [56, 526, 977, 521, 51], WL/DD Ratio: 0.94
+LLR: -0.81 (-2.25, 2.89) [0.00, 5.00]
+------ CONTHIST STC -------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 7.55 +/- 5.85, nElo: 12.20 +/- 9.44
+LOS: 99.43 %, DrawRatio: 44.50 %, PairsRatio: 1.14
+Games: 5200, Wins: 1489, Losses: 1376, Draws: 2335, Points: 2656.5 (51.09 %)
+Ptnml(0-2): [83, 591, 1157, 668, 101], WL/DD Ratio: 1.15
+LLR: 2.09 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 6.68 +/- 4.52, nElo: 11.20 +/- 7.58
+LOS: 99.81 %, DrawRatio: 46.13 %, PairsRatio: 1.15
+Games: 8068, Wins: 2203, Losses: 2048, Draws: 3817, Points: 4111.5 (50.96 %)
+Ptnml(0-2): [114, 897, 1861, 1044, 118], WL/DD Ratio: 0.98
+LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

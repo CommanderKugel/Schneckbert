@@ -31,7 +31,7 @@ public unsafe class MovePicker
     /// <summary>
     /// Fills the "scores" parameter according to the current move-ordering scheme.
     /// </summary>
-    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss, ref Span<move> moves, ref Span<int> scores)
+    private unsafe void ScoreMoves(pos p, move ttMove, SS* ss, int ply, ref Span<move> moves, ref Span<int> scores)
     {
         for (int i=0; i<mvCnt; i++) 
         {
@@ -49,18 +49,28 @@ public unsafe class MovePicker
             // #2 Captures: passed SEE + Mvv-Lva
             // #3 Quiet: Killer move
             // #4 Quiets: + Butterfly & PieceTo history
-            // #5 Captures: !passed SEE + Mvv-Lva 
-            scores[i] = m == ttMove          ? 2_000_000
+            // #5 Captures: !passed SEE + Mvv-Lva
 
-                      : victim != PIECE_NONE ? 
-                            (SEE.see_threshold(m, ref p, 0) ? 1_000_000 : -2_000_000) 
-                            + victim * 100_000 - attacker
-                            + History.get_capthist_val(p.us, victim, attacker, m)
+            if (victim != PIECE_NONE)
+            {
+                scores[i] = (SEE.see_threshold(m, ref p, 0) ? 1_000_000 : -2_000_000) 
+                          + victim * 100_000 - attacker
+                          + History.get_capthist_val(p.us, victim, attacker, m);
+            }
+            else if (m == ss->killerMove)
+            {
+                scores[i] = 900_000;
+            } 
+            else
+            {
+                scores[i] = History.get_butterfly_histval(p.us, m) 
+                          + History.get_pawnhist_val(p.us, p.PawnKey, attacker, m.to);
 
-                      : m == ss->killerMove  ? 900_000
-                      : History.get_butterfly_histval(p.us, m) 
-                            + History.get_pieceTo_histval(p.us, attacker, m.to)
-                            + History.get_pawnhist_val(p.us, p.PawnKey, attacker, m.to);
+                if (ply > 0)
+                {
+                    scores[i] += History.get_conthist_val(ss-1, p.us, attacker, m);
+                }
+            }
         }
     }
 
@@ -71,7 +81,7 @@ public unsafe class MovePicker
     /// <summary>
     /// Returns the next best scored move using partial insertion sort.
     /// </summary>
-    public move next(ref pos p, SS* ss, ref Span<move> moves, ref Span<int> scores, move ttMove)
+    public move next(ref pos p, SS* ss, int ply, ref Span<move> moves, ref Span<int> scores, move ttMove)
     {
         if (stage > Stage.generateMoves && mvIdx >= mvCnt)
             return move.NullMove;
@@ -95,7 +105,7 @@ public unsafe class MovePicker
                     stage++;
 
                     mvCnt = (byte)MoveGen.GenerateMoves(ref moves, ref p, onlyCaptures, ss->checkers);
-                    ScoreMoves(p, ttMove, ss, ref moves, ref scores);
+                    ScoreMoves(p, ttMove, ss, ply, ref moves, ref scores);
                     goto case Stage.pickMoves;
                 }
                 case Stage.pickMoves:

@@ -236,7 +236,7 @@ public static partial class Search
         move locBestMove = move.NullMove;
         
         // main move loop here
-        while (!(m = picker.next(ref p, ss, ref moves, ref scores, ttMove)).IsNull)
+        while (!(m = picker.next(ref p, ss, ply, ref moves, ref scores, ttMove)).IsNull)
         {
 
             if (m == ss->ExcludedMove)
@@ -352,12 +352,11 @@ public static partial class Search
                 int singularScore = Negamax<NON_PV>(p, singularBeta-1, singularBeta, singularDepth, ply, ss, cutnode);
                 ss->ExcludedMove  = move.NullMove;
 
-                // extension
+                // Move is confirmed singular!
+                // ToDo: double & triple extensions
                 if (singularScore < singularBeta)
                 {
                     extensions = 1;
-
-                    // TO DO Double-/Triple Extensions
                 }
 
                 // #22 Multi Cut
@@ -373,12 +372,31 @@ public static partial class Search
                     return singularBeta;
                 }
 
-                // #23 Negative Extensions
-                // score >= beta  -> why no cutoff?
-                // score <= alpha -> why so bad?
-                // cutnode        -> should have snipped, no?
-                // *COMING SOON*
+                // #23.1 Negative Extensions
+                //     If the Node was neither singular, nor produced a multi-cut snip and therefore is
+                //     worse than we hoped for. Some singular candidates behave much different than expected
+                //     and maybe arent even worth searching to full depth.
 
+                // this was predicted to produce a multi cut, but didnt cause one
+                //else if (ttEntry.score >= beta)
+                //{
+                //    extensions = -1;
+                //}
+
+                // 23.2
+                // this was predicted to fail low in the first place
+                //else if (ttEntry.score <= alpha) 
+                //{
+                //    extension = -1;
+                //}
+
+                // 23.3
+                // CutNodes are predicted to produce fail-highs regularly, but neither the ttMove, 
+                // nor the other moves seem to produce one.
+                //else if (cutNode)
+                //{
+                //    extension = -1;
+                //}               
             }
 
             // apply extensions
@@ -392,6 +410,9 @@ public static partial class Search
             {
                 // log-formula = 1 + log(depth) * log(moveCount) / 1.5
                 int R = lmrTable[Min(depth, 63)][Min(movesPlayed, 63)];
+
+                //if (cutnode) R++;             -> +1.59 over 21k games @ 20+0.2
+                //                                 not worth the effort for a 3200 Elo engine
 
                 // History Reduction 
                 //if (histVal < -1000) R++;     -> -23.20 +/- 11.81 @  8+0.08
@@ -468,11 +489,11 @@ public static partial class Search
                         if (isCapture) capturesPlayed--;
                         else           quietsPlayed--;
 
-                        History.increaseSingleHistValue(m, delta, ref p, isCapture);
+                        History.increaseSingleHistValue(m, delta, ref p, ss, ply, isCapture);
                         History.decreaseCaptureHistValues(ref capturesList, capturesPlayed, delta, ref p);
                         if (!isCapture)
                         {
-                            History.decreaseQuietHistValues(ref quietsList, quietsPlayed, delta, ref p);
+                            History.decreaseQuietHistValues(ref quietsList, quietsPlayed, delta, ref p, ss, ply);
                         }
 
                         break;
