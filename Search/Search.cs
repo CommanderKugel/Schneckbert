@@ -415,8 +415,7 @@ public static partial class Search
                 //                                 not worth the effort for a 3200 Elo engine
 
                 // History Reduction 
-                //if (histVal < -1000) R++;     -> -23.20 +/- 11.81 @  8+0.08
-                //if (histVal < -2000) R++;     -> -25.48 +/- 12.13 @  8+0.08
+                if (History.get_quiet_hist(p.us, p.piece_on(m.from), m, ref p, ss, ply) < -256) R++;
 
                 //if (!improving         ) R++; -> -10.13 +/-  7.68 @ 40+0.40 
                 //if ( nonPV             ) R++; -> -21.37 +/- 11.47 @  8+0.08

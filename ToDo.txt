@@ -1,27 +1,30 @@
-ORIGINAL IDEAS:
-- score becomes i32 struckt packing: cp/mate-score (i16), win% (i8), loss% (i8)
-    -> win/loss scaled from % to 255, draw = 255 - win - loss
+=== original ideas ===
+- score becomes i32 packing: cp-score (i16), win&loss in % (scaled to 255) (2xi8)
+    -> draw% = 255 - win - loss
     -> requires wdl-output from NNUE instead of plain cp-score
-    -> different score conditions based on wdl instead of score alone    
-    -> to CentiPawns, use elo formula or something similar (win + draw/2) / 255
+    -> pruning conditions based on wdl-diff instead of plain score diffs
+       e.g. score(45-10-45) = score(0, 100, 0) but first one might allow more carefull pruning
 
-- HCE-like input features
-    - PassedPawns plane (2 * 7 PieceTypes * 64 squares => 896 features)
-    - KingAttacker plane (King Zone is under Attack) (2 * (2 * 6) = 1.536 features)
+- NNUE Input Arch Ideas
+    - PassedPawns plane (2 Colors * 7 PieceTypes * 64 squares => 896 features)
+    - KingAttacker plane (PieceType * 2 -> Attacks King & ~Attacks King) (2 * (2 * 6) = 1.536 features)
+- NNUE Output Bucket Ideas
+    - based on Material imbalances (e.g. no queens, knight vs bishop)
+    - Phase Values instead of pieceCount (e.g. weights = [1, 2, 2, 4, 8, 0] or [0, 1, 1, 2, 4, 0])
 
 - prob-tt-Cut for ttDepth - 1 >= depth
     - allnode && upperBound && score + margin < alpha; or respectively cutnode && lowerBound && score - margin > beta
         -> TT-Cutoff
 
-- NNUE Output Buckets based on Material imbalances (e.g. no queens, knight vs bishop)
-- NNUE Output Buckets based on phase values instead of blocker_count [1, 2, 2, 4, 8, 0] or [0, 1, 1, 2, 4, 0]
+
 
 - 'Complexity' = PESTO vs NNUE difference for tweaks like improving (or even NNUE psqt)
 
 
-COMMON FUNCTIONALITY:
+=== common stuff ===
 - Add Assertions for all kinds of stuff
 
+- TT Fix (not cutoff near 50 moverule, correct save of terminal scores)
 - Mailbox (faster lookups)
 - FRC (castling, fen parsing, pos from Number, DFRC)
 - Staged Movegen 

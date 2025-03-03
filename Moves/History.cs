@@ -114,6 +114,15 @@ public static class History
         => ref CaptureHistory[stm][att * 6 + vict][m.FromTo];
 
 
+    public static unsafe int get_quiet_hist(int stm, int pt, move m, ref pos p, SS* ss, int ply)
+    {
+        int val = get_butterfly_histval(stm, m) + get_pawnhist_val(stm, p.PawnKey, pt, m.to);
+        if (ply > 0) val += get_conthist_val(ss-1, stm, pt, m);
+        return val;
+    }
+
+
+
     /// <summary>
     /// Calculates the delta value used to increase or decrease the History Scores of moves
     /// </summary>
