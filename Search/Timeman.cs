@@ -6,6 +6,8 @@ public static class TimeManager
     public static long QSNodeCnt  = 0;
     public static long TotalNodes = 0;
 
+    public static long[] RootNodeCounts = new long[0b0000_1111_1111_1111];
+
     private static Stopwatch watch = new Stopwatch();    
     public static void RestartTimer() => watch.Restart();
     public static void StopTimer() => watch.Stop();
@@ -52,13 +54,23 @@ public static class TimeManager
     /// </summary>
     public static bool InSoftTimeLimit(move bestMove) 
     {
+        // #1 PV/BestMove Stability TM
+        //    If for many iterations the best move stays the same, we seem to be
+        //    pretty sure that this might be the best move and can spend a little
+        //    less time searching.
         pvStability = bestMove == lastBestMove ? Math.Min(10, pvStability+1) : 0;
         double pvStabilityFactor = 1.20d - 0.04d * pvStability;
         
-        //long nonPVNodes = NodeCnt - Search.rootPVNodes;
-        //double nodeFactor = Math.Clamp(2*nonPVNodes/NodeCnt + 0.5, 0.75, 1.5);
+        // #2 Node TM
+        //    If the majority of all nodes searched are spent on the best move, all the
+        //    other moves seem to be refuted quickly and we need to spent less time. 
+        //    If nodes are spent on many different moves, we are rather unsure of the 
+        //    best move and need to spent more time searching.
+        long bmNodes = RootNodeCounts[bestMove.FromTo];
+        double not_bm_nodes_fraction = 1.0d - (double)bmNodes / ((double)NodeCnt + 1);
+        double nodeScalingFactor = Math.Max(2.3d * not_bm_nodes_fraction + 0.45d, 0.55d);
         
-        return watch.ElapsedMilliseconds < SoftTimeLimit * pvStabilityFactor;
+        return watch.ElapsedMilliseconds < SoftTimeLimit * pvStabilityFactor * nodeScalingFactor;
     }
 
     /// <summary>

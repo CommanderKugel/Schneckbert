@@ -44,12 +44,13 @@ Search heuristics:
     - Continuation- & CounterHistory
     - Capthist: Butterfly -> PieceTo
     - Hist-pruning
-    - Hist-reductions
 - Singular Confirmation Search Related
-    - Multicut
     - Double/Triple extensions
     - Negative extensions (score<alpha, score<beta, cutnode)
 - Cutnode (as apart of negative extensions, LMR, etc)
+    - nmp
+    - negative extensions
+    - lmr
 - Static eval correction history (HELP - its fucked)
     - Pawn
     - Minor/Major

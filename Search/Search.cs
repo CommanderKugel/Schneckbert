@@ -246,6 +246,8 @@ public static partial class Search
 
             bool isCapture           = p.is_capture(m);
             bool nonMatingLineExists = !score_is_terminal(bestScore);
+            int  histScore           = isCapture ? 0 : History.get_quiet_hist(p.us, p.piece_on(m.from), m, ref p, ss, ply);
+            long startNodes          = TimeManager.NodeCnt;
 
             // #16 Futility Pruning
             //     If static evaluation falls below alpha, even by a margin,
@@ -280,18 +282,16 @@ public static partial class Search
 
 
             // #18 History Pruning
+            // *COMING SOON*
             //     If the History Score of a move is really bad and 
             //     there are no tactical reasons to try the move, prune it.
-            // histVal < -1000 -> -21.69 +/- 11.42 @ 8+0.08
-            // histVal < -2000 -> -13.01 +/-  8.89 @ 8+0.08
-            // histVal < -3000 -> -17.74 +/- 10.23 @ 8+0.08
             /*
             if ( nonPV &&
                 !isCapture &&
                 !m.IsPromo &&
                  nonMatingLineExists &&
                  depth < 5 &&
-                 histVal < -3_000)
+                 histScore < -512 * depth)
             {
                 continue;
             }
@@ -414,8 +414,9 @@ public static partial class Search
                 //if (cutnode) R++;             -> +1.59 over 21k games @ 20+0.2
                 //                                 not worth the effort for a 3200 Elo engine
 
-                // History Reduction 
-                if (History.get_quiet_hist(p.us, p.piece_on(m.from), m, ref p, ss, ply) < -256) R++;
+                // History Reduction, probably needs bigger value for longer TC's
+                // ToDo: R += -histScore / HIST_REDUCION_DIV; R = Max(R, 0);
+                if (histScore < -256) R++;
 
                 //if (!improving         ) R++; -> -10.13 +/-  7.68 @ 40+0.40 
                 //if ( nonPV             ) R++; -> -21.37 +/- 11.47 @  8+0.08
@@ -447,6 +448,11 @@ public static partial class Search
 
             // here would be the moment to undo the move but its just copy-make
             RepetitionTable.Pop();
+
+            if (isRoot)
+            {
+                TimeManager.RootNodeCounts[m.FromTo] += TimeManager.NodeCnt - startNodes;
+            }
 
             // #25 Score Update
             if (score > bestScore)

@@ -37,6 +37,7 @@ public static partial class Search
             int beta  =  SCORE_MATE;
 
             TimeManager.NodeCnt = 0;
+            Array.Fill(TimeManager.RootNodeCounts, 0);
 
             do
             {
