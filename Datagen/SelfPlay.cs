@@ -51,26 +51,34 @@ public static class Selfplay
             watch.Start();
             for (int cnt=1; cnt<=games; cnt++)
             {
-                // read the next fen
-                var fen = useUho ? UHOFile.ReadLine() : startpos;
-                if (fen == null)
+                try
                 {
-                    UHOFile.DiscardBufferedData();
-                    UHOFile.BaseStream.Seek(0, SeekOrigin.Begin);
-                    continue;
+                    // read the next fen
+                    var fen = useUho ? UHOFile.ReadLine() : startpos;
+                    if (fen == null)
+                    {
+                        UHOFile.DiscardBufferedData();
+                        UHOFile.BaseStream.Seek(0, SeekOrigin.Begin);
+                        continue;
+                    }
+
+                    // play the game and receive all the necessary information
+                    // alternate between white to move and balck to move
+                    var (root, moves, scores, result) = play(softnodes, randomPly + (cnt & 1), fen);
+
+                    // write the game to the file and count the newly added positions
+                    posCnt += WriteGame.write_game_as_txt(file, root, moves, scores, result);
+
+                    if (cnt % 10 == 0 && cnt > 0)
+                    {
+                        long pps = posCnt * 1000 / (watch.ElapsedMilliseconds + 1);
+                        Console.WriteLine($"time: {watch.Elapsed} total: {posCnt} pps: {pps}");
+                    }
                 }
-
-                // play the game and receive all the necessary information
-                // alternate between white to move and balck to move
-                var (root, moves, scores, result) = play(softnodes, randomPly + (cnt & 1), fen);
-
-                // write the game to the file and count the newly added positions
-                posCnt += WriteGame.write_game_as_txt(file, root, moves, scores, result);
-
-                if (cnt % 10 == 0 && cnt > 0)
+                catch (Exception e)
                 {
-                    long pps = posCnt * 1000 / watch.ElapsedMilliseconds;
-                    Console.WriteLine($"time: {watch.Elapsed} total: {posCnt} pps: {pps}");
+                    // maybe write it down somewhere idk
+                    // but certainly discard all the moves etc.
                 }
             }
         }
