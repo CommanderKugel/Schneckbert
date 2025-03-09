@@ -4,5 +4,7 @@
 *.csproj
 *.sln
 
+*.py
+
 bin/
 obj/

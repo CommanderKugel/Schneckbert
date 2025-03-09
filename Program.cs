@@ -227,7 +227,7 @@ while (true)
             var randomPly = tokens.Contains("randomply") ? SkipPast("randomply").Select(int.Parse).FirstOrDefault() 
                           : (uho ? 3 : 8);
             var softnodes = tokens.Contains("nodes") ? SkipPast("nodes").Select(int.Parse).FirstOrDefault() : 5_000;
-            var games     = tokens.Contains("games") ? SkipPast("games").Select(int.Parse).FirstOrDefault() : 1_000_000;
+            var games     = tokens.Contains("games") ? SkipPast("games").Select(int.Parse).FirstOrDefault() : 10_000_000;
 
             Console.WriteLine($"started selfplay run!");
             Console.WriteLine($"- threadId {threadId}\n- randomPly {randomPly}\n- sooftnodes {softnodes}\n- uho {uho}\n- games {games}");

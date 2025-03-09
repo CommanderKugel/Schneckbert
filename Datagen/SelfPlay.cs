@@ -72,7 +72,7 @@ public static class Selfplay
                     if (cnt % 10 == 0 && cnt > 0)
                     {
                         long pps = posCnt * 1000 / (watch.ElapsedMilliseconds + 1);
-                        Console.WriteLine($"time: {watch.Elapsed} total: {posCnt} pps: {pps}");
+                        Console.WriteLine($"ID: {threadId} time: {watch.Elapsed} total: {posCnt} pps: {pps}");
                     }
                 }
                 catch (Exception e)

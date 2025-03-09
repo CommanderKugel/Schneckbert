@@ -60,7 +60,6 @@ Search heuristics:
 - Prob Cut (dont waste 93487623 hours like yukari plz)
 
 Time management for soft-bound:
-- Node-based scaling
 - Eval stability
 
 
@@ -68,8 +67,13 @@ Time management for soft-bound:
 
 NNUE progression:
 - (Accumulator Stack)
-- Fused Updates
 - Direct accumulator calculation (accumulators[ply] = accumulators[ply - 1] + changes)
 - Lazy Updates (Queue of accumulator updates, calculate only before evaluation)
 - Finny Tables (For each bucket, store the state of the last time you were there, and when you re-enter the bucket, use a bitboard diff to compute updates)
 - multilayer (but first get to 1024 ft size)
+
+- pairwise mul
+- skip neurons/PSQT
+
+- different Quantizations (QA = 255 -> 400 ?)
+- msqe -> mpe(2.5)
