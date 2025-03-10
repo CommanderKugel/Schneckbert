@@ -356,7 +356,8 @@ public static partial class Search
                 // ToDo: double & triple extensions
                 if (singularScore < singularBeta)
                 {
-                    extensions = 1;
+                    extensions = !isPV && singularScore - 15 < singularBeta 
+                               ?  2 : 1;
                 }
 
                 // #22 Multi Cut
@@ -408,19 +409,15 @@ public static partial class Search
             //     For later moves, we only want to prove that it really is worse, using a shallower search.
             if (movesPlayed > 1 && depth > 2 && !isCapture)
             {
+                // TODO
+                // nonPV, !improvong, CutNode
+
                 // log-formula = 1 + log(depth) * log(moveCount) / 1.5
                 int R = lmrTable[Min(depth, 63)][Min(movesPlayed, 63)];
-
-                //if (cutnode) R++;             -> +1.59 over 21k games @ 20+0.2
-                //                                 not worth the effort for a 3200 Elo engine
 
                 // History Reduction, probably needs bigger value for longer TC's
                 // ToDo: R += -histScore / HIST_REDUCION_DIV; R = Max(R, 0);
                 if (histScore < -256) R++;
-
-                //if (!improving         ) R++; -> -10.13 +/-  7.68 @ 40+0.40 
-                //if ( nonPV             ) R++; -> -21.37 +/- 11.47 @  8+0.08
-                //if (!improving && nonPV) R++; ->  -7.65 +/-  7.32 @  8+0.08
 
                 score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true);
 

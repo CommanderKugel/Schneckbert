@@ -178,7 +178,7 @@ while (true)
                 : 10
             );
 
-            long bench = 3242278;
+            long bench = 3838605;
             int  nps   = 1362301;
 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");

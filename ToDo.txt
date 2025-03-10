@@ -59,6 +59,8 @@ Search heuristics:
 - QS futility pruning
 - Prob Cut (dont waste 93487623 hours like yukari plz)
 
+- ttPV
+
 Time management for soft-bound:
 - Eval stability
 
