@@ -15,31 +15,36 @@ public struct move
     public readonly int flag   =>  value & 0xF000;
     public readonly int FromTo =>  value & 0x0FFF;
 
-    public readonly bool IsPromo    => (value & KnightPromo) != 0;
+    public readonly bool IsCastling => (value & 0xC000) == Castling;
+    public readonly bool IsEp       => (value & 0xC000) == EpCapture;
+    public readonly bool IsPromo    => (value & 0xC000) == Promo;
     public readonly int  PromoPiece => ((value >> 12) & 0b11) + 1;
-    public readonly bool IsEp       => (value & EpCapture) != 0;
 
     public readonly bool IsNull => value == 0;
     public static move NullMove => new move() { value = 0 };
 
     public const ushort 
         NoFlag      = 0b0000_0000_0000_0000,
+        EpCapture   = 0b1000_0000_0000_0000,
+        Promo       = 0b0100_0000_0000_0000,
+        Castling    = 0b1100_0000_0000_0000,
+
         KnightPromo = 0b0100_0000_0000_0000,
         BishopPromo = 0b0101_0000_0000_0000,
         RookPromo   = 0b0110_0000_0000_0000,
-        QueenPromo  = 0b0111_0000_0000_0000,
-        EpCapture   = 0b1000_0000_0000_0000;
+        QueenPromo  = 0b0111_0000_0000_0000;
 
 
     /// <summary>
     /// constructs a move from a given uci-string
     /// providing the position is necessary for identifying En Passant captures
     /// </summary>
-    public move(string mvstr, pos p) 
+    public move(string mvstr, ref pos p) 
     {
         int from = CharsToSquare(mvstr[0], mvstr[1]);
         int to   = CharsToSquare(mvstr[2], mvstr[3]);
-        ushort flag = 0;
+        int pt   = p.piece_on(from);
+        ushort flag = NoFlag;
 
         // read promotions directly from the string
         if (mvstr.Length == 5) 
@@ -50,6 +55,11 @@ public struct move
                 'r' => RookPromo,
                 'q' or _ => QueenPromo,
             };
+        }
+
+        else if (pt == KING && Math.Abs(from - to) == 2)
+        {
+            flag = Castling;
         }
 
         // read en passant from the context

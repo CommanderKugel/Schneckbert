@@ -96,7 +96,7 @@ while (true)
                         ply++;
                         moves += moveStr + " ";
 
-                        move m = new move(moveStr, root);
+                        move m = new move(moveStr, ref root);
                         root.make_move(m, ss);
 
                         if (RepetitionTable.needs_set_back())

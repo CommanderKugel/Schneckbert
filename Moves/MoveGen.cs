@@ -7,34 +7,6 @@ using System.Runtime.CompilerServices;
 public static class MoveGen
 {
 
-    /// <summary>
-    /// Returns true if the given move abides to the fundamental laws of piece movement.
-    /// Does not test if the king is left in check afterwads.
-    /// </summary>
-    public static bool is_pseudo_legal(move m, ref pos p)
-    {
-        int pt = p.piece_on(m.from);
-
-        // just assume pseudo-legality of castling moves
-        if (pt == KING && Math.Abs(m.from - m.to) == 2)
-        {
-            return true;
-        }
-
-        // catch obvious illegal cases
-        if (m.IsNull || 
-            pt == PIECE_NONE ||
-            p.color_on(m.from) != p.us || 
-            p.color_on(m.to) == p.us)
-        {
-            return false;
-        }
-
-        // test if the destination is accessible to the Piece
-        return (PieceAttacks(ref p, pt, m.from) & (1ul << m.to)) != 0;
-    }
-
-
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static unsafe int GenerateMoves(ref Span<move> moves, ref pos p, bool OnlyCaptures, ulong checker)
     {
@@ -184,12 +156,12 @@ public static class MoveGen
         if (p.castlingRights[p.us + p.us] &&                               // kingside castling rights
             (p.attackers_to(ksq + 1, block) & p.colorBB[1-p.us]) == 0 &&    // dont move through check
             (block & (1ul << ksq + 1 | 1ul << ksq + 2)) == 0)               // no piece in the way
-            moves[moveCnt++] = new(ksq, ksq + 2);
+            moves[moveCnt++] = new(ksq, ksq + 2, move.Castling);
 
         // Queenside castlingrights            
         if (p.castlingRights[p.us + p.us + 1] &&                               // queenside castling rights
             (p.attackers_to(ksq - 1, block) & p.colorBB[1-p.us]) == 0 &&        // dont move through check
             (block & (1ul << ksq - 1 | 1ul << ksq - 2 | 1ul << ksq - 3)) == 0)  // no piece in the way
-            moves[moveCnt++] = new(ksq, ksq - 2);
+            moves[moveCnt++] = new(ksq, ksq - 2, move.Castling);
     }
 }

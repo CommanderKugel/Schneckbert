@@ -93,7 +93,7 @@ public unsafe class MovePicker
                 case Stage.ttMove:
                 {
                     stage++;
-                    if (MoveGen.is_pseudo_legal(ttMove, ref p))
+                    if (p.is_pseudo_legal(ttMove))
                     {
                         return ttMove;
                     }
