@@ -152,7 +152,8 @@ public static class Selfplay
             if ((!more_than_one(root.colorBB[BLACK]) || !more_than_one(root.colorBB[WHITE])) &&
                   Math.Abs(Search.rootScore) > 400)
             {
-                result = Search.rootScore < 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
+                result = Search.rootScore > 0 ? (root.us == WHITE ? Gameresult.WinWhite : Gameresult.WinBlack)
+                                              : (root.us == WHITE ? Gameresult.WinBlack : Gameresult.WinWhite);
                 break;
             }
 
