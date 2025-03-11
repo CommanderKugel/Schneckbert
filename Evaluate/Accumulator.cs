@@ -55,7 +55,6 @@ public unsafe partial struct Accumulator
     {
         int wfeat = (1-color) * 384 + pt * 64 + (sq ^ wflip);
         int bfeat =    color  * 384 + pt * 64 + (sq ^ bflip ^ 56);
-        if (wfeat < 0 || bfeat < 0) throw null;
         return (wfeat, bfeat);
     }
 
