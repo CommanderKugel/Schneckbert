@@ -273,8 +273,6 @@ public static partial class Search
                 !m.IsPromo &&
                  nonMatingLineExists &&
                  depth < 5 &&
-            // improving: movesToGo *= 1.5 -> -6.04 +/- 6.58 @ 8+0.08
-            //            movesToGo *= 2.0 -> ~0             @ 8+0.08 & 40+0.4
                  movesPlayed > lmpTable[depth])
             {
                 continue;
@@ -353,7 +351,7 @@ public static partial class Search
                 ss->ExcludedMove  = move.NullMove;
 
                 // Move is confirmed singular!
-                // ToDo: double & triple extensions
+                // ToDo: triple extensions
                 if (singularScore < singularBeta)
                 {
                     extensions = !isPV && singularScore - 15 < singularBeta 
