@@ -302,7 +302,7 @@ public static partial class Search
             //     run another SEE with a wider margin.
             if (nonMatingLineExists &&
                 nonPV &&
-                picker.try_see(ref scores))
+                picker.stage_after_killermove(ref scores))
             {
                 int margin = isCapture 
                            ? -200 * depth 

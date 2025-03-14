@@ -120,8 +120,7 @@ public static partial class Search
             //    and we can safely prune the move, run another SEE with a wider margin.
             if ( nonMatingLineExists &&
                  nonPV &&
-                 picker.try_see(ref scores) &&
-                !SEE.see_threshold(m, ref p, alpha - ss->StaticEval - 300))
+                 picker.stage_after_killermove(ref scores))
             {
                 continue;
             }

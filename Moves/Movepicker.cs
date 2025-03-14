@@ -75,7 +75,7 @@ public unsafe class MovePicker
     }
 
 
-    public bool try_see(ref Span<int> scores)
+    public bool stage_after_killermove(ref Span<int> scores)
         => stage == Stage.pickMoves && scores[mvIdx-1] < 900_000;
 
     /// <summary>
