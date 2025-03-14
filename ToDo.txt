@@ -18,10 +18,10 @@
 
 
 
-- 'Complexity' = PESTO vs NNUE difference for tweaks like improving (or even NNUE psqt)
+- 'Complexity' = PSQT vs NNUE difference for tweaks like improving (or even NNUE psqt)
 
 
-=== common stuff ===
+=== miscellaneous stuff ===
 - Add Assertions for all kinds of stuff
 
 - TT Fix (not cutoff near 50 moverule, correct save of terminal scores)
@@ -60,6 +60,7 @@ Search heuristics:
 - Prob Cut (dont waste 93487623 hours like yukari plz)
 
 - ttPV
+- fail-awkward in QSearch/whole node pruning
 
 Time management for soft-bound:
 - Eval stability
