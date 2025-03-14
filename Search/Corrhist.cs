@@ -6,20 +6,23 @@ using static System.Math;
 
 public static class CorrHist
 {
-   
     /*
-    CORR_DIV=256, BONUS_DIV=512, MAX~32 -> -5
-    CORR_DIV=256, BONUS_DIV=256, MAX~32 -> -3.82
-    CORR_DIV=256, BONUS_DIV=128, MAX~32 -> -0.69 & -2 @ 20+0.2
-    CORR_DIV=256, BONUS_DIV= 64, MAX~32 -> -2.08
-
-    CORR_DIV=128, BONUS_DIV=128, MAX~32 -> -13.69
-    CORR_DIV=512, BONUS_DIV=128, MAX~32 ->  -3.40
+    /   Reset between bench positions
+    /   Reset on UCI Newgame
+    /   Correct in regular Search
+    /   Correct in Quiescense Search
+    /   Update after regular Search
     */
 
     /*
     private const int SIZE  = 16384;
 
+    private const short MIN_VALUE = -8_192;
+    private const short MAX_VALUE =  8_192;
+
+    private const int CORRECTION_DIVISOR = 300 * 256;
+
+    private const int PAWN_WEIGHT = 200;
     private static short[][] PawnCorrHist;
 
 
@@ -36,34 +39,32 @@ public static class CorrHist
         Array.Clear(PawnCorrHist[WHITE]);
     }
 
-    const int PAWN_CORRHIST_WEIGHT   = 1;
-    const int FINAL_CORRHIST_DIVISOR = 512;
-
-    const short MAX =  32 * FINAL_CORRHIST_DIVISOR;
-    const short MIN = -32 * FINAL_CORRHIST_DIVISOR;
-
-    const int BONUS_DIVISOR = 256;
-
 
     public static unsafe void correct_static_eval(ref pos p, SS* ss)
-    {      
-        int pawnCorrVal = PAWN_CORRHIST_WEIGHT * PawnCorrHist[p.us][p.PawnKey % SIZE];
-
-        ss->StaticEval = ss->RawStaticEval + (pawnCorrVal) / FINAL_CORRHIST_DIVISOR;
-    }
-
-
-    public static unsafe void update_corrhist(ref pos p, SS* ss, int depth, int score)
     {
-        int bonus = (score - ss->StaticEval) * depth / BONUS_DIVISOR;
+        var pawnVal = PawnCorrHist[p.us][p.PawnKey % SIZE];
 
-        update_single_corrhist(ref PawnCorrHist[p.us][p.PawnKey % SIZE], bonus);
+        var correctionValue = (pawnVal * PAWN_WEIGHT) / CORRECTION_DIVISOR;
+        ss->StaticEval = ss->RawStaticEval + correctionValue;
     }
 
-    private static void update_single_corrhist(ref short entry, int bonus)
+    // stole this implementation from Motor
+    // cant get it to work on my own :(
+    // https://github.com/martinnovaak/motor/blob/main/search/tables/history_table.hpp
+    public static unsafe void update_corrhist(ref pos p, SS* ss, int score, int depth)
     {
-        entry += (short)(bonus - Abs(bonus) * entry / 512);
-        entry = Clamp(entry, MIN, MAX);
+        int diff = (score - ss->StaticEval) * 256;
+        int weight = Min(128, depth * 8);
+
+        update_single(ref PawnCorrHist[p.us][p.PawnKey % SIZE]);
+
+        void update_single(ref short entry)
+        {
+            entry = (short)((entry * (256 - weight) + diff * weight) / 256);
+            entry = Clamp(entry, MIN_VALUE, MAX_VALUE);
+        }
     }
+
     */
+
 }
