@@ -174,14 +174,15 @@ public static partial class Search
             !inCheck && 
              depth>2 && 
             !inSingularity && 
-             ss->StaticEval >= beta)
+             ss->StaticEval >= beta &&
+            (!ttHit || ttEntry.flag != BOUND_UPPER || ttEntry.score >= beta))
         {
             pos posAfterNull = p;
             posAfterNull.force_null_move(ss);
 
             int nmpDepth = depth - 3 
                          - depth / 6;
-                         
+            
             int nmpScore = -Negamax<NON_PV>(posAfterNull, -beta, -alpha, nmpDepth, ply+1, ss+1, false);
             RepetitionTable.Pop();
 
