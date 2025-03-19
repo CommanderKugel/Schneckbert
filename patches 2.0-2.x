@@ -35,3 +35,22 @@ Games: 25182, Wins: 6930, Losses: 6704, Draws: 11548, Points: 12704.0 (50.45 %)
 Ptnml(0-2): [322, 2963, 5835, 3109, 362], WL/DD Ratio: 1.13
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+2.3 conditionally bigger History Delta bonus
+if bestScore > beta and not == beta -> +=1
+i dont understand this at all, this patch was a total brain fart
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 5.58 +/- 4.08, nElo: 8.87 +/- 6.48
+LOS: 99.63 %, DrawRatio: 44.60 %, PairsRatio: 1.09
+Games: 11028, Wins: 3198, Losses: 3021, Draws: 4809, Points: 5602.5 (50.80 %)
+Ptnml(0-2): [197, 1263, 2459, 1356, 239], WL/DD Ratio: 1.25
+LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 5.32 +/- 3.91, nElo: 8.84 +/- 6.48
+LOS: 99.62 %, DrawRatio: 45.68 %, PairsRatio: 1.10
+Games: 11028, Wins: 3087, Losses: 2918, Draws: 5023, Points: 5598.5 (50.77 %)
+Ptnml(0-2): [154, 1274, 2519, 1383, 184], WL/DD Ratio: 1.13
+LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------

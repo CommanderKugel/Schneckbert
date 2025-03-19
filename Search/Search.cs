@@ -485,7 +485,7 @@ public static partial class Search
                         }
 
                         // #28 Update History Values
-                        int delta = History.calcHistDelta(depth);
+                        int delta = History.calcHistDelta(bestScore > beta ? (depth + 1) : depth);
                         
                         if (isCapture) capturesPlayed--;
                         else           quietsPlayed--;
