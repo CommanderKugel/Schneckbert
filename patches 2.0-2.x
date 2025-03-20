@@ -36,9 +36,8 @@ Ptnml(0-2): [322, 2963, 5835, 3109, 362], WL/DD Ratio: 1.13
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
 
-2.3 conditionally bigger History Delta bonus
-if bestScore > beta and not == beta -> +=1
-i dont understand this at all, this patch was a total brain fart
+2.3 Bigger History Bonus if bestScore > beta 
+i dont understand this at all, this patch is a total brain fart
 --------------------------------------------------
 Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
 Elo: 5.58 +/- 4.08, nElo: 8.87 +/- 6.48
@@ -52,5 +51,22 @@ Elo: 5.32 +/- 3.91, nElo: 8.84 +/- 6.48
 LOS: 99.62 %, DrawRatio: 45.68 %, PairsRatio: 1.10
 Games: 11028, Wins: 3087, Losses: 2918, Draws: 5023, Points: 5598.5 (50.77 %)
 Ptnml(0-2): [154, 1274, 2519, 1383, 184], WL/DD Ratio: 1.13
+LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+
+2.4 bigger History Bonus if eval <= alpha
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 10.15 +/- 5.92, nElo: 16.47 +/- 9.60
+LOS: 99.96 %, DrawRatio: 44.83 %, PairsRatio: 1.22
+Games: 5032, Wins: 1480, Losses: 1333, Draws: 2219, Points: 2589.5 (51.46 %)
+Ptnml(0-2): [83, 543, 1128, 668, 94], WL/DD Ratio: 1.24
+LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 6.38 +/- 4.41, nElo: 10.62 +/- 7.34
+LOS: 99.77 %, DrawRatio: 45.05 %, PairsRatio: 1.11
+Games: 8600, Wins: 2440, Losses: 2282, Draws: 3878, Points: 4379.0 (50.92 %)
+Ptnml(0-2): [108, 1011, 1937, 1103, 141], WL/DD Ratio: 1.20
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
