@@ -485,10 +485,11 @@ public static partial class Search
                         }
 
                         // #28 Update History Values
-                        int temp = depth;
-                        if (ss->StaticEval <= alpha) temp++;
-                        if (bestScore      >  beta ) temp++;
-                        int delta = History.calcHistDelta(temp);
+                        int delta = History.calcHistDelta(
+                             depth + 
+                            (ss->StaticEval <= alpha ? 1 : 0) + // 5 Elo
+                            (bestScore      >  beta  ? 1 : 0)   // 6 Elo
+                        );
                         
                         if (isCapture) capturesPlayed--;
                         else           quietsPlayed--;

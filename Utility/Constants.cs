@@ -57,6 +57,7 @@ public static class Constants
     public const int EVAL_SCORE_MAX = 30_000;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool score_is_terminal(int score) => Math.Abs(score) > EVAL_SCORE_MAX;
+    public static bool score_is_win (int score) => score >  EVAL_SCORE_MAX;
     public static bool score_is_loss(int score) => score < -EVAL_SCORE_MAX;
 
     public const int MAX_SEARCH_PLY = 128;
