@@ -418,6 +418,10 @@ public static partial class Search
                 // ToDo: R += -histScore / HIST_REDUCION_DIV; R = Max(R, 0);
                 if (histScore < -256) R++;
 
+                if (isPV) R--;
+
+                R = Max(R, 0);
+
                 score = -Negamax<NON_PV>(nextPos, -alpha-1, -alpha, newDepth+1-R, ply+1, ss+1, true);
 
                 // if the shallower search failse high, we need to prove that the move really beats alpha
