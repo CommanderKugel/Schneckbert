@@ -69,9 +69,12 @@ public unsafe partial struct pos
         }
 
         ZobristKey = Zobrist.calc_zobrist_key(ref this);
-        PawnKey    = Zobrist.calc_pawn_key(ref this);
+        for (int pt=PAWN; pt<=KING; pt++)
+        {
+            PieceKeys[pt] = Zobrist.calc_piece_key(ref this, pt);
+        }
+        
         FiftyMoveCnt = 0;
-
         accumulator = new Accumulator(this);
     }
 

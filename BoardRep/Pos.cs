@@ -15,7 +15,7 @@ public unsafe partial struct pos
     public byte FiftyMoveCnt;
 
     public ulong ZobristKey;
-    public ulong PawnKey;
+    public fixed ulong PieceKeys[6];
 
     public Accumulator accumulator;
 
@@ -99,29 +99,35 @@ public unsafe partial struct pos
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void set_piece(int sq, int pt, int color) 
     {
-        pieceBB[pt]    ^= 1ul << sq;
+        pieceBB[pt   ] ^= 1ul << sq;
         colorBB[color] ^= 1ul << sq;
 
-        ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
+        var temp = Zobrist.get_piece_key(color, pt, sq);
+        ZobristKey    ^= temp;
+        PieceKeys[pt] ^= temp;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void pop_piece(int sq, int pt, int color)
     {
-        pieceBB[pt]    ^= 1ul << sq;
+        pieceBB[pt   ] ^= 1ul << sq;
         colorBB[color] ^= 1ul << sq;
 
-        ZobristKey ^= Zobrist.get_piece_key(color, pt, sq);
+        var temp = Zobrist.get_piece_key(color, pt, sq);
+        ZobristKey    ^= temp;
+        PieceKeys[pt] ^= temp;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void move_piece(int color, int pt, int from, int to)
     {
-        pieceBB[pt] ^= (1ul << from) | (1ul << to);
+        pieceBB[pt   ] ^= (1ul << from) | (1ul << to);
         colorBB[color] ^= (1ul << from) | (1ul << to);
 
-        ZobristKey ^= Zobrist.get_piece_key(color, pt, from)
-                   ^  Zobrist.get_piece_key(color, pt, to);
+        var temp = Zobrist.get_piece_key(color, pt, from)
+                 ^ Zobrist.get_piece_key(color, pt, to);
+        ZobristKey    ^= temp;
+        PieceKeys[pt] ^= temp;
     }
 
 

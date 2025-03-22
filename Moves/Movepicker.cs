@@ -64,7 +64,7 @@ public unsafe class MovePicker
             else
             {
                 scores[i] = History.get_butterfly_histval(p.us, m) 
-                          + History.get_pawnhist_val(p.us, p.PawnKey, attacker, m.to);
+                          + History.get_pawnhist_val(p.us, p.PieceKeys[PAWN], attacker, m.to);
 
                 if (ply > 0)
                 {

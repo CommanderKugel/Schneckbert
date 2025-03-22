@@ -116,7 +116,7 @@ public static class History
 
     public static unsafe int get_quiet_hist(int stm, int pt, move m, ref pos p, SS* ss, int ply)
     {
-        int val = get_butterfly_histval(stm, m) + get_pawnhist_val(stm, p.PawnKey, pt, m.to);
+        int val = get_butterfly_histval(stm, m) + get_pawnhist_val(stm, p.PieceKeys[PAWN], pt, m.to);
         if (ply > 0) val += get_conthist_val(ss-1, stm, pt, m);
         return val;
     }
@@ -162,7 +162,7 @@ public static class History
             int pt = p.piece_on(m.from);
 
             decreaseHistVal(delta, ref get_butterfly_histval(p.us, m));
-            decreaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, pt, m.to));
+            decreaseHistVal(delta, ref get_pawnhist_val(p.us, p.PieceKeys[PAWN], pt, m.to));
 
             if (ply > 0)
             {
@@ -195,7 +195,7 @@ public static class History
         {
             int pt = p.piece_on(m.from);
             increaseHistVal(delta, ref get_butterfly_histval(p.us, m));
-            increaseHistVal(delta, ref get_pawnhist_val(p.us, p.PawnKey, pt, m.to));
+            increaseHistVal(delta, ref get_pawnhist_val(p.us, p.PieceKeys[PAWN], pt, m.to));
 
             if (ply > 0)
             {

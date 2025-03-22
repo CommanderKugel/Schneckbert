@@ -80,20 +80,16 @@ public static class Zobrist
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static ulong calc_pawn_key(ref pos p)
+    public static ulong calc_piece_key(ref pos p, int pt)
     {
         ulong key = 0;
-        // White Pawns
-        ulong pawns = p.get_pieces(PAWN, WHITE);
-        while (pawns != 0)
+        for (int color=BLACK; color<=WHITE; color++)
         {
-            key ^= PieceSqKeys[WHITE][PAWN][popLsb(ref pawns)];
-        }
-        // Black Pawns
-        pawns = p.get_pieces(PAWN, BLACK);
-        while (pawns != 0)
-        {
-            key ^= PieceSqKeys[BLACK][PAWN][popLsb(ref pawns)];
+            ulong pieces = p.get_pieces(pt, color);
+            while (pieces != 0)
+            {
+                key ^= PieceSqKeys[color][pt][popLsb(ref pieces)];
+            }
         }
         return key;
     }
