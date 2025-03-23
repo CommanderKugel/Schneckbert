@@ -146,12 +146,12 @@ public static partial class Search
             }
             else
             {
-                // Reduced zero-window search
+                // zero-window search
                 score = -QSearch<NON_PV>(nextPos, -alpha-1, -alpha, ply+1, ss+1);
 
 
-                // If we are in a PV node and one move seems to beat alpha, we need to re-search at full depth
-                // and with a full window, to confirm we really beat alpha and get an exact score. 
+                // If we are in a PV node and one move seems to beat alpha, we need to re-search
+                // with a full window, to confirm we really beat alpha and get an exact score. 
                 // Searches using a null-window only return upper bounds.
                 if (isPV && score > alpha)
                 {
