@@ -539,9 +539,8 @@ public static partial class Search
             !inCheck &&
             (locBestMove.IsNull || !p.is_capture(locBestMove)) &&
             !score_is_terminal(bestScore) &&
-            !(flag==BOUND_EXACT ||
-              flag==BOUND_LOWER && bestScore <= ss->StaticEval ||
-              flag==BOUND_UPPER && bestScore >= ss->StaticEval))
+            !(bestScore < ss->StaticEval && bestScore < beta ||
+              bestScore > ss->StaticEval && bestScore > alpha))
         {
             CorrHist.update_corrhist(ref p, ss, depth, bestScore);
         }
