@@ -148,20 +148,20 @@ public static class Selfplay
             mainLine.Add(m);
             mainLineScores.Add(Search.rootScore);
 
-            // abort if on side has no pieces left and not everything will be traded off
-            if ((!more_than_one(root.colorBB[BLACK]) || !more_than_one(root.colorBB[WHITE])) &&
-                  Math.Abs(Search.rootScore) > 400)
-            {
-                result = Search.rootScore > 0 ? (root.us == WHITE ? Gameresult.WinWhite : Gameresult.WinBlack)
-                                              : (root.us == WHITE ? Gameresult.WinBlack : Gameresult.WinWhite);
-                break;
-            }
-
             // abort if the score becomes too high/low (includes mate-scores)
             if (Math.Abs(Search.rootScore) > 3000)
             {
-                result = Search.rootScore > 0 ? (root.us == WHITE ? Gameresult.WinWhite : Gameresult.WinBlack)
-                                              : (root.us == WHITE ? Gameresult.WinBlack : Gameresult.WinWhite);
+                // gameresult neets to be flipped opposed to intuitive solution
+                // -> we already made the move and thus flipped stm
+                if (root.us == WHITE) 
+                {
+                    result = Search.rootScore > 0 ? Gameresult.WinBlack : Gameresult.WinWhite;
+                }
+                else if (root.us == BLACK)
+                {
+                    result = Search.rootScore > 0 ? Gameresult.WinWhite : Gameresult.WinWhite;
+                }
+                
                 break;
             }
         }
