@@ -178,8 +178,8 @@ while (true)
                 : 10
             );
 
-            long bench = 4171948;
-            int  nps   = 1184539;
+            long bench = 5247573;
+            int  nps   = 1037479;
 
             Console.WriteLine($"prev. nodes {bench} prev. nps {nps}");
             Console.WriteLine($"bench changed: {bench != TimeManager.TotalNodes}");
