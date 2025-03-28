@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <EmbeddedResource Include="C:\Users\nikol\Desktop\Schneckbert\Schneckbert\Evaluate\Nets\simple512.bin" />
+    <EmbeddedResource Include="C:\Users\nikol\Desktop\Schneckbert\Schneckbert\Evaluate\Nets\simple768.bin" />
   </ItemGroup>
 
   <PropertyGroup>
