@@ -106,3 +106,22 @@ Games: 1418, Wins: 476, Losses: 340, Draws: 602, Points: 777.0 (54.80 %)
 Ptnml(0-2): [15, 131, 306, 217, 40], WL/DD Ratio: 1.41
 LLR: 2.89 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+2.7 New Net
+identical arch
+slightly more data & trained on shuffled dataset
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 23.42 +/- 9.73, nElo: 35.18 +/- 14.57
+LOS: 100.00 %, DrawRatio: 43.32 %, PairsRatio: 1.41
+Games: 2184, Wins: 750, Losses: 603, Draws: 831, Points: 1165.5 (53.37 %)
+Ptnml(0-2): [40, 217, 473, 280, 82], WL/DD Ratio: 1.83
+LLR: 2.90 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 16.72 +/- 7.95, nElo: 26.31 +/- 12.49
+LOS: 100.00 %, DrawRatio: 44.65 %, PairsRatio: 1.33
+Games: 2974, Wins: 951, Losses: 808, Draws: 1215, Points: 1558.5 (52.40 %)
+Ptnml(0-2): [52, 301, 664, 392, 78], WL/DD Ratio: 1.54
+LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
+--------------------------------------------------
