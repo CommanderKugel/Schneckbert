@@ -165,7 +165,8 @@ while (true)
                 root, 
                 info:     true, 
                 maxDepth: depth, 
-                maxNodes: nodes
+                softNodes_: nodes,
+                hardNodes_: nodes
             );
             Console.WriteLine($"bestmove {bestmove}");
                                 

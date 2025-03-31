@@ -29,14 +29,14 @@ public static partial class Search
         //    It only makes sense to evaluate Quiet positions, because captures 
         //    drastically change the positions evaluation.
         //    To get a valid evaluation, play captures until no usefull capture remains.
-        if (depth <= 0)
+        if (depth <= 0 || ply >= MAX_SEARCH_PLY / 2)
         {
             return QSearch<NodeType>(p, alpha, beta, ply, ss);
         }
 
         // #2 Timeout Check
         //    Negamax will negate this big score into the worst mate-score possible
-        if (iteration > 1 && !TimeManager.InHardTimeLimit())
+        if (iteration > 1 && (!TimeManager.InHardTimeLimit() || TimeManager.NodeCnt > hardNodes))
         {
             return SCORE_TIMEOUT;
         }

@@ -12,7 +12,9 @@ public static partial class Search
     public static int rootScore;
 
     public static long rootPVNodes;
-    static bool info_;
+    private static bool info_;
+
+    private static long hardNodes;
 
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -20,7 +22,8 @@ public static partial class Search
         pos  root, 
         bool info,
         int  maxDepth, 
-        long maxNodes = long.MaxValue)
+        long softNodes_ = long.MaxValue,
+        long hardNodes_ = long.MaxValue)
     {
         fixed (SS* ss = SearchStack.stack)
         {
@@ -31,6 +34,8 @@ public static partial class Search
 
             rootPVNodes = 0;
             info_ = info;
+
+            hardNodes = hardNodes_;
 
             const int delta = 35;
             int alpha = -SCORE_MATE;
@@ -62,7 +67,7 @@ public static partial class Search
             }
             while (iteration <= maxDepth && 
                    TimeManager.InSoftTimeLimit(rootBestMove) && 
-                   TimeManager.NodeCnt < maxNodes);
+                   TimeManager.NodeCnt < softNodes_);
 
             return rootBestMove;
 

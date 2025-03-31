@@ -134,7 +134,7 @@ public static class Selfplay
 
             // search
             TimeManager.SetNewTimelimit(1000);
-            move m = Search.iterativeDeepen(root, info: false, maxDepth: 32, maxNodes: softnodes);
+            move m = Search.iterativeDeepen(root, info: false, maxDepth: 16, softNodes_: softnodes, hardNodes_: softnodes * 100);
 
             // check move legality
             bool isLegal = root.make_move(m, &ss);
@@ -159,7 +159,7 @@ public static class Selfplay
                 }
                 else if (root.us == BLACK)
                 {
-                    result = Search.rootScore > 0 ? Gameresult.WinWhite : Gameresult.WinWhite;
+                    result = Search.rootScore > 0 ? Gameresult.WinWhite : Gameresult.WinBlack;
                 }
                 
                 break;
