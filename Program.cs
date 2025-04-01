@@ -25,7 +25,7 @@ while (true)
     {
         case "uci":
         {
-            Console.WriteLine("id name Schneckbert v2.0");
+            Console.WriteLine("id name Schneckbert v3");
             Console.WriteLine("id author CommanderKugel");
 
             Console.WriteLine($"option name Hash type spin default 16 min {TranspositionTable.MIN_SIZE} max {TranspositionTable.MAX_SIZE}");

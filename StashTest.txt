@@ -1,28 +1,5 @@
-Version 2.6
+Version 2.8 vs 2.0
 
-40 + 0.40                          Elo     +/-   Games   Score    Draw 
-   0 Schneckbert dev                42      10    2000   56.0%   56.4% 
-   1 stash 36 (3335)               -36      16    1000   44.9%   46.6% 
-   2 Schneckbert 2.0               -48      12    1000   43.1%   66.1% 
-
- 8 + 8.08                          Elo     +/-   Games   Score    Draw 
-   0 Schneckbert dev                40      11    2000   55.8%   44.2% 
-   1 stash 36 (3335)               -28      17    1000   46.0%   34.8% 
-   2 Schneckbert 2.0               -53      15    1000   42.4%   53.6% 
-
-----------------------------------------------------------------------
-
-Version 2.0
- 8 + 0.08                          Elo     +/-   Games   Score    Draw 
-   0 Schneckbert dev                31      13    1500   54.5%   41.3% 
-   1 stash 36                       45      24     500   56.4%   36.4% 
-   2 yukari_4.3.25_avx2.exe         38      22     500   55.4%   50.0% 
-   3 Schneckbert 1.0              -194      25     500   24.7%   37.4%
-   
-40 + 0.4                           Elo     +/-   Games   Score    Draw 
-   0 Schneckbert dev                63      13    1500   58.9%   48.1% 
-   1 yukari_4.3.25_avx2.exe         15      19     500   52.2%   62.4% 
-   2 stash 36                        8      22     500   51.1%   47.4% 
-   3 Schneckbert 1.0              -241      26     500   20.0%   34.4% 
++77 ltc (40+0.4), +102 stc (8+0.08)
 
 balanced book: GBSelect2024
