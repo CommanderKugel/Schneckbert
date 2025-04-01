@@ -11,7 +11,6 @@ public unsafe partial struct pos
         for (int pt=PAWN;  pt<=KING;  pt++) pieceBB[pt] = 0;
         for (int cl=BLACK; cl<=WHITE; cl++) colorBB[cl] = 0;
         for (int cr=0;     cr<4;      cr++) castlingRights[cr] = false;
-        this.accumulator = new Accumulator();
         SearchStack.stack[0] = new SS();
         
         int r = 7;
@@ -75,7 +74,8 @@ public unsafe partial struct pos
         }
         
         FiftyMoveCnt = 0;
-        accumulator = new Accumulator(this);
+
+        AccStack.stack[0] = new Accumulator(this);
     }
 
     /// <summary>

@@ -8,6 +8,7 @@ Attacks.init();
 NNUEWeights.load();
 Utils.init();
 Search.init();
+AccStack.init();
 
 pos root = new pos(Constants.startpos);
 string moves = "";
@@ -84,6 +85,7 @@ while (true)
 
             SearchStack.Reset();
             RepetitionTable.Reset();
+            AccStack.Reset();            
 
             moves = "";
             unsafe
@@ -106,6 +108,8 @@ while (true)
                     }
                 }
             }
+
+            AccStack.stack[0] = new Accumulator(root);
             break;
         }
         case "go":
@@ -197,7 +201,7 @@ while (true)
                                                     "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1"})
                 {
                     pos p = new pos(fen);
-                    int eval = p.accumulator.Evaluate(ref p);
+                    int eval = AccStack.stack[0].Evaluate(ref root);
                     Console.WriteLine("FEN: "+fen);
                     Console.WriteLine("EVAL: "+eval);
                 }
@@ -205,7 +209,7 @@ while (true)
             else 
             {
                 Utils.print(root);
-                Console.WriteLine("NNUE evaluation: "+root.accumulator.Evaluate(ref root));
+                Console.WriteLine("NNUE evaluation: "+AccStack.stack[0].Evaluate(ref root));
             }
             break;
         }

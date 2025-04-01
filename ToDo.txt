@@ -69,7 +69,7 @@ Time management for soft-bound:
 === viri-pasta ===
 
 NNUE progression:
-- (Accumulator Stack)
+- (Accumulator Stack -> heap)
 - Direct accumulator calculation (accumulators[ply] = accumulators[ply - 1] + changes)
 - Lazy Updates (Queue of accumulator updates, calculate only before evaluation)
 - Finny Tables (For each bucket, store the state of the last time you were there, and when you re-enter the bucket, use a bitboard diff to compute updates)

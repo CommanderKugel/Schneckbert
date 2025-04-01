@@ -5,6 +5,8 @@ using static Constants;
 /// </summary>
 public struct SS
 {
+    public int ply;
+
     /// <summary>
     /// Corrected Static Evaluation of the current Node
     /// </summary>
@@ -39,12 +41,14 @@ public static class SearchStack
     public static void init() 
     {
         stack = new SS[MAX_SEARCH_PLY];
-        Array.Fill(stack, new SS());
+        Reset();
     }
 
     public static void Reset()
     {
         Array.Fill(stack, new SS());
+        for (int p=0; p<stack.Length; p++)
+            stack[p].ply = p;
     }
 
     /// <summary>

@@ -72,4 +72,15 @@ public unsafe partial struct Accumulator
     private int get_hm<Color>(ref pos p) where Color : COL
         =>  file_of(p.get_ksq(typeof(Color)==typeof(COL_WHITE) ? WHITE : BLACK)) > 3 ? 7 : 0;
 
+
+    public bool Equals(ref Accumulator other)
+    {
+        for (int i=0; i<FT_SIZE; i++)
+            if (AccWhite[i] != other.AccWhite[i] || AccBlack[i] != other.AccBlack[i])
+                return false;
+        
+        return wbuck == other.wbuck && bbuck == other.bbuck &&
+               wflip == other.wflip && bflip == other.bflip;
+    }
+
 }

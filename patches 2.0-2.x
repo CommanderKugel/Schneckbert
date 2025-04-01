@@ -125,3 +125,22 @@ Games: 2974, Wins: 951, Losses: 808, Draws: 1215, Points: 1558.5 (52.40 %)
 Ptnml(0-2): [52, 301, 664, 392, 78], WL/DD Ratio: 1.54
 LLR: 2.91 (-2.25, 2.89) [0.00, 5.00]
 --------------------------------------------------
+
+2.8 heap allocate accumulators
+Move accumulators from being part of the board-struct onto a heap-allocated array indexed by ply
+Why not let ltc finish? id merge either way to fix stack-overflow exceptions.
+--------------------------------------------------
+Results of dev vs main (8+0.08, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 27.04 +/- 10.53, nElo: 44.86 +/- 17.40
+LOS: 100.00 %, DrawRatio: 46.34 %, PairsRatio: 1.58
+Games: 1532, Wins: 505, Losses: 386, Draws: 641, Points: 825.5 (53.88 %)
+Ptnml(0-2): [14, 145, 355, 212, 40], WL/DD Ratio: 1.50
+LLR: 2.90 (-2.25, 2.89) [-5.00, 0.00]
+--------------------------------------------------
+Results of dev vs main (20+0.2, NULL, 16MB, UHO_2024_8mvs_big_+105_+124.pgn):
+Elo: 5.72 +/- 9.57, nElo: 10.91 +/- 18.23
+LOS: 87.97 %, DrawRatio: 53.44 %, PairsRatio: 1.11
+Games: 1396, Wins: 371, Losses: 348, Draws: 677, Points: 709.5 (50.82 %)
+Ptnml(0-2): [7, 147, 373, 158, 13], WL/DD Ratio: 1.01
+LLR: 1.83 (-2.25, 2.89) [-10.00, 0.00]
+--------------------------------------------------

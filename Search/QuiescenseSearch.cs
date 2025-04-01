@@ -26,7 +26,7 @@ public static partial class Search
         // #1 avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
-            return p.accumulator.Evaluate(ref p);
+            return AccStack.stack[ss->ply].Evaluate(ref p);
         }
 
         // #2 Draw detection (besides Stalemate)
@@ -69,7 +69,7 @@ public static partial class Search
         else
         {
             ss->StaticEval = 
-                ss->RawStaticEval = p.accumulator.Evaluate(ref p);
+                ss->RawStaticEval = AccStack.stack[ss->ply].Evaluate(ref p);
             //CorrHist.correct_static_eval(ref p, ss);
         }
 

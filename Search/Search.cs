@@ -44,7 +44,7 @@ public static partial class Search
         // #3 Avoid stack-overflows or IndexOutOfBound Exceptions
         if (ply >= MAX_SEARCH_PLY)
         {
-            return p.accumulator.Evaluate(ref p);
+            return AccStack.stack[ss->ply].Evaluate(ref p);
         }
 
         // #4 Draw Detection
@@ -114,7 +114,7 @@ public static partial class Search
         else
         {
             ss->StaticEval = 
-                ss->RawStaticEval = p.accumulator.Evaluate(ref p);
+                ss->RawStaticEval = AccStack.stack[ss->ply].Evaluate(ref p);
 
             // #8 Static Evaluation Correction History
             //CorrHist.correct_static_eval(ref p, ss);
@@ -344,6 +344,7 @@ public static partial class Search
                  ttEntry.depth >= depth-3 &&
                  ttEntry.flag != BOUND_UPPER)
             {
+                Accumulator copy = AccStack.stack[ss->ply + 1];
                 int singularBeta = Max(-SCORE_MATE+1, ttEntry.score - depth * 2);
                 int singularDepth = (depth - 1) / 2;
 
@@ -396,7 +397,9 @@ public static partial class Search
                 //else if (cutNode)
                 //{
                 //    extension = -1;
-                //}               
+                //}
+
+                AccStack.stack[ss->ply + 1] = copy;
             }
 
             // apply extensions

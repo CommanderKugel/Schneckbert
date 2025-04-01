@@ -103,8 +103,8 @@ public unsafe partial struct pos
 
         if (IsLegal) 
         {
-
-            accumulator.Update(type, ref this, m, movingPieceType, capturedPieceType);
+            AccStack.stack[ss->ply + 1] = AccStack.stack[ss->ply];
+            AccStack.stack[ss->ply + 1].Update(type, ref this, m, movingPieceType, capturedPieceType);
 
             us = (byte)(1-us);
             ZobristKey ^= Zobrist.get_stm_key();
@@ -132,25 +132,21 @@ public unsafe partial struct pos
     private static readonly ulong[] CastlingRightModifiers = { 0x9000_0000_0000_0000ul, 0x1100_0000_0000_0000ul, 0x0000_0000_0000_0090ul, 0x0000_0000_0000_0011ul };
 
 
-
-    public bool is_legal (move m)
+    /// <summary>
+    /// Applies a null-move to the position without checking for anything!
+    /// Also updates the Repetition Table and Search Stack.
+    /// </summary>
+    public unsafe void force_null_move(SS* ss)
     {
-        return false;
-    }
+        ep = SQ_NONE;
+        us = (byte)(1-us);
+        FiftyMoveCnt++;
 
-    private bool normal_is_legal (move m)
-    {
-        return false;
-    }
+        ZobristKey = Zobrist.calc_zobrist_key(ref this);
+        RepetitionTable.Push(ZobristKey);
+        SearchStack.Push(ss, move.NullMove, ref this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
 
-    private bool ep_is_legal (move m)
-    {
-        return false;
-    }
-
-    private bool castling_is_legal (move m)
-    {
-        return false;
+        AccStack.stack[ss->ply + 1] = AccStack.stack[ss->ply];
     }
 
 

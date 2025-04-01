@@ -17,8 +17,6 @@ public unsafe partial struct pos
     public ulong ZobristKey;
     public fixed ulong PieceKeys[6];
 
-    public Accumulator accumulator;
-
 
     // QOL Methods
 
@@ -130,20 +128,6 @@ public unsafe partial struct pos
         PieceKeys[pt] ^= temp;
     }
 
-
-    /// <summary>
-    /// Applies a null-move to the position without checking for anything!
-    /// Also updates the Repetition Table and Search Stack.
-    /// </summary>
-    public unsafe void force_null_move(SS* ss)
-    {
-        ep = SQ_NONE;
-        us = (byte)(1-us);
-        FiftyMoveCnt++;
-        ZobristKey = Zobrist.calc_zobrist_key(ref this);
-        RepetitionTable.Push(ZobristKey);
-        SearchStack.Push(ss, move.NullMove, ref this, PIECE_TYPE_NONE, PIECE_TYPE_NONE);
-    }
 
     public static bool operator ==(pos p1, pos p2) => p1.ZobristKey == p2.ZobristKey;
     public static bool operator !=(pos p1, pos p2) => p1.ZobristKey != p2.ZobristKey;
